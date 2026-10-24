@@ -2,7 +2,9 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using TomorrowsCrime.Core;
 using TomorrowsCrime.Debugging;
+using TomorrowsCrime.Events;
 using TomorrowsCrime.Player;
 using TomorrowsCrime.Simulation;
 using TomorrowsCrime.World;
@@ -23,7 +25,7 @@ namespace TomorrowsCrime.EditorTools
         {
             if (!File.Exists(ScenePath))
             {
-                Debug.Log("[Tomorrow's Crime] Prototype scene missing. Automatically generating initial graybox prototype...");
+                Debug.Log("[Tomorrow's Crime] Prototype scene missing. Building complete scenario prototype...");
                 BuildPrototypeScene();
             }
         }
@@ -57,26 +59,77 @@ namespace TomorrowsCrime.EditorTools
             CreateWall("Wall_West", envRoot.transform, new Vector3(-10f, 2f, 0f), new Vector3(1f, 4f, 24f));
             CreateWall("Wall_East", envRoot.transform, new Vector3(10f, 2f, 0f), new Vector3(1f, 4f, 24f));
 
-            // Interior Architecture: Reception Counter
+            // Interior: Reception Desk
             var counter = GameObject.CreatePrimitive(PrimitiveType.Cube);
             counter.name = "Reception_Counter";
             counter.transform.SetParent(envRoot.transform);
-            counter.transform.position = new Vector3(0f, 0.6f, 3f);
+            counter.transform.position = new Vector3(0f, 0.6f, 4f);
             counter.transform.localScale = new Vector3(6f, 1.2f, 1.2f);
 
             // Lobby Columns
             CreateWall("Pillar_West", envRoot.transform, new Vector3(-5f, 2f, 0f), new Vector3(1f, 4f, 1f));
             CreateWall("Pillar_East", envRoot.transform, new Vector3(5f, 2f, 0f), new Vector3(1f, 4f, 1f));
 
-            // 3. Test Interactable Prop on Reception Desk (Demonstrates World State Reset)
-            var propGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            propGo.name = "Prop_Room102_Keycard";
-            propGo.transform.position = new Vector3(0f, 1.25f, 3f);
-            propGo.transform.localScale = new Vector3(0.35f, 0.08f, 0.22f);
-            propGo.AddComponent<TestInteractableProp>();
+            // 3. Lobby Table (Holds the Keycard)
+            var table = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            table.name = "Table_LobbyKeyTable";
+            table.transform.SetParent(envRoot.transform);
+            table.transform.position = new Vector3(0f, 0.45f, -3f);
+            table.transform.localScale = new Vector3(2.0f, 0.9f, 1.2f);
 
-            // 4. Player Rig
+            // 4. Interactable Keycard (Room 102 Keycard resting on the table)
+            var keyGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            keyGo.name = "Prop_Room102_Keycard";
+            keyGo.transform.SetParent(envRoot.transform);
+            keyGo.transform.position = new Vector3(0f, 0.95f, -3f);
+            keyGo.transform.localScale = new Vector3(0.35f, 0.06f, 0.22f);
+            var interactableKey = keyGo.AddComponent<InteractableKey>();
+
+            // Give key a distinct golden/amber appearance
+            var keyRenderer = keyGo.GetComponent<Renderer>();
+            if (keyRenderer != null)
+            {
+                keyRenderer.sharedMaterial.color = new Color(0.95f, 0.75f, 0.15f);
+            }
+
+            // 5. Destination Door (Room 102 Door at North Wall)
+            var doorRoot = new GameObject("Destination_Door_Room102");
+            doorRoot.transform.SetParent(envRoot.transform);
+            doorRoot.transform.position = new Vector3(0f, 0f, 11.4f);
+
+            var doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            doorLeaf.name = "Door_Leaf";
+            doorLeaf.transform.SetParent(doorRoot.transform);
+            doorLeaf.transform.localPosition = new Vector3(0.6f, 1.3f, 0f); // Pivot offset for realistic swing
+            doorLeaf.transform.localScale = new Vector3(1.2f, 2.6f, 0.15f);
+
+            var doorHinge = new GameObject("Door_Hinge");
+            doorHinge.transform.SetParent(doorRoot.transform);
+            doorHinge.transform.localPosition = Vector3.zero;
+            doorLeaf.transform.SetParent(doorHinge.transform);
+
+            var doorComponent = doorRoot.AddComponent<InteractableDoor>();
+            var soDoor = new SerializedObject(doorComponent);
+            soDoor.FindProperty("doorHingeTransform").objectReferenceValue = doorHinge.transform;
+            soDoor.FindProperty("doorId").stringValue = "door_room_102";
+            soDoor.FindProperty("doorDisplayName").stringValue = "Room 102 Door";
+            soDoor.ApplyModifiedPropertiesWithoutUndo();
+
+            // 6. Concierge NPC Placeholder (Positioned near Room 102)
+            var npcGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            npcGo.name = "NPC_Concierge";
+            npcGo.transform.SetParent(envRoot.transform);
+            npcGo.transform.position = new Vector3(2.5f, 1.0f, 9.5f);
+            npcGo.transform.localScale = new Vector3(0.9f, 1.0f, 0.9f);
+            var npcRenderer = npcGo.GetComponent<Renderer>();
+            if (npcRenderer != null)
+            {
+                npcRenderer.sharedMaterial.color = new Color(0.2f, 0.35f, 0.7f); // Navy concierge uniform
+            }
+
+            // 7. Player Rig with Interaction System
             var playerGo = new GameObject("Player");
+            playerGo.tag = "Player";
             playerGo.transform.position = new Vector3(0f, 1.0f, -8f);
 
             var characterController = playerGo.AddComponent<CharacterController>();
@@ -85,6 +138,7 @@ namespace TomorrowsCrime.EditorTools
             characterController.center = new Vector3(0f, 0f, 0f);
 
             var playerController = playerGo.AddComponent<PlayerController>();
+            var playerInteraction = playerGo.AddComponent<PlayerInteraction>();
 
             var cameraGo = new GameObject("Main Camera");
             cameraGo.tag = "MainCamera";
@@ -92,17 +146,32 @@ namespace TomorrowsCrime.EditorTools
             cameraGo.transform.localPosition = new Vector3(0f, 0.75f, 0f);
             cameraGo.transform.localRotation = Quaternion.identity;
 
-            cameraGo.AddComponent<Camera>();
+            var cam = cameraGo.AddComponent<Camera>();
             cameraGo.AddComponent<AudioListener>();
 
             var soPlayer = new SerializedObject(playerController);
             soPlayer.FindProperty("cameraTransform").objectReferenceValue = cameraGo.transform;
             soPlayer.ApplyModifiedPropertiesWithoutUndo();
 
-            // 5. Simulation Systems & Diagnostics
+            var soInteract = new SerializedObject(playerInteraction);
+            soInteract.FindProperty("playerCamera").objectReferenceValue = cam;
+            soInteract.ApplyModifiedPropertiesWithoutUndo();
+
+            // 8. Simulation & World State Systems
             var simSystemsGo = new GameObject("[SimulationSystems]");
-            simSystemsGo.AddComponent<SimulationManager>();
+            var simManager = simSystemsGo.AddComponent<SimulationManager>();
+            var worldStateManager = simSystemsGo.AddComponent<WorldStateManager>();
+            var scenarioController = simSystemsGo.AddComponent<KeyScenarioController>();
             simSystemsGo.AddComponent<SimulationDebugUI>();
+
+            // Configure Scenario Controller
+            var soScenario = new SerializedObject(scenarioController);
+            soScenario.FindProperty("scheduledTimeSeconds").floatValue = 30.0f; // 00:30 into loop
+            soScenario.FindProperty("requiredKeyId").stringValue = "key_room_102";
+            soScenario.FindProperty("targetDoorId").stringValue = "door_room_102";
+            soScenario.FindProperty("targetDoor").objectReferenceValue = doorComponent;
+            soScenario.FindProperty("npcTransform").objectReferenceValue = npcGo.transform;
+            soScenario.ApplyModifiedPropertiesWithoutUndo();
 
             // Ensure parent directory exists
             var dir = Path.GetDirectoryName(ScenePath);

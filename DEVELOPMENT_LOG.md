@@ -38,3 +38,34 @@ This document tracks dated, factual development milestones, technical design cho
 ### Validation & Verification
 - EditMode tests verified for `SimulationClockModel` (clock tick progression, pause behavior, clamp at 300 seconds, loop increment, time scaling).
 - Compilation clean in Unity Editor.
+
+
+---
+
+## [2026-10-25] Milestone 2: World State & Interactive Causal Scenario
+
+### Architectural Decisions
+1. **Deterministic World State Architecture (`WorldStateRegistry` & `WorldStateManager`)**:
+   - Implemented a pure, decoupled `WorldStateRegistry` that stores mutable properties (doors, lights, props, key availability) under stable string identifiers (`key_room_102`, `door_room_102`).
+   - Registration explicitly detects duplicate IDs (throws `InvalidOperationException`) and guards against uninitialized access, preventing silent bugs.
+   - Captures baseline state on registration; on loop reset (`ILoopResetReceiver`), `ResetAllToBaseline()` resets all registered loop-scoped entities without reloading scenes.
+2. **First-Person Interaction System (`IInteractable` & `PlayerInteraction`)**:
+   - Created `IInteractable` interface with prompt and execution contracts.
+   - Added `PlayerInteraction` component to the player rig with a 2.5m raycast forward from camera center, debounced input polling (`KeyCode.E`), and contextual prompt rendering.
+3. **Causal Key Scenario (`KeyScenarioController`)**:
+   - Implemented scheduled scenario at `00:30` (30 seconds into loop): Concierge NPC attempts to take Room 102 keycard and unlock Room 102 door.
+   - Pure evaluation function `EvaluatePreconditions` tests actual world state (`PropLocationState.AtBaseline` vs `HeldByPlayer` / `DroppedElsewhere`).
+   - If key is present: Door 102 unlocks and swings open.
+   - If key is missing/relocated by player: Event fails with explicit report: `"Event failed: required key was not available at the expected location."`
+4. **Cross-Loop Persistent Knowledge (`InvestigationKnowledgeService`)**:
+   - Detective memory service that explicitly survives loop turnovers.
+   - When the player witnesses the scenario fail at 00:30, it permanently records discovery `key_missing_at_table`. Re-recording the same discovery is deduplicated.
+5. **Observability & Diagnostics**:
+   - Extended `SimulationDebugUI` to render real-time key status, door lock state, scenario status & pass/fail reason, persistent discovery list, and screen-center interaction reticle/prompt.
+
+### Validation & Test Results
+- Ran complete Unity Test Framework EditMode suite via CLI:
+  - 16 total test cases executed.
+  - 16 passed, 0 failed, 0 inconclusive.
+  - 10 new tests in `WorldStateAndScenarioTests` covering baseline capture, state mutation, reset restoration, persistent knowledge survival, duplicate ID handling, and causal scenario evaluation.
+- Verified scene construction in `Assets/_Project/Scenes/Prototype.unity` with interactive key, destination door, concierge placeholder, table, and simulation systems.
