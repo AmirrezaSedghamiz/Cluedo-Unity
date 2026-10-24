@@ -30,15 +30,20 @@ flowchart TD
         Resettables --> Player[PlayerController & PlayerInteraction]
     end
 
-    subgraph Causal Scenario Engine
-        Scenario[KeyScenarioController]
-        WorldMgr -->|State queries: key position| Scenario
-        Clock -->|00:30 Timestamp trigger| Scenario
-        Scenario -->|Succeed: unlocks door| Door
-        Scenario -->|Fail: records observation| Knowledge[InvestigationKnowledgeService]
+    subgraph Causal Event Engine
+        Scheduler[CausalEventScheduler] -->|Ticks & Resets| Engine[CausalEventEngine]
+        Clock -->|SimTime feed| Scheduler
+        Def[EventDefinition ScriptableObjects] -->|Registered into| Engine
+        Engine -->|Evaluates| Precond[IEventPrecondition]
+        Engine -->|Applies effects| Effects[IEventEffect]
+        Precond -->|Reads mutable state| WorldReg
+        Effects -->|Modifies mutable state| WorldReg
+        Effects -.->|Door state mutations| Door
     end
 
     subgraph Investigation Layer
+        Scenario[KeyScenarioController] -->|Observes event status| Engine
+        Scenario -->|Records witnessed failure| Knowledge[InvestigationKnowledgeService]
         Knowledge -->|Persistent Discoveries| Knowledge
         Knowledge -.->|Survives Loop Reset| LoopMgr
     end
@@ -46,7 +51,7 @@ flowchart TD
     subgraph UI & Diagnostics
         DebugHUD[SimulationDebugUI] --> Clock
         DebugHUD --> WorldMgr
-        DebugHUD --> Scenario
+        DebugHUD --> Engine
         DebugHUD --> Knowledge
         DebugHUD --> Player
     end
@@ -73,12 +78,18 @@ flowchart TD
 - **Interface (`IInteractable`):** Defines `InteractionPrompt`, `CanInteract`, and `Interact(GameObject interactor)`.
 - **Interaction Handler (`PlayerInteraction`):** Casts a 2.5m raycast forward from the player camera every frame. Detects `IInteractable` objects, debounces input (`KeyCode.E`), and feeds the contextual prompt to the HUD.
 
-### 3.4 Causal Scenario Engine (`TomorrowsCrime.Events`)
-- **Controller (`KeyScenarioController`):** Evaluates scheduled events against real world state.
-- **Precondition Evaluation:** At 00:30, checks if `key_room_102` is `PropLocationState.AtBaseline`.
-  - **Success:** Concierge takes key, opens Door 102.
-  - **Failure:** Key was moved or taken by player. Action fails with explicit report: `"Event failed: required key was not available at the expected location."`
-  - **Observation:** If witnessed, adds discovery to `InvestigationKnowledgeService`.
+### 3.4 Causal Event Engine (`TomorrowsCrime.Events`)
+- **Event Definition (`EventDefinition`):** Immutable-at-runtime `ScriptableObject` containing stable event ID, human-readable name, scheduled simulation time, priority, failure policy, prerequisites, preconditions (`IEventPrecondition`), and effects (`IEventEffect`).
+- **Runtime Instance (`EventRuntimeInstance`):** Ephemeral execution state per loop (`Pending`, `Executing`, `Executed`, `Failed`, `Cancelled`, `Skipped`) with execution time and human-readable explanation.
+- **Causal Engine Core (`CausalEventEngine`):**
+  - **Deterministic Ordering:** Sorts eligible pending events by scheduled timestamp ascending, priority descending, and ID string ordinal.
+  - **Graph Validation & Cycle Detection:** Depth-first search (DFS) with three-color recursion tracking prevents dependency cycles and validates all prerequisite references.
+  - **Multi-Pass Resolution:** Fixed-point loop within each tick allows dependent events scheduled at or before the current time to resolve as soon as their prerequisites execute successfully.
+  - **Prerequisite Failure Policies:** Configurable behavior when a prerequisite fails (`Skip`, `Fail`, `Cancel`).
+  - **Effect Failure Safety:** Preconditions are evaluated completely before any effect modifies world state.
+  - **Chronological History:** Evaluated events produce immutable `EventExecutionRecord` entries tracking simulation time, loop index, status, and reason.
+  - **Loop Reset:** Resets all runtime instances to `Pending` and clears history when the 5-minute loop turns over.
+- **Scheduler Bridge (`CausalEventScheduler`):** MonoBehaviour bridging `SimulationManager.OnTick` and `ILoopResetReceiver.OnLoopReset` to the pure C# engine.
 
 ### 3.5 Persistent Knowledge Service (`TomorrowsCrime.Investigation`)
 - **Service (`InvestigationKnowledgeService`):** Singleton knowledge store that survives loop resets.
@@ -90,6 +101,6 @@ flowchart TD
   - Loop index, elapsed & remaining time.
   - Keycard location (`At Table`, `Held by Player`, `Dropped Elsewhere`).
   - Door status (`Locked`, `Unlocked`).
-  - Concierge scenario state and pass/fail reason.
+  - Chronological Causal Event History with scrollable status badges (`Executed`, `Failed`, `Skipped`) and explanation strings.
   - Persistent discoveries list.
   - Center reticle and contextual interaction prompt.

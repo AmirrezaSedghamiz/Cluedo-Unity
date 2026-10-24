@@ -35,12 +35,19 @@ A phased, iterative plan for developing *Tomorrow's Crime*.
 
 ---
 
-## Phase 3: Causal Event Engine (Next Milestone)
-- [ ] Immutable event definitions (`ScriptableObject`-based).
-- [ ] Generalized runtime event scheduler driven by the 5-minute clock.
-- [ ] Precondition evaluation dependency graph (e.g., "Event occurs at 02:15 IF Door 102 is unlocked AND Power is ON").
-- [ ] Consequence execution and causal invalidation reporting.
-- [ ] Narrative log documenting why events occurred or failed.
+## Phase 3: Causal Event Engine (Completed)
+- [x] Immutable event definitions (`ScriptableObject`-based `EventDefinition`).
+- [x] Pure C# deterministic causal event engine (`CausalEventEngine`).
+- [x] Graph validation and cycle detection using depth-first search.
+- [x] Deterministic execution ordering (timestamp asc, priority desc, ID ordinal).
+- [x] Preconditions reading mutable world state (`IEventPrecondition`).
+- [x] Effects modifying mutable world state with failure safety (`IEventEffect`).
+- [x] Prerequisite dependency policies (`Skip`, `Fail`, `Cancel`).
+- [x] Multi-pass same-tick dependency resolution.
+- [x] Loop reset restoring runtime instances and clearing loop history.
+- [x] Data-driven concierge key and door scenario refactored into event engine.
+- [x] Real-time chronological event history with explanations in `SimulationDebugUI`.
+- [x] Comprehensive 15-requirement EditMode test suite (31/31 passing in total suite).
 
 ---
 

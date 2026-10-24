@@ -161,15 +161,16 @@ namespace TomorrowsCrime.EditorTools
             var simSystemsGo = new GameObject("[SimulationSystems]");
             var simManager = simSystemsGo.AddComponent<SimulationManager>();
             var worldStateManager = simSystemsGo.AddComponent<WorldStateManager>();
+            var eventScheduler = simSystemsGo.AddComponent<CausalEventScheduler>();
             var scenarioController = simSystemsGo.AddComponent<KeyScenarioController>();
             simSystemsGo.AddComponent<SimulationDebugUI>();
 
             // Configure Scenario Controller
             var soScenario = new SerializedObject(scenarioController);
-            soScenario.FindProperty("scheduledTimeSeconds").floatValue = 30.0f; // 00:30 into loop
-            soScenario.FindProperty("requiredKeyId").stringValue = "key_room_102";
-            soScenario.FindProperty("targetDoorId").stringValue = "door_room_102";
-            soScenario.FindProperty("targetDoor").objectReferenceValue = doorComponent;
+            soScenario.FindProperty("retrieveKeyTime").floatValue = 30.0f; // 00:30 into loop
+            soScenario.FindProperty("unlockDoorTime").floatValue = 35.0f;  // 00:35 into loop
+            soScenario.FindProperty("keyId").stringValue = "key_room_102";
+            soScenario.FindProperty("doorId").stringValue = "door_room_102";
             soScenario.FindProperty("npcTransform").objectReferenceValue = npcGo.transform;
             soScenario.ApplyModifiedPropertiesWithoutUndo();
 

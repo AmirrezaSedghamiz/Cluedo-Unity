@@ -42,7 +42,7 @@ namespace TomorrowsCrime.Simulation
         private void Start()
         {
             // Auto-discover existing reset receivers present in the scene
-            var allMonoBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+            var allMonoBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude);
             foreach (var mb in allMonoBehaviours)
             {
                 if (mb is ILoopResetReceiver receiver && !_resetReceivers.Contains(receiver))

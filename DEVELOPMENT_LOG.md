@@ -69,3 +69,52 @@ This document tracks dated, factual development milestones, technical design cho
   - 16 passed, 0 failed, 0 inconclusive.
   - 10 new tests in `WorldStateAndScenarioTests` covering baseline capture, state mutation, reset restoration, persistent knowledge survival, duplicate ID handling, and causal scenario evaluation.
 - Verified scene construction in `Assets/_Project/Scenes/Prototype.unity` with interactive key, destination door, concierge placeholder, table, and simulation systems.
+
+---
+
+## [2026-10-25] Milestone 3: Causal Event Engine
+
+### Architectural Decisions
+1. **Data-Driven Event Definitions (`EventDefinition` & `EventRuntimeInstance`)**:
+   - Implemented `EventDefinition` as a `ScriptableObject`-based immutable event descriptor (ID, name, scheduled time, priority, failure policy, prerequisites, preconditions, effects).
+   - Separated runtime execution state into `EventRuntimeInstance` (`Pending`, `Executing`, `Executed`, `Failed`, `Cancelled`, `Skipped`).
+   - Ensures definitions are completely reusable across loops without state corruption.
+2. **Deterministic Causal Event Engine (`CausalEventEngine`)**:
+   - Pure C# simulation engine decoupled from `MonoBehaviour` for testability and performance.
+   - **Deterministic Sorting:** Events eligible at the current tick are ordered strictly by scheduled time ascending, priority descending, and event ID ordinal.
+   - **Graph Validation & Cycle Detection:** Validates prerequisite IDs against registered definitions and executes DFS with 3-color cycle detection to prevent deadlocks.
+   - **Multi-Pass Resolution:** Uses a fixed-point loop within each tick so dependent events scheduled at or before the current timestamp resolve immediately once prerequisite events complete in the same tick.
+   - **Failure Policy Engine:** When a prerequisite reaches an unsuccessful terminal state, dependent events transition according to configured policy (`Skip`, `Fail`, `Cancel`) with explanatory logging.
+   - **Preconditions and Effect Safety:** Evaluates all `IEventPrecondition` contracts before invoking any `IEventEffect`. If a precondition fails or an effect throws/fails, state transitions to `Failed` without partial side effects.
+   - **Chronological History & Loop Resets:** Records immutable `EventExecutionRecord` instances per processed event. Resets all runtime instances to `Pending` and clears history upon loop reset (`ILoopResetReceiver`).
+3. **Refactored Scenario Controller (`KeyScenarioController`)**:
+   - Transformed the concierge scenario from hardcoded time checks into two distinct causal events:
+     - `concierge_retrieves_key` (scheduled at 30.0s, priority 10): Checks `KeyLocationPrecondition`.
+     - `concierge_unlocks_room102` (scheduled at 35.0s, priority 5): Depends on `concierge_retrieves_key`; applies `DoorStateEffect`.
+   - Preserves player witnessing logic: if the player witnesses `concierge_retrieves_key` fail, `InvestigationKnowledgeService` logs `key_missing_at_table`.
+4. **Enhanced Diagnostic UI (`SimulationDebugUI`)**:
+   - Replaced static scenario status with a scrollable chronological event history list.
+   - Shows event timestamps, event IDs, colored status badges (`Executed` = green, `Failed` = red, `Skipped` = orange), and result explanations.
+
+### Validation & Test Results
+- Ran complete Unity Test Framework EditMode suite via CLI:
+  - 31 total test cases executed.
+  - 31 passed, 0 failed, 0 inconclusive (100% pass rate).
+  - All 15 required causal event engine test cases verified in `CausalEventEngineTests`:
+    - Requirement 1: Event executes when time reached and preconditions pass.
+    - Requirement 2: Event remains pending before scheduled time.
+    - Requirement 3: Event fails with explanation when precondition false.
+    - Requirement 4: Event executes at most once per loop.
+    - Requirement 5: Events with same timestamp follow deterministic ordering.
+    - Requirement 6: Event does not execute before pending prerequisite succeeds.
+    - Requirement 7: Terminal unsuccessful prerequisite triggers configured dependency policy (`Skip`, `Fail`).
+    - Requirement 8: Failed event does not partially apply required effects.
+    - Requirement 9: Invalid event references are reported.
+    - Requirement 10: Dependency cycles are detected.
+    - Requirement 11: Loop reset restores event runtime state.
+    - Requirement 12: Events execute correctly again in new loop.
+    - Requirement 13: Moving key changes expected event outcome.
+    - Requirement 14: Large clock advance does not miss eligible events.
+    - Requirement 15: Exact loop boundary behavior matches documented policy.
+  - All 16 previous tests in `SimulationClockModelTests` and `WorldStateAndScenarioTests` continue to pass.
+- Verified scene execution and component integration in `Prototype.unity`.

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Events;
@@ -13,7 +14,7 @@ namespace TomorrowsCrime.Debugging
     /// Provides observability for:
     /// - 5-minute simulation clock and loop turnover
     /// - Live world state (key position, door status)
-    /// - Causal scenario evaluation (precondition pass/fail reasons)
+    /// - Chronological causal event history & dependency explanations
     /// - Cross-loop persistent investigation discoveries
     /// - First-person interaction prompt
     /// </summary>
@@ -27,14 +28,16 @@ namespace TomorrowsCrime.Debugging
         private GUIStyle _labelStyle;
         private GUIStyle _successStyle;
         private GUIStyle _failStyle;
+        private GUIStyle _skipStyle;
         private GUIStyle _promptStyle;
+        private Vector2 _scrollPosition;
         private bool _stylesInitialized;
 
         private PlayerInteraction _playerInteraction;
 
         private void Start()
         {
-            _playerInteraction = FindFirstObjectByType<PlayerInteraction>();
+            _playerInteraction = FindAnyObjectByType<PlayerInteraction>();
         }
 
         private void Update()
@@ -46,7 +49,7 @@ namespace TomorrowsCrime.Debugging
 
             if (_playerInteraction == null)
             {
-                _playerInteraction = FindFirstObjectByType<PlayerInteraction>();
+                _playerInteraction = FindAnyObjectByType<PlayerInteraction>();
             }
         }
 
@@ -55,7 +58,7 @@ namespace TomorrowsCrime.Debugging
             if (_stylesInitialized) return;
 
             var bgTex = new Texture2D(1, 1);
-            bgTex.SetPixel(0, 0, new Color(0.04f, 0.06f, 0.09f, 0.92f));
+            bgTex.SetPixel(0, 0, new Color(0.04f, 0.06f, 0.09f, 0.94f));
             bgTex.Apply();
 
             _boxStyle = new GUIStyle(GUI.skin.box)
@@ -66,14 +69,14 @@ namespace TomorrowsCrime.Debugging
 
             _headerStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 13,
+                fontSize = 12,
                 fontStyle = FontStyle.Bold,
                 normal = { textColor = new Color(0.95f, 0.75f, 0.2f) }
             };
 
             _timeStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 22,
+                fontSize = 20,
                 fontStyle = FontStyle.Bold,
                 normal = { textColor = Color.white }
             };
@@ -101,6 +104,14 @@ namespace TomorrowsCrime.Debugging
                 wordWrap = true
             };
 
+            _skipStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 11,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = new Color(1.0f, 0.75f, 0.25f) },
+                wordWrap = true
+            };
+
             _promptStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 14,
@@ -124,10 +135,10 @@ namespace TomorrowsCrime.Debugging
             var mgr = SimulationManager.Instance;
             var clock = mgr != null ? mgr.Clock : null;
 
-            // 2. Draw Simulation & Causal World State Panel
-            GUILayout.BeginArea(new Rect(14, 14, 380, 520), _boxStyle);
+            // 2. Draw Simulation, Causal Event History & World State Panel
+            GUILayout.BeginArea(new Rect(14, 14, 420, 580), _boxStyle);
 
-            GUILayout.Label("TOMORROW'S CRIME — DIAGNOSTICS", _headerStyle);
+            GUILayout.Label("TOMORROW'S CRIME — SIMULATION & EVENT ENGINE", _headerStyle);
             GUILayout.Space(2);
 
             if (clock != null)
@@ -168,10 +179,9 @@ namespace TomorrowsCrime.Debugging
                 GUILayout.Label("Waiting for SimulationManager...", _labelStyle);
             }
 
-            GUILayout.Space(8);
-            GUILayout.Label("WORLD STATE & CAUSAL SCENARIO", _headerStyle);
+            GUILayout.Space(6);
+            GUILayout.Label("WORLD STATE", _headerStyle);
 
-            // Key status
             string keyStateStr = "Unknown";
             if (WorldStateManager.Instance != null &&
                 WorldStateManager.Instance.Registry.TryGetState<PropLocationState>("key_room_102", out var ks))
@@ -186,7 +196,6 @@ namespace TomorrowsCrime.Debugging
             }
             GUILayout.Label($"Room 102 Keycard: {keyStateStr}", _labelStyle);
 
-            // Door status
             string doorStateStr = "Unknown";
             if (WorldStateManager.Instance != null &&
                 WorldStateManager.Instance.Registry.TryGetState<DoorLockState>("door_room_102", out var ds))
@@ -195,29 +204,38 @@ namespace TomorrowsCrime.Debugging
             }
             GUILayout.Label($"Door 102: {doorStateStr}", _labelStyle);
 
-            // Scenario status
-            var scenario = FindFirstObjectByType<KeyScenarioController>();
-            if (scenario != null)
+            // Chronological Event Engine History
+            GUILayout.Space(6);
+            GUILayout.Label("CAUSAL EVENT HISTORY (CHRONOLOGICAL)", _headerStyle);
+
+            var scheduler = CausalEventScheduler.Instance;
+            var history = scheduler != null && scheduler.Engine != null ? scheduler.Engine.History : null;
+
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(130));
+            if (history == null || history.Count == 0)
             {
-                GUILayout.Space(4);
-                string statusText = scenario.Status switch
-                {
-                    ScenarioExecutionStatus.Pending => $"Pending (Scheduled at 00:30)",
-                    ScenarioExecutionStatus.Succeeded => "SUCCEEDED",
-                    ScenarioExecutionStatus.Failed => "FAILED",
-                    _ => scenario.Status.ToString()
-                };
-
-                GUIStyle statusStyle = scenario.Status == ScenarioExecutionStatus.Succeeded
-                    ? _successStyle
-                    : (scenario.Status == ScenarioExecutionStatus.Failed ? _failStyle : _labelStyle);
-
-                GUILayout.Label($"Concierge Scenario: {statusText}", statusStyle);
-                GUILayout.Label($"Reason: {scenario.LastResultReason}", _labelStyle);
+                GUILayout.Label("No events processed yet in current loop. (Watch at 00:30)", _labelStyle);
             }
+            else
+            {
+                foreach (var record in history)
+                {
+                    GUIStyle statusStyle = record.Status switch
+                    {
+                        EventStatus.Executed => _successStyle,
+                        EventStatus.Failed => _failStyle,
+                        EventStatus.Skipped or EventStatus.Cancelled => _skipStyle,
+                        _ => _labelStyle
+                    };
+
+                    GUILayout.Label($"[{record.GetFormattedTime()}] {record.EventId} — {record.Status}", statusStyle);
+                    GUILayout.Label($"  Reason: {record.Explanation}", _labelStyle);
+                }
+            }
+            GUILayout.EndScrollView();
 
             // Persistent Discoveries Section
-            GUILayout.Space(8);
+            GUILayout.Space(6);
             var discoveries = InvestigationKnowledgeService.Instance.GetAllDiscoveries();
             GUILayout.Label($"PERSISTENT DISCOVERIES ({discoveries.Count})", _headerStyle);
 
@@ -233,8 +251,8 @@ namespace TomorrowsCrime.Debugging
                 }
             }
 
-            GUILayout.Space(6);
-            GUILayout.Label("Controls: WASD=Move | Mouse=Look | E=Interact\nP=Pause | 1/2/5=Speed | R=Reset | F1=Toggle HUD", _labelStyle);
+            GUILayout.Space(4);
+            GUILayout.Label("WASD=Move | Mouse=Look | E=Interact | P=Pause | 1/2/5=Speed | R=Reset | F1=HUD", _labelStyle);
 
             GUILayout.EndArea();
         }
