@@ -2,7 +2,9 @@
     "name": "TomorrowsCrime.Editor",
     "rootNamespace": "TomorrowsCrime.Editor",
     "references": [
-        "TomorrowsCrime.Runtime"
+        "TomorrowsCrime.Runtime",
+        "Unity.AI.Navigation",
+        "Unity.AI.Navigation.Editor"
     ],
     "includePlatforms": [
         "Editor"

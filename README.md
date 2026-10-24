@@ -52,9 +52,24 @@ The `Prototype.unity` scene features a complete end-to-end causal simulation dri
    - The event log clears for the new loop.
    - **Crucially: The player's persistent discoveries remain intact across all loops!**
 
+## 4. Suspect Simulation & Navigation (Milestone 4)
+
+The prototype features the first autonomous suspect simulation with Unity AI Navigation:
+1. **Character Definition (`NPCDefinition`):** Immutable data asset specifying character identity (`npc_concierge`, "Concierge Pierre"), locomotion speed (3.0 m/s), stopping distance (0.8m), perception cone (8.0m view range, 90° FOV), and scheduled activities.
+2. **Simulation-Time Schedule:**
+   - `00:00 - 00:15`: `WaitAtPost` — Concierge waits at the reception desk (`Waypoint_LobbyDesk`).
+   - `00:15 - 00:30`: `RetrieveKey` — Concierge navigates across the lobby floor using `NavMeshAgent` toward the lobby table (`Waypoint_LobbyTable`).
+   - `00:30 - 00:45`: `UnlockDoor` — If key was acquired, walks toward Room 102 (`Waypoint_Room102Door`) and unlocks the door.
+   - `00:45 - 05:00`: `WaitAtPost` — Concierge stations at Room 102.
+3. **Reactive Behaviors:**
+   - **Reaction A (Missing Key):** When reaching the table at ~00:30, if the player moved or picked up the keycard, the concierge notices the absence, enters the `Investigating` behavior state, logs reason: `"Investigating: expected keycard is missing from lobby table!"`, and does NOT attempt to unlock Room 102.
+   - **Reaction B (Blocked Route):** If the path to a destination is blocked or unreachable, the NPC transitions to `Blocked` navigation status, avoids infinite path spamming, and enters a clear waiting state.
+4. **Basic Sensory Model (`NPCPerception`):** NPCs only perceive information within their sensory cone (distance, horizontal angle, and line-of-sight raycasts). If the player takes the key behind the concierge's back, the NPC does not magically know until reaching the table.
+5. **Deterministic Reset:** Upon loop reset, the `NavMeshAgent` is warped back to the baseline desk position, paths are cleared, behavior state resets to `Idle`, and transient awareness is wiped clean.
+
 ---
 
-## 4. Controls
+## 5. Controls
 
 - **Move:** `W`, `A`, `S`, `D`
 - **Look:** Mouse (Cursor is automatically locked to screen; press `Esc` to toggle)
@@ -63,11 +78,11 @@ The `Prototype.unity` scene features a complete end-to-end causal simulation dri
 - **Fast Forward Time (Debug):** `1` (1x), `2` (2x), `5` (5x), `10x` button
 - **Pause / Resume Simulation:** `P`
 - **Manual Loop Reset:** `R`
-- **Toggle Diagnostic HUD:** `F1` or `~` (Features scrollable chronological causal event history)
+- **Toggle Diagnostic HUD:** `F1` or `~` (Shows clock, world state, causal history, and live NPC simulation diagnostics)
 
 ---
 
-## 5. Getting Started in Unity
+## 6. Getting Started & Baking Navigation in Unity
 
 1. Open **Unity Hub**.
 2. Click **Add** -> **Add project from disk**.
@@ -75,4 +90,5 @@ The `Prototype.unity` scene features a complete end-to-end causal simulation dri
 4. Ensure the selected Editor version is **Unity 6000.6.7f1** (or matching Unity 6 LTS).
 5. Open the project.
 6. In the Project window, navigate to `Assets/_Project/Scenes/` and double-click `Prototype.unity`.
-7. Press the **Play** button in the Unity toolbar.
+7. **(Optional) Re-baking NavMesh:** Select `[Environment_HotelLobby]` in the Hierarchy. In the Inspector, locate the `NavMeshSurface` component and click **Bake**. (The scene is already pre-baked via `Tomorrow's Crime -> Build Prototype Scene`).
+8. Press the **Play** button in the Unity toolbar.

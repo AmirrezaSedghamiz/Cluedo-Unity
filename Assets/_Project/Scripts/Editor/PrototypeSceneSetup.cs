@@ -5,6 +5,7 @@ using UnityEngine;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Debugging;
 using TomorrowsCrime.Events;
+using TomorrowsCrime.NPC;
 using TomorrowsCrime.Player;
 using TomorrowsCrime.Simulation;
 using TomorrowsCrime.World;
@@ -115,11 +116,32 @@ namespace TomorrowsCrime.EditorTools
             soDoor.FindProperty("doorDisplayName").stringValue = "Room 102 Door";
             soDoor.ApplyModifiedPropertiesWithoutUndo();
 
-            // 6. Concierge NPC Placeholder (Positioned near Room 102)
+            // 6. Navigation Surface & Waypoints
+            var waypointsRoot = new GameObject("[Waypoints]");
+            var wpLobbyDesk = new GameObject("Waypoint_LobbyDesk");
+            wpLobbyDesk.transform.SetParent(waypointsRoot.transform);
+            wpLobbyDesk.transform.position = new Vector3(0f, 0f, 5.5f);
+
+            var wpLobbyTable = new GameObject("Waypoint_LobbyTable");
+            wpLobbyTable.transform.SetParent(waypointsRoot.transform);
+            wpLobbyTable.transform.position = new Vector3(0f, 0f, -1.8f);
+
+            var wpRoom102Door = new GameObject("Waypoint_Room102Door");
+            wpRoom102Door.transform.SetParent(waypointsRoot.transform);
+            wpRoom102Door.transform.position = new Vector3(0f, 0f, 10.2f);
+
+            // Bake NavMesh Surface across lobby
+            var navSurface = envRoot.AddComponent<Unity.AI.Navigation.NavMeshSurface>();
+            navSurface.collectObjects = Unity.AI.Navigation.CollectObjects.All;
+            navSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+            navSurface.BuildNavMesh();
+
+            // 7. Concierge NPC with NavMeshAgent & NPCController
             var npcGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             npcGo.name = "NPC_Concierge";
             npcGo.transform.SetParent(envRoot.transform);
-            npcGo.transform.position = new Vector3(2.5f, 1.0f, 9.5f);
+            npcGo.transform.position = new Vector3(0f, 1.0f, 5.5f); // Starts at reception desk
+            npcGo.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             npcGo.transform.localScale = new Vector3(0.9f, 1.0f, 0.9f);
             var npcRenderer = npcGo.GetComponent<Renderer>();
             if (npcRenderer != null)
@@ -127,7 +149,20 @@ namespace TomorrowsCrime.EditorTools
                 npcRenderer.sharedMaterial.color = new Color(0.2f, 0.35f, 0.7f); // Navy concierge uniform
             }
 
-            // 7. Player Rig with Interaction System
+            var agent = npcGo.AddComponent<UnityEngine.AI.NavMeshAgent>();
+            agent.speed = 3.0f;
+            agent.stoppingDistance = 0.8f;
+            agent.radius = 0.45f;
+            agent.height = 2.0f;
+
+            var npcController = npcGo.AddComponent<NPCController>();
+            var soNpc = new SerializedObject(npcController);
+            soNpc.FindProperty("waypointLobbyDesk").objectReferenceValue = wpLobbyDesk.transform;
+            soNpc.FindProperty("waypointLobbyTable").objectReferenceValue = wpLobbyTable.transform;
+            soNpc.FindProperty("waypointRoom102Door").objectReferenceValue = wpRoom102Door.transform;
+            soNpc.ApplyModifiedPropertiesWithoutUndo();
+
+            // 8. Player Rig with Interaction System
             var playerGo = new GameObject("Player");
             playerGo.tag = "Player";
             playerGo.transform.position = new Vector3(0f, 1.0f, -8f);
@@ -157,7 +192,7 @@ namespace TomorrowsCrime.EditorTools
             soInteract.FindProperty("playerCamera").objectReferenceValue = cam;
             soInteract.ApplyModifiedPropertiesWithoutUndo();
 
-            // 8. Simulation & World State Systems
+            // 9. Simulation & World State Systems
             var simSystemsGo = new GameObject("[SimulationSystems]");
             var simManager = simSystemsGo.AddComponent<SimulationManager>();
             var worldStateManager = simSystemsGo.AddComponent<WorldStateManager>();

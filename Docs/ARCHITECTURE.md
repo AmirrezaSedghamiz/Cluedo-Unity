@@ -41,6 +41,16 @@ flowchart TD
         Effects -.->|Door state mutations| Door
     end
 
+    subgraph Suspect Simulation & AI Navigation
+        NPC[NPCController] -->|Navigates| NavAgent[NavMeshAgent & NavMeshSurface]
+        NPCDef[NPCDefinition] -->|Provides static data| NPC
+        NPCSched[NPCScheduleEvaluator] -->|Evaluates simTime| NPC
+        Percept[NPCPerception] -->|Sensory Cone & Line of Sight| NPC
+        Clock -->|Ticks simTime| NPC
+        NPC -->|Queries & updates state| WorldReg
+        Resettables --> NPC
+    end
+
     subgraph Investigation Layer
         Scenario[KeyScenarioController] -->|Observes event status| Engine
         Scenario -->|Records witnessed failure| Knowledge[InvestigationKnowledgeService]
@@ -52,6 +62,7 @@ flowchart TD
         DebugHUD[SimulationDebugUI] --> Clock
         DebugHUD --> WorldMgr
         DebugHUD --> Engine
+        DebugHUD --> NPC
         DebugHUD --> Knowledge
         DebugHUD --> Player
     end
@@ -91,16 +102,28 @@ flowchart TD
   - **Loop Reset:** Resets all runtime instances to `Pending` and clears history when the 5-minute loop turns over.
 - **Scheduler Bridge (`CausalEventScheduler`):** MonoBehaviour bridging `SimulationManager.OnTick` and `ILoopResetReceiver.OnLoopReset` to the pure C# engine.
 
-### 3.5 Persistent Knowledge Service (`TomorrowsCrime.Investigation`)
+### 3.5 Suspect Simulation & Navigation (`TomorrowsCrime.NPC`)
+- **Character Definition (`NPCDefinition`):** `ScriptableObject` containing character ID, display name, baseline position, rotation, speed, stopping distance, perception parameters, and schedule activities.
+- **Schedule Evaluator (`NPCScheduleEvaluator`):** Pure C# evaluator operating on half-open intervals `[StartTime, EndTime)`. Given simulation time, deterministically selects active activity (`WaitAtPost`, `RetrieveKey`, `UnlockDoor`, `Patrol`, `Idle`).
+- **Runtime State (`NPCRuntimeState`):** Ephemeral state tracking high-level behavior (`Idle`, `Moving`, `PerformingAction`, `Investigating`, `Blocked`, `Waiting`), navigation status, missing key awareness, and decision explanations.
+- **Locomotion & AI Navigation (`NPCController`):**
+  - Uses Unity AI Navigation (`NavMeshSurface` & `NavMeshAgent`) for collision-free pathfinding across lobby floor.
+  - Detects unreachable or invalid paths (**Reaction B: Blocked Route**) without infinite spam.
+  - Reaches destinations and executes scheduled actions against live world state (**Reaction A: Missing Key** triggers `Investigating` state).
+  - Implements `ILoopResetReceiver`: resets agent position/rotation, clears paths, and wipes transient awareness on loop reset.
+- **Sensory Perception (`NPCPerception`):** Evaluates distance, horizontal FOV angle, and physics raycast line-of-sight to ensure NPCs cannot perceive actions behind their back or through occluding walls.
+
+### 3.6 Persistent Knowledge Service (`TomorrowsCrime.Investigation`)
 - **Service (`InvestigationKnowledgeService`):** Singleton knowledge store that survives loop resets.
 - Deduplicates discoveries based on stable identifier (`key_missing_at_table`).
 - Retains loop number and timestamp when discovery occurred.
 
-### 3.6 Diagnostics & Observability (`TomorrowsCrime.Debugging`)
+### 3.7 Diagnostics & Observability (`TomorrowsCrime.Debugging`)
 - Real-time HUD showing:
   - Loop index, elapsed & remaining time.
   - Keycard location (`At Table`, `Held by Player`, `Dropped Elsewhere`).
   - Door status (`Locked`, `Unlocked`).
-  - Chronological Causal Event History with scrollable status badges (`Executed`, `Failed`, `Skipped`) and explanation strings.
+  - Chronological Causal Event History with scrollable status badges and reasons.
+  - Live NPC simulation diagnostics (Name, ID, behavior state, navigation status, active activity, and decision reason).
   - Persistent discoveries list.
   - Center reticle and contextual interaction prompt.

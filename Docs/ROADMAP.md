@@ -51,11 +51,17 @@ A phased, iterative plan for developing *Tomorrow's Crime*.
 
 ---
 
-## Phase 4: Suspect Simulation & Navigation
-- [ ] Hotel NavMesh setup using `com.unity.ai.navigation`.
-- [ ] Suspect behavior controllers with baseline daily routines.
-- [ ] Dynamic reactions when expected conditions change (e.g., locked path, missing prop).
-- [ ] Suspect visual placeholders with directional cones of vision and auditory awareness.
+## Phase 4: Suspect Simulation & Navigation (Completed)
+- [x] Hotel NavMesh setup using `com.unity.ai.navigation` (`NavMeshSurface`).
+- [x] Character definition data asset (`NPCDefinition`).
+- [x] Pure C# deterministic schedule evaluator (`NPCScheduleEvaluator`) using `[StartTime, EndTime)`.
+- [x] Locomotion controller (`NPCController`) with `NavMeshAgent` and waypoint navigation.
+- [x] Dynamic reaction to missing key (**Reaction A**: enters `Investigating` state, stops door unlock).
+- [x] Dynamic reaction to blocked route (**Reaction B**: enters `Blocked` state with recovery cooldown).
+- [x] Sensory perception model (`NPCPerception`) checking distance, FOV angle, and line of sight.
+- [x] Loop reset integration restoring baseline position, schedule, and clearing transient awareness.
+- [x] Observability diagnostics in HUD showing live NPC behavior state, activity, and decision reason.
+- [x] 12 new automated EditMode unit tests (43/43 passing in total suite).
 
 ---
 

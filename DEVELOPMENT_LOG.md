@@ -118,3 +118,53 @@ This document tracks dated, factual development milestones, technical design cho
     - Requirement 15: Exact loop boundary behavior matches documented policy.
   - All 16 previous tests in `SimulationClockModelTests` and `WorldStateAndScenarioTests` continue to pass.
 - Verified scene execution and component integration in `Prototype.unity`.
+
+---
+
+## [2026-10-25] Milestone 4: Suspect Simulation & Navigation
+
+### Architectural Decisions
+1. **Separation of Character Definition and Runtime State (`NPCDefinition` & `NPCRuntimeState`)**:
+   - Implemented `NPCDefinition` as a `ScriptableObject` containing static configuration: identity (`npc_concierge`, "Concierge Pierre"), locomotion settings (speed 3.0 m/s, stopping distance 0.8m), perception parameters (view range 8.0m, FOV 90°), and scheduled activities.
+   - Isolated ephemeral execution state in `NPCRuntimeState` (`BehaviorState`, `NavigationStatus`, `CurrentActivity`, `HasNoticedMissingKey`, `LastDecisionReason`, `LoopIndex`).
+2. **Pure C# Deterministic Schedule Evaluator (`NPCScheduleEvaluator`)**:
+   - Decoupled from `MonoBehaviour` for 100% testability in EditMode.
+   - Evaluates simulation clock time across half-open intervals `[StartTime, EndTime)`.
+   - Concierge 5-minute routine:
+     - `00:00 - 00:15`: `WaitAtPost` at reception desk (`Waypoint_LobbyDesk`).
+     - `00:15 - 00:30`: `RetrieveKey` — navigates across lobby toward table (`Waypoint_LobbyTable`).
+     - `00:30 - 00:45`: `UnlockDoor` — navigates toward Room 102 (`Waypoint_Room102Door`) and opens door.
+     - `00:45 - 05:00`: `WaitAtPost` — stations at Room 102.
+3. **Unity AI Navigation (`com.unity.ai.navigation` 2.0.16)**:
+   - Added `NavMeshSurface` to `[Environment_HotelLobby]` and baked walkable geometry taking into account lobby walls, pillars, reception counter, and table.
+   - Equipped `NPC_Concierge` with `NavMeshAgent` and waypoint destination system.
+4. **Reactive Behaviors**:
+   - **Reaction A (Missing Key):** When arriving at the lobby table, if the key was moved or picked up by the player, the concierge enters `Investigating` behavior state, logs reason: `"Investigating: expected keycard is missing from lobby table!"`, and aborts unlocking Room 102.
+   - **Reaction B (Blocked Route):** If a navigation path is invalid or partial, detects failure, enters `Blocked` state with recovery cooldown, avoiding infinite request loops.
+5. **Basic Sensory Perception (`NPCPerception`)**:
+   - Implemented distance, FOV angle, and physics raycast line-of-sight checks.
+   - Ensures the NPC cannot perceive player actions occurring behind its back or through walls.
+6. **Deterministic Loop Reset (`ILoopResetReceiver`)**:
+   - Warps `NavMeshAgent` back to baseline station, resets paths and velocity, resets runtime state to `Idle`, and clears transient awareness without duplicate callback registrations.
+7. **Observability**:
+   - Extended `SimulationDebugUI` to render suspect ID, display name, behavior state, navigation status, active activity, and decision reasons.
+
+### Validation & Test Results
+- Ran complete Unity Test Framework EditMode suite via CLI:
+  - 43 total test cases executed.
+  - 43 passed, 0 failed, 0 inconclusive (100% pass rate).
+  - All 12 required Step 4 test cases verified in `NPCSimulationTests`:
+    - Requirement 1: Character starts in configured initial state.
+    - Requirement 2: Schedule evaluation returns expected activity for given simulation time.
+    - Requirement 3: Schedule boundaries follow documented policy `[StartTime, EndTime)`.
+    - Requirement 4: Schedule uses simulation time rather than wall-clock time.
+    - Requirement 5: Missing-key condition produces intended response (`Investigating`, aborted unlock).
+    - Requirement 6: NPC does not gain knowledge of player actions it could not perceive.
+    - Requirement 7: Unreachable destination produces defined blocked or recovery state.
+    - Requirement 8: Reset restores initial NPC state and schedule progress.
+    - Requirement 9: Reset clears stale navigation intentions.
+    - Requirement 10: Repeated resets do not duplicate event callbacks.
+    - Requirement 11: NPC actions integrate with causal event engine without duplicate execution.
+    - Requirement 12: Identical initial conditions and action sequences produce identical decisions.
+  - All 31 previous tests continue to pass without regression.
+- Programmatically baked NavMesh and regenerated `Prototype.unity` via batchmode.

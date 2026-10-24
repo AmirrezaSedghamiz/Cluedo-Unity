@@ -136,7 +136,7 @@ namespace TomorrowsCrime.Debugging
             var clock = mgr != null ? mgr.Clock : null;
 
             // 2. Draw Simulation, Causal Event History & World State Panel
-            GUILayout.BeginArea(new Rect(14, 14, 420, 580), _boxStyle);
+            GUILayout.BeginArea(new Rect(14, 14, 420, 640), _boxStyle);
 
             GUILayout.Label("TOMORROW'S CRIME — SIMULATION & EVENT ENGINE", _headerStyle);
             GUILayout.Space(2);
@@ -211,7 +211,7 @@ namespace TomorrowsCrime.Debugging
             var scheduler = CausalEventScheduler.Instance;
             var history = scheduler != null && scheduler.Engine != null ? scheduler.Engine.History : null;
 
-            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(130));
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(110));
             if (history == null || history.Count == 0)
             {
                 GUILayout.Label("No events processed yet in current loop. (Watch at 00:30)", _labelStyle);
@@ -233,6 +233,35 @@ namespace TomorrowsCrime.Debugging
                 }
             }
             GUILayout.EndScrollView();
+
+            // NPC Simulation Diagnostics
+            GUILayout.Space(6);
+            GUILayout.Label("SUSPECT / NPC SIMULATION", _headerStyle);
+            var npc = FindAnyObjectByType<TomorrowsCrime.NPC.NPCController>();
+            if (npc != null && npc.RuntimeState != null)
+            {
+                var rt = npc.RuntimeState;
+                string npcName = npc.Definition != null ? npc.Definition.DisplayName : rt.CharacterId;
+                GUIStyle npcStatusStyle = rt.BehaviorState switch
+                {
+                    TomorrowsCrime.NPC.NPCBehaviorState.PerformingAction => _successStyle,
+                    TomorrowsCrime.NPC.NPCBehaviorState.Investigating => _failStyle,
+                    TomorrowsCrime.NPC.NPCBehaviorState.Blocked => _failStyle,
+                    TomorrowsCrime.NPC.NPCBehaviorState.Waiting => _skipStyle,
+                    _ => _labelStyle
+                };
+
+                GUILayout.Label($"{npcName} [{rt.BehaviorState}] (Nav: {rt.NavigationStatus})", npcStatusStyle);
+                if (rt.CurrentActivity != null)
+                {
+                    GUILayout.Label($"Activity: {rt.CurrentActivity.ActivityType} -> {rt.CurrentDestinationKey}", _labelStyle);
+                }
+                GUILayout.Label($"Status: {rt.LastDecisionReason}", _labelStyle);
+            }
+            else
+            {
+                GUILayout.Label("No active NPC in scene.", _labelStyle);
+            }
 
             // Persistent Discoveries Section
             GUILayout.Space(6);

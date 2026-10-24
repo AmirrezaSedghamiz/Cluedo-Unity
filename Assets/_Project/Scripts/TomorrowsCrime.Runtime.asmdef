@@ -2,6 +2,7 @@
     "name": "TomorrowsCrime.Runtime",
     "rootNamespace": "TomorrowsCrime",
     "references": [
+        "Unity.AI.Navigation",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
