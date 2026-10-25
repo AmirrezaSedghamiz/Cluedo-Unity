@@ -53,8 +53,27 @@ namespace TomorrowsCrime.Player
             }
         }
 
+        public bool IsInputBlocked { get; set; }
+
+        public void SetInputBlocked(bool blocked)
+        {
+            IsInputBlocked = blocked;
+            if (blocked)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+        }
+
         private void Update()
         {
+            if (IsInputBlocked) return;
+
             HandleMouseLook();
             HandleMovement();
             HandleCursorToggle();

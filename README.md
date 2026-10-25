@@ -67,14 +67,34 @@ The prototype features the first autonomous suspect simulation with Unity AI Nav
 4. **Basic Sensory Model (`NPCPerception`):** NPCs only perceive information within their sensory cone (distance, horizontal angle, and line-of-sight raycasts). If the player takes the key behind the concierge's back, the NPC does not magically know until reaching the table.
 5. **Deterministic Reset:** Upon loop reset, the `NavMeshAgent` is warped back to the baseline desk position, paths are cleared, behavior state resets to `Idle`, and transient awareness is wiped clean.
 
+## 5. Investigation System & Persistent Notebook (Milestone 5)
+
+Step 5 implements the core detective loop, adhering to the foundational rule: **Simulation Knowledge != Player Knowledge**.
+
+### Core Architecture & Features:
+1. **Separation of World Truth & Detective Knowledge:**
+   - The simulation engine tracks all world state and NPC activities. The player's persistent notebook ONLY records what the player has directly inspected or personally witnessed.
+   - Unobserved events (e.g. an NPC's internal routine when the player is absent) never contaminate the player's timeline.
+2. **Three-Tab Detective Notebook (`Tab` or `N`):**
+   - **Evidence:** Displays all discovered clues (`Room 102 Keycard`, `Concierge Duty Memo`, `Room 102 Door & Lock`). Selecting an item reveals its category, detailed inspection notes, and linked events.
+   - **Timeline:** Displays chronological player-witnessed observations (e.g., witnessing the concierge finding the key missing at 00:30). Allows comparing loop-over-loop deviations.
+   - **Hypotheses & Notes:** Formulate theories by entering titles and explanations, with optional supporting evidence selection. Hypotheses can be created, edited, and deleted. Freeform general notes persist automatically across loops.
+3. **Live Simulation & Input Blocking:**
+   - Opening the notebook (`Tab`/`N`) disables player movement and mouse look, unlocking the cursor for interactive note-taking.
+   - The live hotel simulation continues running uninterrupted in the background while the notebook is open. Closing the notebook restores first-person control and locks the cursor.
+4. **Cross-Loop Persistence:**
+   - When a loop ends (at 05:00 or via `R`), all world objects, NPC positions, and event instances reset to baseline.
+   - All discovered evidence, observation entries, hypotheses, and notes are preserved in `InvestigationKnowledgeService`. Discovering additional clues in subsequent loops seamlessly adds to the notebook without duplicating or overwriting previous findings.
+
 ---
 
-## 5. Controls
+## 6. Controls
 
 - **Move:** `W`, `A`, `S`, `D`
-- **Look:** Mouse (Cursor is automatically locked to screen; press `Esc` to toggle)
+- **Look:** Mouse (Cursor is automatically locked to screen)
 - **Sprint:** Hold `Left Shift`
-- **Interact / Pick Up / Place:** `E` (Aim at table keycard or doors when prompt appears)
+- **Interact / Inspect / Pick Up / Place:** `E` (Aim at objects when prompt appears)
+- **Toggle Investigation Notebook:** `Tab` or `N` (Opens Evidence, Timeline & Hypotheses)
 - **Fast Forward Time (Debug):** `1` (1x), `2` (2x), `5` (5x), `10x` button
 - **Pause / Resume Simulation:** `P`
 - **Manual Loop Reset:** `R`
@@ -82,7 +102,7 @@ The prototype features the first autonomous suspect simulation with Unity AI Nav
 
 ---
 
-## 6. Getting Started & Baking Navigation in Unity
+## 7. Getting Started & Baking Navigation in Unity
 
 1. Open **Unity Hub**.
 2. Click **Add** -> **Add project from disk**.

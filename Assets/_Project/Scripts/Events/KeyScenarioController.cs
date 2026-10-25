@@ -160,7 +160,16 @@ namespace TomorrowsCrime.Events
                         record.SimTime
                     );
 
-                    Debug.Log("[KeyScenarioController] Discovery recorded: 'key_missing_at_table' via causal engine!");
+                    InvestigationKnowledgeService.Instance.RecordObservation(
+                        $"obs_concierge_key_missing_loop_{loop}",
+                        "Observed Concierge Pierre discover that the Room 102 keycard was missing from the lobby table at 00:30.",
+                        loop,
+                        record.SimTime,
+                        relatedEventId: EventRetrieveKey,
+                        relatedEvidenceId: "evidence_room102_keycard"
+                    );
+
+                    Debug.Log("[KeyScenarioController] Discovery and player observation recorded for key missing event!");
                 }
             }
         }

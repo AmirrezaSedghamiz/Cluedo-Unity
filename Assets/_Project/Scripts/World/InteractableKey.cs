@@ -1,5 +1,6 @@
 using UnityEngine;
 using TomorrowsCrime.Core;
+using TomorrowsCrime.Investigation;
 using TomorrowsCrime.Simulation;
 
 namespace TomorrowsCrime.World
@@ -14,6 +15,7 @@ namespace TomorrowsCrime.World
         [Header("Configuration")]
         [SerializeField] private string keyId = "key_room_102";
         [SerializeField] private string keyDisplayName = "Hotel Room 102 Keycard";
+        [SerializeField] private EvidenceDefinition keyEvidence;
 
         [Header("State")]
         [SerializeField] private PropLocationState locationState = PropLocationState.AtBaseline;
@@ -27,6 +29,11 @@ namespace TomorrowsCrime.World
 
         public string KeyId => keyId;
         public PropLocationState LocationState => locationState;
+        public EvidenceDefinition KeyEvidence
+        {
+            get => keyEvidence;
+            set => keyEvidence = value;
+        }
 
         public string InteractionPrompt => _isHeld
             ? $"Press E to place {keyDisplayName}"
@@ -91,6 +98,17 @@ namespace TomorrowsCrime.World
             if (WorldStateManager.Instance != null)
             {
                 WorldStateManager.Instance.Registry.SetState(keyId, PropLocationState.HeldByPlayer);
+            }
+
+            if (keyEvidence != null && InvestigationKnowledgeService.Instance != null)
+            {
+                int loop = SimulationManager.Instance != null && SimulationManager.Instance.Clock != null
+                    ? SimulationManager.Instance.Clock.LoopCount
+                    : 1;
+                float simTime = SimulationManager.Instance != null && SimulationManager.Instance.Clock != null
+                    ? SimulationManager.Instance.Clock.ElapsedSeconds
+                    : 0f;
+                InvestigationKnowledgeService.Instance.DiscoverEvidence(keyEvidence, loop, simTime);
             }
 
             Debug.Log($"[InteractableKey] Player picked up {keyDisplayName}. World state '{keyId}' set to HeldByPlayer.");

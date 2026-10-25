@@ -113,17 +113,41 @@ flowchart TD
   - Implements `ILoopResetReceiver`: resets agent position/rotation, clears paths, and wipes transient awareness on loop reset.
 - **Sensory Perception (`NPCPerception`):** Evaluates distance, horizontal FOV angle, and physics raycast line-of-sight to ensure NPCs cannot perceive actions behind their back or through occluding walls.
 
-### 3.6 Persistent Knowledge Service (`TomorrowsCrime.Investigation`)
-- **Service (`InvestigationKnowledgeService`):** Singleton knowledge store that survives loop resets.
-- Deduplicates discoveries based on stable identifier (`key_missing_at_table`).
-- Retains loop number and timestamp when discovery occurred.
+### 3.6 Investigation System & Persistent Notebook (`TomorrowsCrime.Investigation`)
+
+#### Core Design Principle: Simulation Knowledge != Player Knowledge
+The simulation truth contains the complete objective state of hotel geometry, objects, NPCs, and causal events. The player's persistent notebook ONLY contains what the player has directly interacted with, inspected, or personally witnessed. Unobserved simulation events never enter the player's notebook.
+
+#### Component Breakdown:
+- **Evidence Definitions (`EvidenceDefinition`):**
+  - Immutable `ScriptableObject` containing `evidenceId`, `displayName`, `category`, `shortDescription`, `detailedInspectionText`, `relatedEventId`, and `relatedEvidenceIds`.
+  - Reusable across loops without holding any mutable runtime state.
+- **Discovered Evidence Records (`DiscoveredEvidenceRecord`):**
+  - Runtime record capturing the definition, loop index, and simulation timestamp of discovery.
+- **Player Observation Timeline (`PlayerObservationEntry`):**
+  - Factual records of events directly observed by the player (e.g. witnessing the concierge discovering the key missing at 00:30).
+  - Preserves loop index and simulation timestamp for loop-over-loop comparison.
+- **Hypotheses & Notes (`HypothesisEntry`):**
+  - Player-authored theories linking titles, explanations, and supporting evidence IDs. Supports full CRUD operations (create, update, delete).
+  - Freeform scratchpad general notes that persist across loops.
+- **Persistent Store (`InvestigationKnowledgeService`):**
+  - Pure C# singleton preserving all discovered evidence, observation entries, hypotheses, and notes across loop turnovers.
+  - Deduplicates repeated discoveries and provides clean event subscriptions.
+- **World Interaction Bridge (`InspectableEvidence`):**
+  - Implements `IInteractable` to connect physical world objects to the first-person raycast interaction system.
+  - Supports prerequisite holding item requirements (`requiresHoldingProp`, `requiredPropId`).
+- **Interactive Notebook Controller (`NotebookUIController`):**
+  - Toggled with `Tab` or `N`.
+  - Features three interactive sections: `Evidence`, `Timeline`, and `Hypotheses & Notes`.
+  - Blocks player input (`PlayerController.SetInputBlocked`) and unlocks the mouse cursor while live simulation continues running.
 
 ### 3.7 Diagnostics & Observability (`TomorrowsCrime.Debugging`)
-- Real-time HUD showing:
-  - Loop index, elapsed & remaining time.
+- Real-time HUD (`SimulationDebugUI`) showing:
+  - Loop index, elapsed & remaining time, time-scale controls.
   - Keycard location (`At Table`, `Held by Player`, `Dropped Elsewhere`).
   - Door status (`Locked`, `Unlocked`).
   - Chronological Causal Event History with scrollable status badges and reasons.
   - Live NPC simulation diagnostics (Name, ID, behavior state, navigation status, active activity, and decision reason).
   - Persistent discoveries list.
   - Center reticle and contextual interaction prompt.
+  - Controls help text (including `Tab/N=Notebook`).

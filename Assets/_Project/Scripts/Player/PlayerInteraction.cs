@@ -25,8 +25,11 @@ namespace TomorrowsCrime.Player
         public string CurrentPrompt { get; private set; }
         public bool HasInteractable => CurrentInteractable != null && CurrentInteractable.CanInteract;
 
+        private PlayerController _playerController;
+
         private void Awake()
         {
+            _playerController = GetComponent<PlayerController>();
             if (playerCamera == null)
             {
                 playerCamera = GetComponentInChildren<Camera>();
@@ -35,6 +38,13 @@ namespace TomorrowsCrime.Player
 
         private void Update()
         {
+            if (_playerController != null && _playerController.IsInputBlocked)
+            {
+                CurrentInteractable = null;
+                CurrentPrompt = null;
+                return;
+            }
+
             DetectInteractable();
             HandleInteractionInput();
         }

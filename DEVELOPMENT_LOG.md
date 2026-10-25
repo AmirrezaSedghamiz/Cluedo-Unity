@@ -168,3 +168,62 @@ This document tracks dated, factual development milestones, technical design cho
     - Requirement 12: Identical initial conditions and action sequences produce identical decisions.
   - All 31 previous tests continue to pass without regression.
 - Programmatically baked NavMesh and regenerated `Prototype.unity` via batchmode.
+
+---
+
+## [2026-10-25] Milestone 5: Investigation System & Persistent Notebook
+
+### Architectural Decisions
+1. **Core Principle: Simulation Knowledge != Player Knowledge**:
+   - The causal event engine tracks internal simulation truth for determinism and debugging.
+   - The player's persistent notebook only captures evidence directly inspected (`InspectableEvidence`) or events personally witnessed (`PlayerObservationEntry`).
+   - Unobserved events (e.g. concierge routine when player is elsewhere) never enter player knowledge.
+2. **Immutable Clue Definitions (`EvidenceDefinition`) & Runtime Records (`DiscoveredEvidenceRecord`)**:
+   - `EvidenceDefinition`: Authored as `ScriptableObject` containing stable `evidenceId`, display name, category, short summary, detailed inspection text, and related event/evidence links.
+   - `DiscoveredEvidenceRecord`: Pure runtime record capturing the `EvidenceDefinition`, the loop number (`DiscoveredInLoop`), and the exact simulation timestamp (`DiscoveredAtSimTime`).
+3. **Player-Witnessed Observation Timeline (`PlayerObservationEntry`)**:
+   - Captures factual, personally witnessed occurrences with loop number, timestamp, and optional causal event links.
+   - Distinct from internal engine event logs; provides the player with an authentic cross-loop comparison record.
+4. **Player Hypotheses & General Notes (`HypothesisEntry` & `InvestigationKnowledgeService`)**:
+   - Formulates theories linking player-authored titles and explanations to discovered evidence IDs.
+   - Full CRUD capability: create, edit, and delete hypotheses.
+   - Dedicated freeform general notes field for player scratchpad observations.
+5. **Interactive Three-Tab IMGUI Notebook (`NotebookUIController`)**:
+   - Toggled via `Tab` or `N`.
+   - Built using robust IMGUI architecture, eliminating UI canvas serialization issues while providing interactive tabs:
+     - **Evidence**: List of discovered clues with category badges and full inspection detail panel.
+     - **Timeline**: Chronological player-witnessed timeline across all loops.
+     - **Hypotheses & Notes**: Interactive hypothesis editor with title/explanation inputs and supporting evidence checkboxes, plus persistent general notes.
+6. **Input Blocking with Running Simulation**:
+   - Added `IsInputBlocked` and `SetInputBlocked(bool)` to `PlayerController`.
+   - When notebook is open, player movement and camera rotation are blocked, and cursor is unlocked (`CursorLockMode.None`, `Cursor.visible = true`).
+   - The live hotel simulation continues running in the background. Closing the notebook restores first-person control and locks the cursor.
+7. **Seamless Cross-Loop Persistence**:
+   - When the 5-minute loop turns over or `R` is pressed, `WorldStateManager`, `NPCController`, and `CausalEventScheduler` reset the physical scene to baseline.
+   - `InvestigationKnowledgeService` preserves all discovered evidence, observation history, hypotheses, and notes without duplicate subscriptions or static memory leaks.
+
+### Validation & Test Results
+- Ran complete Unity Test Framework EditMode suite via CLI:
+  - 57 total test cases executed.
+  - 57 passed, 0 failed, 0 inconclusive (100% pass rate).
+  - All 14 required Step 5 test cases verified in `InvestigationSystemTests`:
+    - Requirement 1: Inspecting valid target records evidence (`InspectableEvidence.Interact`).
+    - Requirement 2: Repeated discovery does not duplicate evidence.
+    - Requirement 3: Evidence cannot be discovered when prerequisites are unmet (`RequiresHoldingProp`).
+    - Requirement 4: Undiscovered evidence is not exposed through player notebook data.
+    - Requirement 5: Player observations recorded only through valid observation pathways.
+    - Requirement 6: Unobserved simulation events do not enter player timeline.
+    - Requirement 7: Hypotheses can be created, edited, and deleted.
+    - Requirement 8: Notes and hypotheses survive loop reset.
+    - Requirement 9: Discovered evidence survives loop reset.
+    - Requirement 10: Previous valid observations remain available after reset.
+    - Requirement 11: Loop-scoped world and NPC state still reset correctly.
+    - Requirement 12: Resetting does not duplicate callbacks or subscriptions.
+    - Requirement 13: Opening and closing notebook enables and disables player input.
+    - Requirement 14: Discovering additional evidence in a later loop does not erase earlier discoveries.
+  - All 43 previous tests continue to pass without regression:
+    - `CausalEventEngineTests`: 15 / 15 passed
+    - `NPCSimulationTests`: 12 / 12 passed
+    - `SimulationClockTests`: 6 / 6 passed
+    - `WorldStateAndScenarioTests`: 10 / 10 passed
+- Rebuilt `Prototype.unity` via batchmode CLI with `Prop_Room102_Keycard`, `Prop_Reception_ScheduleMemo`, `Prop_Door102_CardReader`, and `NotebookUIController`.

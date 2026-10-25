@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26ccc26976028f741a1aab798f82a696, type: 3}
+  m_Name: evidence_room102_keycard
+  m_EditorClassIdentifier: TomorrowsCrime.Runtime::TomorrowsCrime.Investigation.EvidenceDefinition
+  evidenceId: evidence_room102_keycard
+  displayName: Room 102 Keycard
+  category: Keys & Access
+  shortDescription: A magnetic hotel keycard stamped with 'Room 102 - Meridian House'.
+  detailedInspectionText: Standard electronic guest keycard for Room 102. Found resting on the lobby table. Concierge is scheduled to retrieve it at 00:30 for turn-down inspection.
+  relatedEventId: evt_concierge_retrieve_key
+  relatedEvidenceIds: []

@@ -281,7 +281,7 @@ namespace TomorrowsCrime.Debugging
             }
 
             GUILayout.Space(4);
-            GUILayout.Label("WASD=Move | Mouse=Look | E=Interact | P=Pause | 1/2/5=Speed | R=Reset | F1=HUD", _labelStyle);
+            GUILayout.Label("WASD=Move | Mouse=Look | E=Interact | Tab/N=Notebook | P=Pause | 1/2/5=Speed | R=Reset | F1=HUD", _labelStyle);
 
             GUILayout.EndArea();
         }

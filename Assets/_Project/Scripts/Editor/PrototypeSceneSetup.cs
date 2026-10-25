@@ -5,6 +5,7 @@ using UnityEngine;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Debugging;
 using TomorrowsCrime.Events;
+using TomorrowsCrime.Investigation;
 using TomorrowsCrime.NPC;
 using TomorrowsCrime.Player;
 using TomorrowsCrime.Simulation;
@@ -67,6 +68,48 @@ namespace TomorrowsCrime.EditorTools
             counter.transform.position = new Vector3(0f, 0.6f, 4f);
             counter.transform.localScale = new Vector3(6f, 1.2f, 1.2f);
 
+            // Create or load immutable evidence definitions
+            var keyEvidence = GetOrCreateEvidenceAsset(
+                "evidence_room102_keycard",
+                "Room 102 Keycard",
+                "Keys & Access",
+                "A magnetic hotel keycard stamped with 'Room 102 - Meridian House'.",
+                "Standard electronic guest keycard for Room 102. Found resting on the lobby table. Concierge is scheduled to retrieve it at 00:30 for turn-down inspection.",
+                "evt_concierge_retrieve_key"
+            );
+
+            var memoEvidence = GetOrCreateEvidenceAsset(
+                "evidence_concierge_schedule_memo",
+                "Concierge Duty Memo",
+                "Documents",
+                "A duty memo on the reception desk noting midnight staff routines.",
+                "Handwritten memo on Meridian House stationery: 'Concierge Night Shift: 00:00 - Midnight inspection begins. 00:30 - Retrieve spare Room 102 keycard from central lobby table. 00:35 - Inspect Room 102 suite.' Signed by the Head Concierge.",
+                "evt_concierge_retrieve_key"
+            );
+
+            var doorEvidence = GetOrCreateEvidenceAsset(
+                "evidence_room102_door",
+                "Room 102 Door & Lock",
+                "Locations",
+                "The entrance to Room 102 with an electronic deadbolt lock.",
+                "Heavy mahogany door leading into Room 102. An electronic card reader glows red, requiring the Room 102 keycard. Secured at the start of every midnight loop.",
+                "evt_concierge_unlock_door"
+            );
+
+            // Schedule Memo Evidence on Reception Desk
+            var memoGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            memoGo.name = "Prop_Reception_ScheduleMemo";
+            memoGo.transform.SetParent(envRoot.transform);
+            memoGo.transform.position = new Vector3(1.5f, 1.22f, 4f);
+            memoGo.transform.localScale = new Vector3(0.4f, 0.04f, 0.5f);
+            var memoRenderer = memoGo.GetComponent<Renderer>();
+            if (memoRenderer != null)
+            {
+                memoRenderer.sharedMaterial.color = new Color(0.92f, 0.90f, 0.82f);
+            }
+            var memoInspectable = memoGo.AddComponent<InspectableEvidence>();
+            memoInspectable.Definition = memoEvidence;
+
             // Lobby Columns
             CreateWall("Pillar_West", envRoot.transform, new Vector3(-5f, 2f, 0f), new Vector3(1f, 4f, 1f));
             CreateWall("Pillar_East", envRoot.transform, new Vector3(5f, 2f, 0f), new Vector3(1f, 4f, 1f));
@@ -85,6 +128,7 @@ namespace TomorrowsCrime.EditorTools
             keyGo.transform.position = new Vector3(0f, 0.95f, -3f);
             keyGo.transform.localScale = new Vector3(0.35f, 0.06f, 0.22f);
             var interactableKey = keyGo.AddComponent<InteractableKey>();
+            interactableKey.KeyEvidence = keyEvidence;
 
             // Give key a distinct golden/amber appearance
             var keyRenderer = keyGo.GetComponent<Renderer>();
@@ -115,6 +159,20 @@ namespace TomorrowsCrime.EditorTools
             soDoor.FindProperty("doorId").stringValue = "door_room_102";
             soDoor.FindProperty("doorDisplayName").stringValue = "Room 102 Door";
             soDoor.ApplyModifiedPropertiesWithoutUndo();
+
+            // Door Card Reader / Lockplate Evidence
+            var keypadGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            keypadGo.name = "Prop_Door102_CardReader";
+            keypadGo.transform.SetParent(doorRoot.transform);
+            keypadGo.transform.localPosition = new Vector3(0.85f, 1.3f, -0.05f);
+            keypadGo.transform.localScale = new Vector3(0.18f, 0.28f, 0.08f);
+            var keypadRenderer = keypadGo.GetComponent<Renderer>();
+            if (keypadRenderer != null)
+            {
+                keypadRenderer.sharedMaterial.color = new Color(0.25f, 0.28f, 0.32f);
+            }
+            var doorInspectable = keypadGo.AddComponent<InspectableEvidence>();
+            doorInspectable.Definition = doorEvidence;
 
             // 6. Navigation Surface & Waypoints
             var waypointsRoot = new GameObject("[Waypoints]");
@@ -199,6 +257,7 @@ namespace TomorrowsCrime.EditorTools
             var eventScheduler = simSystemsGo.AddComponent<CausalEventScheduler>();
             var scenarioController = simSystemsGo.AddComponent<KeyScenarioController>();
             simSystemsGo.AddComponent<SimulationDebugUI>();
+            simSystemsGo.AddComponent<NotebookUIController>();
 
             // Configure Scenario Controller
             var soScenario = new SerializedObject(scenarioController);
@@ -226,6 +285,39 @@ namespace TomorrowsCrime.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        private static EvidenceDefinition GetOrCreateEvidenceAsset(
+            string id,
+            string displayName,
+            string category,
+            string shortDesc,
+            string detailText,
+            string eventId = null)
+        {
+            string folder = "Assets/_Project/Data/Evidence";
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+                AssetDatabase.Refresh();
+            }
+
+            string assetPath = $"{folder}/{id}.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<EvidenceDefinition>(assetPath);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<EvidenceDefinition>();
+                asset.Initialize(id, displayName, shortDesc, detailText, category, eventId);
+                AssetDatabase.CreateAsset(asset, assetPath);
+                AssetDatabase.SaveAssets();
+            }
+            else
+            {
+                asset.Initialize(id, displayName, shortDesc, detailText, category, eventId);
+                EditorUtility.SetDirty(asset);
+            }
+
+            return asset;
         }
 
         private static void CreateWall(string name, Transform parent, Vector3 position, Vector3 scale)

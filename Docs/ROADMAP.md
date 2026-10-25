@@ -65,16 +65,24 @@ A phased, iterative plan for developing *Tomorrow's Crime*.
 
 ---
 
-## Phase 5: Investigation System & Persistent Notebook
-- [ ] Player evidence notebook UI persisting across loop resets.
-- [ ] Multi-trigger discovery pipeline (witnessing an event, inspecting a clue, overhearing dialog).
-- [ ] Hypothesis board: connecting Means, Motive, and Opportunity.
-- [ ] Validation logic for player deduction and mystery resolution.
+## Phase 5: Investigation System & Persistent Notebook (Completed)
+- [x] Immutable `EvidenceDefinition` ScriptableObjects and runtime `DiscoveredEvidenceRecord` structures.
+- [x] Separation of internal simulation truth from player-witnessed timeline (`PlayerObservationEntry`).
+- [x] Player hypotheses formulation system (`HypothesisEntry`) with CRUD support and supporting evidence linking.
+- [x] Freeform persistent general notes storage across loop resets.
+- [x] Persistent singleton knowledge service (`InvestigationKnowledgeService`) preserving data across resets without duplicate subscriptions.
+- [x] Interactive three-tab notebook IMGUI controller (`NotebookUIController`) toggled via `Tab` or `N`.
+- [x] Input blocking system (`PlayerController.SetInputBlocked`) pausing look/movement and unlocking cursor while live simulation runs.
+- [x] World evidence inspection component (`InspectableEvidence`) integrated with player raycast interaction and item prerequisites.
+- [x] Playable scenario evidence items: Room 102 Keycard, Concierge Duty Memo, Room 102 Door & Lock Card Reader.
+- [x] 14 new automated EditMode unit tests (57/57 total passing across full suite).
 
 ---
 
-## Phase 6: Polish, Hotel Graybox Expansion & Portfolio Presentation
-- [ ] Multi-room Meridian House layout (Lobby, Guest Rooms, Service Corridor, Manager's Office).
-- [ ] Audio design (clock ticking, ambient tension, loop transition sound cues).
+## Phase 6: Hotel Environment Expansion & Full Suspect Ensemble
+- [ ] Multi-room Meridian House layout expansion (Lobby, Guest Room 102 interior, Service Corridor, Manager's Office).
+- [ ] Suspect ensemble expansion: author definitions and routines for remaining suspects.
+- [ ] Additional physical clues, documents, and environmental manipulation devices (breakers, phone lines).
+- [ ] Audio design (clock ticking, ambient tension, loop transition stingers, footstep audio).
 - [ ] Visual polish (lighting, post-processing volume profiles, materials).
 - [ ] Automated integration test suite and final release build.
