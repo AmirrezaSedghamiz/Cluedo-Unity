@@ -1,4 +1,5 @@
 using UnityEngine;
+using TomorrowsCrime.Audio;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Settings;
 using TomorrowsCrime.Simulation;
@@ -8,16 +9,34 @@ namespace TomorrowsCrime.Player
 {
     /// <summary>
     /// Robust First-Person Player Controller using CharacterController.
-    /// Handles WASD movement, mouse look, sprinting, and implements
-    /// ILoopResetReceiver to restore initial spawn transform on loop turnover.
+    /// Features:
+    /// - Smooth WASD movement with walk, sprint, and crouch modes.
+    /// - Dynamic procedural head-bobbing based on movement speed.
+    /// - Distance-based footstep audio triggers that differentiate carpet vs hardwood.
+    /// - Contextual room location detection for atmospheric HUD navigation.
+    /// - Full loop turnover reset via ILoopResetReceiver.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour, ILoopResetReceiver
     {
         [Header("Locomotion")]
-        [SerializeField] private float walkSpeed = 4.0f;
-        [SerializeField] private float sprintSpeed = 6.5f;
+        [SerializeField] private float walkSpeed = 3.8f;
+        [SerializeField] private float sprintSpeed = 6.2f;
+        [SerializeField] private float crouchSpeed = 2.0f;
         [SerializeField] private float gravity = -15.0f;
+
+        [Header("Crouch Configuration")]
+        [SerializeField] private float standingHeight = 2.0f;
+        [SerializeField] private float crouchingHeight = 1.15f;
+        [SerializeField] private float standingEyeHeight = 1.75f;
+        [SerializeField] private float crouchingEyeHeight = 0.95f;
+        [SerializeField] private float crouchTransitionSpeed = 8f;
+
+        [Header("Head Bobbing")]
+        [SerializeField] private bool enableHeadBob = true;
+        [SerializeField] private float bobFrequency = 9.0f;
+        [SerializeField] private float bobHorizontalAmplitude = 0.035f;
+        [SerializeField] private float bobVerticalAmplitude = 0.045f;
 
         [Header("Mouse Look")]
         [SerializeField] private Transform cameraTransform;
@@ -31,11 +50,25 @@ namespace TomorrowsCrime.Player
         private float _verticalVelocity;
         private float _cameraPitch;
 
+        // Locomotion & Head Bob State
+        private bool _isCrouching = false;
+        private float _currentEyeHeight;
+        private float _bobTimer = 0f;
+        private float _footstepDistanceCounter = 0f;
+        private Vector3 _lastPosition;
+
+        // Current Room Detection
+        public string CurrentRoomName { get; private set; } = "Meridian House • Grand Lobby";
+
+        public bool IsCrouching => _isCrouching;
+
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
             _spawnPosition = transform.position;
             _spawnRotation = transform.rotation;
+            _lastPosition = transform.position;
+            _currentEyeHeight = standingEyeHeight;
 
             if (cameraTransform == null)
             {
@@ -77,7 +110,10 @@ namespace TomorrowsCrime.Player
             if (IsInputBlocked) return;
 
             HandleMouseLook();
+            HandleCrouch();
             HandleMovement();
+            HandleHeadBob();
+            UpdateRoomDetection();
             HandleCursorToggle();
         }
 
@@ -101,13 +137,28 @@ namespace TomorrowsCrime.Player
             }
         }
 
+        private void HandleCrouch()
+        {
+            if (Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.LeftControl))
+            {
+                _isCrouching = !_isCrouching;
+            }
+
+            float targetHeight = _isCrouching ? crouchingHeight : standingHeight;
+            float targetEyeHeight = _isCrouching ? crouchingEyeHeight : standingEyeHeight;
+
+            _characterController.height = Mathf.Lerp(_characterController.height, targetHeight, Time.deltaTime * crouchTransitionSpeed);
+            _characterController.center = new Vector3(0f, _characterController.height * 0.5f, 0f);
+            _currentEyeHeight = Mathf.Lerp(_currentEyeHeight, targetEyeHeight, Time.deltaTime * crouchTransitionSpeed);
+        }
+
         private void HandleMovement()
         {
             float horizontal = Input.GetAxisRaw("Horizontal");
             float vertical = Input.GetAxisRaw("Vertical");
 
-            bool isSprinting = Input.GetKey(KeyCode.LeftShift);
-            float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
+            bool isSprinting = !_isCrouching && Input.GetKey(KeyCode.LeftShift);
+            float currentSpeed = _isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
 
             Vector3 moveDirection = (transform.forward * vertical + transform.right * horizontal).normalized;
 
@@ -124,11 +175,96 @@ namespace TomorrowsCrime.Player
             velocity.y = _verticalVelocity;
 
             _characterController.Move(velocity * Time.deltaTime);
+
+            // Handle Procedural Footstep Sounds based on ground distance moved
+            Vector3 horizontalMove = transform.position - _lastPosition;
+            horizontalMove.y = 0f;
+            float distMoved = horizontalMove.magnitude;
+
+            if (_characterController.isGrounded && distMoved > 0.001f)
+            {
+                _footstepDistanceCounter += distMoved;
+                float stepThreshold = _isCrouching ? 2.1f : (isSprinting ? 1.4f : 1.8f);
+
+                if (_footstepDistanceCounter >= stepThreshold)
+                {
+                    _footstepDistanceCounter = 0f;
+                    bool isCarpet = CheckIsOnCarpet();
+                    AudioManager.Instance?.PlayFootstep(isSprinting, isCarpet);
+                }
+            }
+
+            _lastPosition = transform.position;
+        }
+
+        private bool CheckIsOnCarpet()
+        {
+            if (Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.down, out RaycastHit hit, 1.2f))
+            {
+                string hitName = hit.collider.gameObject.name.ToLower();
+                if (hitName.Contains("carpet") || hitName.Contains("runner") || hitName.Contains("rug"))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void HandleHeadBob()
+        {
+            if (!enableHeadBob || cameraTransform == null) return;
+
+            Vector3 horizontalMove = transform.position - _lastPosition;
+            horizontalMove.y = 0f;
+            bool isMoving = _characterController.isGrounded && (Input.GetAxisRaw("Horizontal") != 0f || Input.GetAxisRaw("Vertical") != 0f);
+
+            if (isMoving)
+            {
+                bool isSprinting = !_isCrouching && Input.GetKey(KeyCode.LeftShift);
+                float speedMultiplier = isSprinting ? 1.4f : (_isCrouching ? 0.7f : 1.0f);
+                _bobTimer += Time.deltaTime * bobFrequency * speedMultiplier;
+
+                float bobX = Mathf.Cos(_bobTimer * 0.5f) * bobHorizontalAmplitude * (isSprinting ? 1.3f : 1.0f);
+                float bobY = Mathf.Sin(_bobTimer) * bobVerticalAmplitude * (isSprinting ? 1.3f : 1.0f);
+
+                cameraTransform.localPosition = new Vector3(bobX, _currentEyeHeight + bobY, 0f);
+            }
+            else
+            {
+                _bobTimer = 0f;
+                cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, new Vector3(0f, _currentEyeHeight, 0f), Time.deltaTime * 6f);
+            }
+        }
+
+        private void UpdateRoomDetection()
+        {
+            Vector3 pos = transform.position;
+
+            // Simple robust spatial bounding classifier for Meridian House
+            if (pos.y > 3.0f)
+            {
+                // Upper Floor
+                if (pos.x < -6f && pos.z > 2f) CurrentRoomName = "Meridian House • Room 101 Suite";
+                else if (pos.x > 8f && pos.z > 2f) CurrentRoomName = "Meridian House • Room 102 Suite";
+                else if (pos.x < -6f && pos.z < -2f) CurrentRoomName = "Meridian House • Room 103 Suite";
+                else if (pos.x > 8f && pos.z < -2f) CurrentRoomName = "Meridian House • Housekeeping Storage";
+                else CurrentRoomName = "Meridian House • Upper Mezzanine Gallery";
+            }
+            else
+            {
+                // Ground Floor
+                if (pos.z > 3.0f && pos.z < 8.0f && Mathf.Abs(pos.x) < 5.0f) CurrentRoomName = "Meridian House • Front Reception Desk";
+                else if (pos.z >= 8.0f) CurrentRoomName = "Meridian House • Room 102 Grand Entrance";
+                else if (pos.x < -7f && pos.z > 5f) CurrentRoomName = "Meridian House • Kitchen & Pantry";
+                else if (pos.x < -7f) CurrentRoomName = "Meridian House • Dining Hall";
+                else if (pos.x > 7f && pos.z > 5f) CurrentRoomName = "Meridian House • Executive Staff Office";
+                else if (pos.x > 7f) CurrentRoomName = "Meridian House • Maintenance Utility Room";
+                else CurrentRoomName = "Meridian House • Central Marble Lobby";
+            }
         }
 
         private void HandleCursorToggle()
         {
-            // If UIManager is active, it handles Escape navigation centrally
             if (UIManager.Instance != null) return;
 
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -140,14 +276,18 @@ namespace TomorrowsCrime.Player
 
         public void OnLoopReset()
         {
-            // Temporarily disable CharacterController to avoid collision interference during teleportation
             _characterController.enabled = false;
             transform.position = _spawnPosition;
             transform.rotation = _spawnRotation;
+            _lastPosition = _spawnPosition;
             _cameraPitch = 0f;
+            _isCrouching = false;
+            _currentEyeHeight = standingEyeHeight;
+
             if (cameraTransform != null)
             {
                 cameraTransform.localRotation = Quaternion.identity;
+                cameraTransform.localPosition = new Vector3(0f, standingEyeHeight, 0f);
             }
             _verticalVelocity = 0f;
             _characterController.enabled = true;

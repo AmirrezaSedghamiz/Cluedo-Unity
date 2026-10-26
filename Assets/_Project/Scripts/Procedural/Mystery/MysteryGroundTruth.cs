@@ -75,8 +75,8 @@ namespace TomorrowsCrime.Procedural.Mystery
         public List<TimelineCausalEvent> CrimeTimeline = new();
         public List<EvidenceClueLink> RequiredEvidenceLinks = new();
         public List<string> ExoneratedSuspectIds = new();
-        public Dictionary<string, string> SuspectAlibis = new(); // SuspectId -> AlibiDescription
-        public Dictionary<string, string> MandatoryObjectPlacements = new(); // ObjectId -> RoomId
+        [System.NonSerialized] public Dictionary<string, string> SuspectAlibis = new(); // SuspectId -> AlibiDescription
+        [System.NonSerialized] public Dictionary<string, string> MandatoryObjectPlacements = new(); // ObjectId -> RoomId
 
         public override string ToString()
         {

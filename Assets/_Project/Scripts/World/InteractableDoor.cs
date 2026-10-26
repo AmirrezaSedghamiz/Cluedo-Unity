@@ -76,6 +76,7 @@ namespace TomorrowsCrime.World
             if (lockState == DoorLockState.Locked)
             {
                 Debug.Log($"[InteractableDoor] {doorDisplayName} is locked. Interaction cannot open it without key/unlock.");
+                TomorrowsCrime.Audio.AudioManager.Instance?.PlayLockClick();
                 return;
             }
 
@@ -97,6 +98,8 @@ namespace TomorrowsCrime.World
                 WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Unlocked);
             }
 
+            TomorrowsCrime.Audio.AudioManager.Instance?.PlayLockClick();
+            TomorrowsCrime.Audio.AudioManager.Instance?.PlayDoorCreak();
             Debug.Log($"[InteractableDoor] {doorDisplayName} unlocked and opened by scenario event.");
         }
 
@@ -107,6 +110,7 @@ namespace TomorrowsCrime.World
             {
                 doorHingeTransform.localRotation = openState == DoorOpenState.Open ? _openRotation : _closedRotation;
             }
+            TomorrowsCrime.Audio.AudioManager.Instance?.PlayDoorCreak();
         }
 
         public void OnLoopReset()

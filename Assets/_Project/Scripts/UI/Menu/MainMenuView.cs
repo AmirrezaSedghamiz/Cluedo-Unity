@@ -82,21 +82,40 @@ namespace TomorrowsCrime.UI.Menu
             float btnWidth = menuWidth - 80f;
             float btnX = x + 40f;
 
-            Rect btnStart = new Rect(btnX, contentY, btnWidth, 48f);
+            var session = FindAnyObjectByType<TomorrowsCrime.Procedural.Core.GameSessionManager>();
+            string seedCode = session != null ? session.ActiveSeedCode : "TC-1A2B3C4D";
+            int solvedCount = TomorrowsCrime.Investigation.CaseAccusationService.CasesSolvedCount;
+
+            Rect btnStart = new Rect(btnX, contentY, btnWidth, 44f);
             if (UITheme.DrawLuxeButton(btnStart, "BEGIN INVESTIGATION", isPrimary: true))
             {
+                if (session != null && session.CurrentInvestigation == null)
+                {
+                    session.StartNewProceduralCase();
+                }
                 uiMgr.SetState(UIState.InGameHUD);
             }
 
-            contentY += 58f;
-            Rect btnSettings = new Rect(btnX, contentY, btnWidth, 42f);
+            contentY += 50f;
+            Rect btnNewCase = new Rect(btnX, contentY, btnWidth, 38f);
+            if (UITheme.DrawLuxeButton(btnNewCase, $"START NEW CASE [RANDOM SEED]", isPrimary: false))
+            {
+                if (session != null)
+                {
+                    session.StartNewProceduralCase();
+                }
+                uiMgr.SetState(UIState.InGameHUD);
+            }
+
+            contentY += 46f;
+            Rect btnSettings = new Rect(btnX, contentY, btnWidth, 38f);
             if (UITheme.DrawLuxeButton(btnSettings, "SETTINGS & PREFERENCES", isPrimary: false))
             {
                 uiMgr.SetState(UIState.SettingsMenu);
             }
 
-            contentY += 52f;
-            Rect btnExit = new Rect(btnX, contentY, btnWidth, 42f);
+            contentY += 46f;
+            Rect btnExit = new Rect(btnX, contentY, btnWidth, 38f);
             if (UITheme.DrawLuxeButton(btnExit, "EXIT INCIDENT", isPrimary: false))
             {
                 Application.Quit();
@@ -105,7 +124,7 @@ namespace TomorrowsCrime.UI.Menu
 #endif
             }
 
-            // Footer Credits
+            // Footer Case & Seed Status
             Rect footerRect = new Rect(x, y + menuHeight - 34f, menuWidth, 24f);
             var footStyle = new GUIStyle(UITheme.BodyMutedStyle)
             {
@@ -113,7 +132,7 @@ namespace TomorrowsCrime.UI.Menu
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = UITheme.TextMuted }
             };
-            GUI.Label(footerRect, "MERIDIAN HOUSE DOSSIER • STEP 7 REBOOT • UNITY 6 LTS", footStyle);
+            GUI.Label(footerRect, $"MERIDIAN HOUSE • SEED: <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{seedCode}</color> • CASES SOLVED: <color=#{ColorUtility.ToHtmlStringRGB(UITheme.StatusAmber)}>{solvedCount}</color>", footStyle);
         }
     }
 }

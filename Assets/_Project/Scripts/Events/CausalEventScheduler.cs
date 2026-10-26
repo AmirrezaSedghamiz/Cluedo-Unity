@@ -69,6 +69,16 @@ namespace TomorrowsCrime.Events
             Engine.Tick(sim.Clock.ElapsedSeconds, world.Registry);
         }
 
+        public void ClearScheduledEvents()
+        {
+            Engine = new CausalEventEngine();
+        }
+
+        public void ScheduleEvent(EventDefinition def)
+        {
+            RegisterDefinition(def);
+        }
+
         public void RegisterDefinition(EventDefinition def)
         {
             if (def != null && Engine != null)

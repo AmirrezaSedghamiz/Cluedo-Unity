@@ -14,10 +14,11 @@ namespace TomorrowsCrime.NPC
     /// world-state queries, causal event engine integration, and loop resets.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent))]
-    public class NPCController : MonoBehaviour, ILoopResetReceiver
+    public class NPCController : MonoBehaviour, IInteractable, ILoopResetReceiver
     {
         [Header("Configuration")]
         [SerializeField] private NPCDefinition definition;
+        [SerializeField] private TomorrowsCrime.Procedural.NPCs.NPCProfile profile;
         [SerializeField] private LayerMask obstructionMask;
 
         [Header("Waypoints")]
@@ -38,10 +39,56 @@ namespace TomorrowsCrime.NPC
         private ScheduleActivity _lastEvaluatedActivity;
         private float _lastPathAttemptTime = -10f;
         private bool _isActionHandledForCurrentActivity;
+        private bool _isInConversation = false;
 
         public NPCDefinition Definition => definition;
+        public TomorrowsCrime.Procedural.NPCs.NPCProfile Profile
+        {
+            get => profile;
+            set => profile = value;
+        }
         public NPCRuntimeState RuntimeState => _runtimeState;
         public NavMeshAgent Agent => _agent;
+
+        public string CharacterDisplayName => profile != null ? profile.DisplayName : (definition != null ? definition.DisplayName : "Concierge Pierre");
+        public string CharacterRole => profile != null ? profile.Role.ToString() : "Concierge";
+
+        // IInteractable Implementation
+        public string InteractionPrompt => $"Question {CharacterDisplayName} [E]";
+        public bool CanInteract => true;
+
+        public void Interact(GameObject interactor)
+        {
+            if (interactor != null)
+            {
+                Vector3 lookDir = interactor.transform.position - transform.position;
+                lookDir.y = 0f;
+                if (lookDir.sqrMagnitude > 0.001f)
+                {
+                    transform.rotation = Quaternion.LookRotation(lookDir);
+                }
+            }
+
+            _isInConversation = true;
+            if (_agent != null && _agent.isOnNavMesh && !_agent.isStopped)
+            {
+                _agent.isStopped = true;
+            }
+
+            if (TomorrowsCrime.UI.Core.UIManager.Instance != null)
+            {
+                TomorrowsCrime.UI.Core.UIManager.Instance.ShowDialogueModal(this);
+            }
+        }
+
+        public void EndConversation()
+        {
+            _isInConversation = false;
+            if (_agent != null && _agent.isOnNavMesh && SimulationManager.Instance != null && !SimulationManager.Instance.IsPaused)
+            {
+                _agent.isStopped = false;
+            }
+        }
 
         private void Awake()
         {
@@ -70,8 +117,8 @@ namespace TomorrowsCrime.NPC
 
             var clock = SimulationManager.Instance.Clock;
 
-            // Pause locomotion when simulation is paused
-            if (clock.IsPaused)
+            // Pause locomotion when in conversation or simulation is paused
+            if (_isInConversation || clock.IsPaused)
             {
                 if (_agent != null && _agent.isOnNavMesh && !_agent.isStopped)
                 {
@@ -384,6 +431,7 @@ namespace TomorrowsCrime.NPC
 
         public void OnLoopReset()
         {
+            _isInConversation = false;
             StopAgent();
 
             // Restore baseline transform

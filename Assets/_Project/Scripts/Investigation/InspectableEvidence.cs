@@ -104,6 +104,11 @@ namespace TomorrowsCrime.Investigation
             if (isNew)
             {
                 Debug.Log($"[InspectableEvidence] NEW EVIDENCE DISCOVERED: '{evidenceDefinition.DisplayName}' [{evidenceDefinition.EvidenceId}] at {simTime:F1}s (Loop {loop}).");
+                TomorrowsCrime.Audio.AudioManager.Instance?.PlayEvidenceDiscovery();
+            }
+            else
+            {
+                TomorrowsCrime.Audio.AudioManager.Instance?.PlayPaperRustle();
             }
 
             if (UIManager.Instance != null)

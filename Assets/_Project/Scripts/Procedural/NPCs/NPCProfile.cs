@@ -41,7 +41,7 @@ namespace TomorrowsCrime.Procedural.NPCs
         public int Age;
         public PersonalityProfile Personality = new();
         public string AssignedRoomId; // Bedroom or office assignment
-        public HashSet<string> PermittedRoomIds = new();
+        [System.NonSerialized] public HashSet<string> PermittedRoomIds = new();
         public Vector3 BaselinePosition;
         public Vector3 BaselineRotation;
         public string ModelPrefabPath;

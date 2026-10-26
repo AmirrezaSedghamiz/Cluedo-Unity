@@ -398,6 +398,9 @@ namespace TomorrowsCrime.EditorTools
             var scenarioController = simSystemsGo.AddComponent<KeyScenarioController>();
             simSystemsGo.AddComponent<SimulationDebugUI>();
             simSystemsGo.AddComponent<NotebookUIController>();
+            simSystemsGo.AddComponent<TomorrowsCrime.Audio.AudioManager>();
+            simSystemsGo.AddComponent<TomorrowsCrime.Investigation.CaseAccusationService>();
+            simSystemsGo.AddComponent<TomorrowsCrime.Procedural.Core.GameSessionManager>();
 
             var soScenario = new SerializedObject(scenarioController);
             soScenario.FindProperty("retrieveKeyTime").floatValue = 30.0f;
@@ -413,6 +416,8 @@ namespace TomorrowsCrime.EditorTools
             uiRootGo.AddComponent<GameHUDView>();
             uiRootGo.AddComponent<InvestigationWorkspaceView>();
             uiRootGo.AddComponent<EvidenceInspectionModalView>();
+            uiRootGo.AddComponent<TomorrowsCrime.UI.Modals.NPCDialogueModalView>();
+            uiRootGo.AddComponent<TomorrowsCrime.UI.Modals.CaseResolutionModalView>();
             uiRootGo.AddComponent<PauseMenuView>();
             uiRootGo.AddComponent<SettingsMenuView>();
             uiRootGo.AddComponent<MainMenuView>();

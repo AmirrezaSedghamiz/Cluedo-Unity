@@ -21,11 +21,13 @@ namespace TomorrowsCrime.UI.HUD
     public class GameHUDView : MonoBehaviour
     {
         private PlayerInteraction _playerInteraction;
+        private PlayerController _playerController;
         private SimulationManager _simulationManager;
 
         private void Start()
         {
             _playerInteraction = FindAnyObjectByType<PlayerInteraction>();
+            _playerController = FindAnyObjectByType<PlayerController>();
             _simulationManager = SimulationManager.Instance;
         }
 
@@ -38,6 +40,7 @@ namespace TomorrowsCrime.UI.HUD
             }
 
             DrawTimeLoopChronometer();
+            DrawRoomLocationBanner();
             DrawInteractionReticle();
             DrawNotificationToasts();
             DrawDossierAccessPill();
@@ -169,6 +172,42 @@ namespace TomorrowsCrime.UI.HUD
 
             string text = $"<color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>[TAB / N]</color> CASE DOSSIER • <color=#{ColorUtility.ToHtmlStringRGB(UITheme.StatusAmber)}>{evidenceCount} CLUES</color>";
             GUI.Label(new Rect(x + 40f, y + 2f, width - 44f, height - 4f), text, pillStyle);
+        }
+
+        private void DrawRoomLocationBanner()
+        {
+            if (_playerController == null) _playerController = FindAnyObjectByType<PlayerController>();
+            if (_playerController == null) return;
+
+            string room = _playerController.CurrentRoomName;
+            if (!string.IsNullOrEmpty(room))
+            {
+                float width = 380f;
+                float height = 24f;
+                float x = (Screen.width - width) * 0.5f;
+                float y = 82f;
+
+                var style = new GUIStyle(UITheme.BodyMutedStyle)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 11,
+                    fontStyle = FontStyle.Bold,
+                    normal = { textColor = UITheme.BrassHighlight }
+                };
+
+                GUI.Label(new Rect(x, y, width, height), $"<color=#{ColorUtility.ToHtmlStringRGB(UITheme.PeacockTeal)}>LOCATION:</color> {room.ToUpper()}", style);
+            }
+
+            if (_playerController.IsCrouching)
+            {
+                var crouchStyle = new GUIStyle(UITheme.BodyStyle)
+                {
+                    alignment = TextAnchor.MiddleLeft,
+                    fontSize = 11,
+                    normal = { textColor = UITheme.StatusAmber }
+                };
+                GUI.Label(new Rect(24f, Screen.height - 40f, 180f, 24f), "● CROUCHING [C / CTRL]", crouchStyle);
+            }
         }
     }
 }

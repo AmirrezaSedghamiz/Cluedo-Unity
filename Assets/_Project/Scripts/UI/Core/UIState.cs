@@ -5,6 +5,8 @@ namespace TomorrowsCrime.UI.Core
         InGameHUD,
         InvestigationNotebook,
         EvidenceDetailModal,
+        NPCDialogueModal,
+        CaseResolutionModal,
         PauseMenu,
         SettingsMenu,
         MainMenu,

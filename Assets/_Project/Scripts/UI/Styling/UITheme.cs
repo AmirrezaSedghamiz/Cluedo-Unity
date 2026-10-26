@@ -48,6 +48,7 @@ namespace TomorrowsCrime.UI.Styling
         public static Color MutedBrass => PolishedBrass;
         public static Color BrassHover => BrassHighlight;
         public static Color DesaturatedTeal => PeacockTeal;
+        public static Color TieBurgundy => BordeauxCrimson;
         public static Color RestrainedAmber => StatusAmber;
         public static Color MutedRed => StatusDanger;
         public static Color TextPrimary => TextIvory;

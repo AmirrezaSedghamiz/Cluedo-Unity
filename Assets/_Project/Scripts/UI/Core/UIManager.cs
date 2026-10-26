@@ -41,10 +41,12 @@ namespace TomorrowsCrime.UI.Core
         private UIState _previousState = UIState.InGameHUD;
         private PlayerController _playerController;
         private EvidenceDefinition _currentInspectedEvidence;
+        private TomorrowsCrime.NPC.NPCController _currentInteractingNpc;
         private readonly List<NotificationToast> _activeToasts = new();
 
         public IReadOnlyList<NotificationToast> ActiveToasts => _activeToasts.AsReadOnly();
         public EvidenceDefinition CurrentInspectedEvidence => _currentInspectedEvidence;
+        public TomorrowsCrime.NPC.NPCController CurrentInteractingNpc => _currentInteractingNpc;
 
         private void Awake()
         {
@@ -186,6 +188,14 @@ namespace TomorrowsCrime.UI.Core
                     CloseModal();
                     break;
 
+                case UIState.NPCDialogueModal:
+                    CloseModal();
+                    break;
+
+                case UIState.CaseResolutionModal:
+                    CloseModal();
+                    break;
+
                 case UIState.LoopSummaryOverlay:
                     SetState(UIState.InGameHUD);
                     break;
@@ -226,6 +236,11 @@ namespace TomorrowsCrime.UI.Core
                 }
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+
+                if (newState == UIState.InvestigationNotebook || newState == UIState.EvidenceDetailModal)
+                {
+                    TomorrowsCrime.Audio.AudioManager.Instance?.PlayPaperRustle();
+                }
             }
 
             // 2. Simulation Pause Management
@@ -252,8 +267,32 @@ namespace TomorrowsCrime.UI.Core
             SetState(UIState.EvidenceDetailModal);
         }
 
+        public void ShowDialogueModal(TomorrowsCrime.NPC.NPCController npc)
+        {
+            if (npc == null) return;
+            _currentInteractingNpc = npc;
+            SetState(UIState.NPCDialogueModal);
+            TomorrowsCrime.Audio.AudioManager.Instance?.PlayPaperRustle();
+        }
+
+        public void ShowCaseResolutionModal(TomorrowsCrime.Investigation.AccusationResult result)
+        {
+            if (result == null) return;
+            var resolutionView = FindAnyObjectByType<TomorrowsCrime.UI.Modals.CaseResolutionModalView>();
+            if (resolutionView != null)
+            {
+                resolutionView.SetResult(result);
+            }
+            SetState(UIState.CaseResolutionModal);
+        }
+
         public void CloseModal()
         {
+            if (_currentInteractingNpc != null)
+            {
+                _currentInteractingNpc.EndConversation();
+                _currentInteractingNpc = null;
+            }
             _currentInspectedEvidence = null;
             SetState(_previousState == UIState.InvestigationNotebook ? UIState.InvestigationNotebook : UIState.InGameHUD);
         }

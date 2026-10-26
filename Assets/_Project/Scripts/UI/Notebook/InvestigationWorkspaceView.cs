@@ -16,7 +16,8 @@ namespace TomorrowsCrime.UI.Notebook
         LoopTimeline,
         DeductionBoard,
         HypothesisManager,
-        FieldNotes
+        FieldNotes,
+        AccusationBoard
     }
 
     /// <summary>
@@ -61,6 +62,19 @@ namespace TomorrowsCrime.UI.Notebook
         private readonly HashSet<string> _selectedSupportingEvidence = new();
         private bool _isEditingHypothesis = false;
         private string _editingHypoId = "";
+
+        // Accusation authoring state
+        private string _accusedSuspect = "Concierge Pierre";
+        private string _chosenWeapon = "Heavy Meat Cleaver";
+        private string _chosenRoom = "Room 102 Suite";
+        private string _chosenMotive = "Blackmail Silence";
+        private Vector2 _accusationScroll = Vector2.zero;
+
+        public void SelectAccusationSuspect(string suspectName)
+        {
+            _accusedSuspect = suspectName;
+            activeSection = NotebookSection.AccusationBoard;
+        }
 
         private void OnGUI()
         {
@@ -149,6 +163,8 @@ namespace TomorrowsCrime.UI.Notebook
             DrawSectionTab("III. Deduction Board", NotebookSection.DeductionBoard);
             DrawSectionTab("IV. Case Hypotheses", NotebookSection.HypothesisManager);
             DrawSectionTab("V. Field Scratchpad", NotebookSection.FieldNotes);
+            GUILayout.Space(8f);
+            DrawSectionTab("VI. SOLVE CASE", NotebookSection.AccusationBoard);
 
             GUILayout.FlexibleSpace();
 
@@ -178,7 +194,11 @@ namespace TomorrowsCrime.UI.Notebook
 
             if (GUILayout.Button(label, style, GUILayout.Height(38f)))
             {
-                activeSection = section;
+                if (activeSection != section)
+                {
+                    activeSection = section;
+                    TomorrowsCrime.Audio.AudioManager.Instance?.PlayPaperRustle();
+                }
                 if (UIManager.Instance != null) UIManager.Instance.IsTypingInField = false;
             }
             GUILayout.Space(4f);
@@ -211,6 +231,10 @@ namespace TomorrowsCrime.UI.Notebook
 
                 case NotebookSection.FieldNotes:
                     DrawFieldNotes(contentRect);
+                    break;
+
+                case NotebookSection.AccusationBoard:
+                    DrawAccusationBoard(contentRect);
                     break;
             }
         }
@@ -899,6 +923,115 @@ namespace TomorrowsCrime.UI.Notebook
             GUILayout.Label(description, UITheme.BodyStyle);
             GUILayout.Space(20f);
             GUILayout.EndVertical();
+        }
+
+        // --- SECTION 6: ACCUSATION / SOLVE CASE ---
+        private void DrawAccusationBoard(Rect rect)
+        {
+            GUILayout.BeginArea(rect);
+
+            GUILayout.Label("FORMAL CASE DEDUCTION & ACCUSATION", UITheme.HeaderStyle);
+            GUILayout.Space(4f);
+            GUILayout.Label("Synthesize your investigation. Identify the perpetrator, murder weapon, crime scene, and motive.", UITheme.BodyMutedStyle);
+            GUILayout.Space(8f);
+
+            var accusationService = CaseAccusationService.Instance;
+            var suspects = accusationService != null ? accusationService.GetKnownSuspects() : new List<string> { "Concierge Pierre", "Celeste Moreau", "Chef Marcel" };
+            var weapons = accusationService != null ? accusationService.GetKnownWeapons() : new List<string> { "Heavy Meat Cleaver", "Heavy Brass Candlestick", "Poison Vial" };
+            var rooms = accusationService != null ? accusationService.GetKnownCrimeScenes() : new List<string> { "Room 102 Suite", "Kitchen & Pantry", "Staff Office" };
+            var motives = accusationService != null ? accusationService.GetKnownMotives() : new List<string> { "Blackmail Silence", "Financial Embezzlement", "Revenge & Spite" };
+
+            _accusationScroll = GUILayout.BeginScrollView(_accusationScroll, GUILayout.Height(rect.height - 130f));
+
+            // Card 1: Accused Culprit
+            GUILayout.BeginVertical(UITheme.CardStyle);
+            GUILayout.Label($"<b>1. ACCUSED PERPETRATOR:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_accusedSuspect}</color>", UITheme.SubHeaderStyle);
+            GUILayout.Space(6f);
+            GUILayout.BeginHorizontal();
+            foreach (var s in suspects)
+            {
+                bool isSel = _accusedSuspect == s;
+                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+                if (GUILayout.Button(s, bStyle, GUILayout.Height(30f)))
+                {
+                    _accusedSuspect = s;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+
+            GUILayout.Space(8f);
+
+            // Card 2: Murder Weapon
+            GUILayout.BeginVertical(UITheme.CardStyle);
+            GUILayout.Label($"<b>2. MURDER WEAPON:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_chosenWeapon}</color>", UITheme.SubHeaderStyle);
+            GUILayout.Space(6f);
+            GUILayout.BeginHorizontal();
+            foreach (var w in weapons)
+            {
+                bool isSel = _chosenWeapon == w;
+                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+                if (GUILayout.Button(w, bStyle, GUILayout.Height(30f)))
+                {
+                    _chosenWeapon = w;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+
+            GUILayout.Space(8f);
+
+            // Card 3: Crime Scene Room
+            GUILayout.BeginVertical(UITheme.CardStyle);
+            GUILayout.Label($"<b>3. CRIME SCENE LOCATION:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_chosenRoom}</color>", UITheme.SubHeaderStyle);
+            GUILayout.Space(6f);
+            GUILayout.BeginHorizontal();
+            foreach (var rm in rooms)
+            {
+                bool isSel = _chosenRoom == rm;
+                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+                if (GUILayout.Button(rm, bStyle, GUILayout.Height(30f)))
+                {
+                    _chosenRoom = rm;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+
+            GUILayout.Space(8f);
+
+            // Card 4: Motive
+            GUILayout.BeginVertical(UITheme.CardStyle);
+            GUILayout.Label($"<b>4. UNDERLYING MOTIVE:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_chosenMotive}</color>", UITheme.SubHeaderStyle);
+            GUILayout.Space(6f);
+            GUILayout.BeginHorizontal();
+            foreach (var m in motives)
+            {
+                bool isSel = _chosenMotive == m;
+                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+                if (GUILayout.Button(m, bStyle, GUILayout.Height(30f)))
+                {
+                    _chosenMotive = m;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+
+            GUILayout.EndScrollView();
+
+            GUILayout.Space(10f);
+
+            // Big Climax Submit Button
+            if (UITheme.DrawLuxeButton(new Rect(0, rect.height - 48f, rect.width, 44f), "CONFRONT SUSPECT & SUBMIT FINAL DEDUCTION", isPrimary: true))
+            {
+                if (CaseAccusationService.Instance != null)
+                {
+                    var result = CaseAccusationService.Instance.FormulateAccusation(_accusedSuspect, _chosenWeapon, _chosenRoom, _chosenMotive);
+                    UIManager.Instance?.ShowCaseResolutionModal(result);
+                }
+            }
+
+            GUILayout.EndArea();
         }
     }
 }
