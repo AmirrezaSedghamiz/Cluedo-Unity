@@ -137,12 +137,38 @@ namespace TomorrowsCrime.EditorTools
             chandelierLight.intensity = 3.2f;
             chandelierLight.range = 18f;
 
-            // 7. Reception Desk & Banker's Lamp
+            // 7. Reception Desk, Banker's Lamp & Solid Key Cubbies / Staff Lockers
             var deskPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
             var desk = SpawnProp(deskPrefab, "Reception_Desk", envRoot.transform, new Vector3(0f, 0f, 4.5f), Vector3.zero, Vector3.one, mats);
+
+            // Front Mahogany Counter Solid Box Collider (Check-in side)
             var deskCollider = desk.AddComponent<BoxCollider>();
             deskCollider.center = new Vector3(0f, 0.55f, 0f);
             deskCollider.size = new Vector3(5.4f, 1.1f, 1.4f);
+            deskCollider.isTrigger = false;
+
+            // Rear Key Cubbies & Staff Lockers Solid Collider (Blocks player and NPC navigation)
+            var lockersGo = new GameObject("Reception_Lockers_Unit");
+            lockersGo.transform.SetParent(desk.transform);
+            lockersGo.transform.localPosition = Vector3.zero;
+            lockersGo.transform.localRotation = Quaternion.identity;
+
+            var lockersCollider = lockersGo.AddComponent<BoxCollider>();
+            lockersCollider.center = new Vector3(0f, 1.15f, -1.77f);
+            lockersCollider.size = new Vector3(4.25f, 2.30f, 0.45f);
+            lockersCollider.isTrigger = false;
+
+            // Inspectable Evidence for Key Cubbies & Staff Lockers
+            var lockersEvidence = GetOrCreateEvidenceAsset(
+                "evidence_reception_lockers",
+                "Key Cubbies & Staff Lockers",
+                "Locations",
+                "A grand mahogany cabinet of room key pigeonholes and brass-locked staff cubbies behind the reception counter.",
+                "Meridian House reception key rack and staff storage lockers. Compartments are numbered for rooms 101 through 103. Slot 101 contains a brass room key; slot 102 is vacant; slot 103 contains sealed guest mail. Lower staff lockers are secured with heavy brass padlocks.",
+                "evt_concierge_retrieve_key"
+            );
+            var lockersInspectable = lockersGo.AddComponent<InspectableEvidence>();
+            lockersInspectable.Definition = lockersEvidence;
 
             // Banker's Desk Lamp with glowing emerald shade
             var bankerLampPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/Prop_BankerLamp.obj");
@@ -408,6 +434,21 @@ namespace TomorrowsCrime.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        public static void BuildPrototypeSceneBatchmode()
+        {
+            try
+            {
+                BuildPrototypeScene();
+                Debug.Log("[Tomorrow's Crime] BuildPrototypeSceneBatchmode completed successfully.");
+                EditorApplication.Exit(0);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[Tomorrow's Crime] BuildPrototypeSceneBatchmode failed: {ex}");
+                EditorApplication.Exit(1);
+            }
         }
 
         private static GameObject SpawnProp(GameObject prefab, string name, Transform parent,

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26ccc26976028f741a1aab798f82a696, type: 3}
+  m_Name: evidence_reception_lockers
+  m_EditorClassIdentifier: TomorrowsCrime.Runtime::TomorrowsCrime.Investigation.EvidenceDefinition
+  evidenceId: evidence_reception_lockers
+  displayName: Key Cubbies & Staff Lockers
+  category: Locations
+  shortDescription: A grand mahogany cabinet of room key pigeonholes and brass-locked staff cubbies behind the reception counter.
+  detailedInspectionText: Meridian House reception key rack and staff storage lockers. Compartments are numbered for rooms 101 through 103. Slot 101 contains a brass room key; slot 102 is vacant; slot 103 contains sealed guest mail. Lower staff lockers are secured with heavy brass padlocks.
+  relatedEventId: evt_concierge_retrieve_key
+  relatedEvidenceIds: []

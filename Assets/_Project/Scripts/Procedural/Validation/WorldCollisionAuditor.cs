@@ -85,6 +85,30 @@ namespace TomorrowsCrime.Procedural.Validation
                 }
             }
 
+            // Verify reception desk & lockers compound collision integrity if present
+            var allTransforms = root.GetComponentsInChildren<Transform>(true);
+            foreach (var t in allTransforms)
+            {
+                if (t.name.Contains("Reception_Desk") || t.name.Contains("ReceptionDesk"))
+                {
+                    var deskCols = t.GetComponentsInChildren<Collider>(true);
+                    bool hasSolidDeskCol = false;
+                    bool hasSolidLockersCol = false;
+                    foreach (var c in deskCols)
+                    {
+                        if (!c.isTrigger)
+                        {
+                            if (c.bounds.size.x >= 3.5f && c.bounds.size.y >= 1.8f) hasSolidLockersCol = true;
+                            if (c.bounds.size.x >= 4.5f && c.bounds.size.y <= 1.5f) hasSolidDeskCol = true;
+                        }
+                    }
+                    if (!hasSolidDeskCol || !hasSolidLockersCol)
+                    {
+                        report.Warnings.Add($"Reception desk '{t.name}' must have compound colliders covering both counter and lockers (Counter: {hasSolidDeskCol}, Lockers: {hasSolidLockersCol}).");
+                    }
+                }
+            }
+
             // Verify player CharacterController configuration if present
             var characterControllers = root.GetComponentsInChildren<CharacterController>(true);
             foreach (var cc in characterControllers)

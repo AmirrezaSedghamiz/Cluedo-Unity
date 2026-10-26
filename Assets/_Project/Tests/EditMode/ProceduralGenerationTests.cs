@@ -307,5 +307,66 @@ namespace TomorrowsCrime.Tests.EditMode
             Assert.AreEqual(0, report.FailedCount);
             Assert.Less(report.AverageMsPerSeed, 10.0, "Average generation time per seed must be under 10ms for fast execution.");
         }
+
+        [Test]
+        public void Collision_ReceptionDeskAndLockersHaveSolidCompoundCollision()
+        {
+            var deskPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
+            Assert.IsNotNull(deskPrefab, "Desk prefab must be found in Assets.");
+
+            var testRoot = new GameObject("TestRoot_Desk");
+            var desk = Object.Instantiate(deskPrefab, testRoot.transform);
+            desk.name = "Reception_Desk";
+            desk.transform.position = new Vector3(0f, 0f, 4.5f);
+
+            // Front counter collider
+            var counterCol = desk.AddComponent<BoxCollider>();
+            counterCol.center = new Vector3(0f, 0.55f, 0f);
+            counterCol.size = new Vector3(5.4f, 1.1f, 1.4f);
+            counterCol.isTrigger = false;
+
+            // Rear lockers unit collider
+            var lockersGo = new GameObject("Reception_Lockers_Unit");
+            lockersGo.transform.SetParent(desk.transform);
+            lockersGo.transform.localPosition = Vector3.zero;
+
+            var lockersCol = lockersGo.AddComponent<BoxCollider>();
+            lockersCol.center = new Vector3(0f, 1.15f, -1.77f);
+            lockersCol.size = new Vector3(4.25f, 2.30f, 0.45f);
+            lockersCol.isTrigger = false;
+
+            // Verify both colliders are solid
+            Assert.IsFalse(counterCol.isTrigger, "Counter collider must be solid non-trigger.");
+            Assert.IsFalse(lockersCol.isTrigger, "Lockers collider must be solid non-trigger.");
+
+            // Verify physical dimensions cover the lockers mesh
+            Assert.GreaterOrEqual(lockersCol.size.x, 4.0f, "Lockers collider width must cover key cubbies.");
+            Assert.GreaterOrEqual(lockersCol.size.y, 2.0f, "Lockers collider height must block character height.");
+
+            // Verify audit passes
+            var audit = WorldCollisionAuditor.AuditEnvironment(testRoot);
+            Assert.IsTrue(audit.IsValid, "Audit must pass on compound reception desk.");
+            Assert.AreEqual(2, audit.SolidCollidersCount, "Must have 2 solid colliders (counter + lockers).");
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Collision_HotelBuilderGeneratesSolidFurnitureAndLockers()
+        {
+            var testRoot = new GameObject("TestRoot_Hotel");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            Assert.IsNotNull(hotel, "Hotel environment root must not be null.");
+
+            var audit = WorldCollisionAuditor.AuditEnvironment(testRoot);
+            Assert.IsTrue(audit.IsValid, $"Hotel environment collision must be valid: {audit}");
+            Assert.Greater(audit.SolidCollidersCount, 30, "Hotel environment must contain solid walls, floors, ceilings, doors, and furniture.");
+            Assert.AreEqual(0, audit.Errors.Count, "Hotel environment must have 0 collision errors.");
+
+            Object.DestroyImmediate(testRoot);
+        }
     }
 }

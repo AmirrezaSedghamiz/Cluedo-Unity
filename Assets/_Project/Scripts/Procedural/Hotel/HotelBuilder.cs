@@ -32,7 +32,10 @@ namespace TomorrowsCrime.Procedural.Hotel
             // 3. Instantiate Doors with synchronized collision
             BuildDoors(hotelRoot.transform, rooms, mats);
 
-            // 4. Run Collision Audit
+            // 4. Build Architectural Furniture & Solid Storage Units (Desks, Lockers, Wardrobes, Cabinets)
+            BuildRoomFurniture(hotelRoot.transform, rooms, mats);
+
+            // 5. Run Collision Audit
             var audit = WorldCollisionAuditor.AuditEnvironment(hotelRoot);
             Debug.Log($"[HotelBuilder] Environment build complete. {audit}");
 
@@ -247,7 +250,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                         doorLeaf.transform.localScale = new Vector3(1.3f, 2.8f, 0.15f);
                     }
 
-                    var leafCol = doorLeaf.GetComponent<BoxCollider>() ?? doorLeaf.AddComponent<BoxCollider>();
+                    var leafCol = doorLeaf.GetComponent<BoxCollider>();
+                    if (leafCol == null) leafCol = doorLeaf.AddComponent<BoxCollider>();
                     leafCol.center = new Vector3(0f, 1.4f, 0f);
                     leafCol.size = new Vector3(1.4f, 2.8f, 0.25f);
                     leafCol.isTrigger = false; // Solid physical obstacle when closed!
@@ -262,6 +266,120 @@ namespace TomorrowsCrime.Procedural.Hotel
                     soDoor.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
+        }
+
+        private static void BuildRoomFurniture(Transform parent, List<RoomDefinition> rooms, Dictionary<string, Material> mats)
+        {
+            var furnitureRoot = new GameObject("Hotel_SolidFurniture");
+            furnitureRoot.transform.SetParent(parent);
+
+            Material mahoganyMat = null;
+            Material walnutMat = null;
+            if (mats != null)
+            {
+                mats.TryGetValue("WoodMahogany", out mahoganyMat);
+                mats.TryGetValue("WoodWalnut", out walnutMat);
+            }
+
+            var deskObjPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
+
+            foreach (var room in rooms)
+            {
+                if (room.Type == RoomType.Reception)
+                {
+                    // Reception Desk & Solid Lockers
+                    var deskRoot = new GameObject("Reception_Desk_Compound");
+                    deskRoot.transform.SetParent(furnitureRoot.transform);
+                    deskRoot.transform.position = new Vector3(0f, 0f, 10.5f);
+
+                    GameObject deskVisual;
+                    if (deskObjPrefab != null)
+                    {
+                        deskVisual = Object.Instantiate(deskObjPrefab, deskRoot.transform);
+                        deskVisual.name = "Model";
+                        deskVisual.transform.localPosition = Vector3.zero;
+                        deskVisual.transform.localRotation = Quaternion.identity;
+                    }
+                    else
+                    {
+                        deskVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        deskVisual.name = "Counter_Primitive";
+                        deskVisual.transform.SetParent(deskRoot.transform);
+                        deskVisual.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+                        deskVisual.transform.localScale = new Vector3(5.4f, 1.1f, 1.4f);
+                        var r = deskVisual.GetComponent<Renderer>();
+                        if (r != null && mahoganyMat != null) r.sharedMaterial = mahoganyMat;
+                    }
+
+                    // Front Counter Solid Box Collider
+                    var counterCol = deskRoot.AddComponent<BoxCollider>();
+                    counterCol.center = new Vector3(0f, 0.55f, 0f);
+                    counterCol.size = new Vector3(5.4f, 1.1f, 1.4f);
+                    counterCol.isTrigger = false;
+
+                    // Rear Key Cubbies & Staff Lockers Solid Collider
+                    var lockersGo = new GameObject("Reception_Lockers_Unit");
+                    lockersGo.transform.SetParent(deskRoot.transform);
+                    lockersGo.transform.localPosition = Vector3.zero;
+                    lockersGo.transform.localRotation = Quaternion.identity;
+
+                    var lockersCol = lockersGo.AddComponent<BoxCollider>();
+                    lockersCol.center = new Vector3(0f, 1.15f, -1.77f);
+                    lockersCol.size = new Vector3(4.25f, 2.30f, 0.45f);
+                    lockersCol.isTrigger = false;
+                }
+                else if (room.Type == RoomType.StaffOffice)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(24f, 0f, 8f), new Vector3(1.4f, 2.2f, 0.6f),
+                        walnutMat, "Office_FilingCabinet");
+                }
+                else if (room.Type == RoomType.Kitchen)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, 0f, 11.0f), new Vector3(2.0f, 2.4f, 0.6f),
+                        mahoganyMat, "Kitchen_PantryShelves");
+                }
+                else if (room.Type == RoomType.UtilityRoom)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(21f, 0f, -9.5f), new Vector3(1.8f, 2.2f, 0.6f),
+                        mahoganyMat, "Utility_MaintenanceRack");
+                }
+                else if (room.Type == RoomType.HousekeepingStorage)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(18f, 5f, -6f), new Vector3(2.2f, 2.4f, 0.6f),
+                        walnutMat, "Housekeeping_LinenShelves");
+                }
+                else if (room.Type == RoomType.GuestRoom101)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-12f, 5f, 8f), new Vector3(1.6f, 2.3f, 0.65f),
+                        mahoganyMat, "Room101_Wardrobe");
+                }
+                else if (room.Type == RoomType.GuestRoom102)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(18f, 5f, 8f), new Vector3(1.6f, 2.3f, 0.65f),
+                        mahoganyMat, "Room102_Wardrobe");
+                }
+                else if (room.Type == RoomType.GuestRoom103)
+                {
+                    BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-12f, 5f, -8f), new Vector3(1.6f, 2.3f, 0.65f),
+                        mahoganyMat, "Room103_Wardrobe");
+                }
+            }
+        }
+
+        private static void BuildSolidStorageUnit(Transform parent, Vector3 position, Vector3 size, Material mat, string name)
+        {
+            var unit = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            unit.name = name;
+            unit.transform.SetParent(parent);
+            unit.transform.position = position + new Vector3(0f, size.y * 0.5f, 0f);
+            unit.transform.localScale = size;
+
+            var r = unit.GetComponent<Renderer>();
+            if (r != null && mat != null) r.sharedMaterial = mat;
+
+            var col = unit.GetComponent<BoxCollider>();
+            if (col == null) col = unit.AddComponent<BoxCollider>();
+            col.isTrigger = false;
         }
     }
 }
