@@ -14,6 +14,7 @@ namespace TomorrowsCrime.World
         [Header("Configuration")]
         [SerializeField] private string doorId = "door_room_102";
         [SerializeField] private string doorDisplayName = "Room 102";
+        [SerializeField] private string requiredKeyId = "key_room_102";
         [SerializeField] private Transform doorHingeTransform;
 
         [Header("State")]
@@ -24,8 +25,14 @@ namespace TomorrowsCrime.World
         private Quaternion _openRotation;
 
         public string DoorId => doorId;
+        public string RequiredKeyId
+        {
+            get => requiredKeyId;
+            set => requiredKeyId = value;
+        }
         public DoorLockState LockState => lockState;
         public DoorOpenState OpenState => openState;
+        public WorldStateRegistry WorldStateRegistryOverride { get; set; }
 
         public string InteractionPrompt
         {
@@ -33,7 +40,10 @@ namespace TomorrowsCrime.World
             {
                 if (lockState == DoorLockState.Locked)
                 {
-                    return $"{doorDisplayName} is Locked";
+                    bool hasKey = PlayerHasRequiredKey();
+                    return hasKey
+                        ? $"Unlock {doorDisplayName} [E] (Using Keycard)"
+                        : $"{doorDisplayName} (Locked - Requires Keycard)";
                 }
                 return openState == DoorOpenState.Open
                     ? $"Press E to close {doorDisplayName}"
@@ -42,6 +52,17 @@ namespace TomorrowsCrime.World
         }
 
         public bool CanInteract => true;
+
+        private bool PlayerHasRequiredKey()
+        {
+            if (string.IsNullOrEmpty(requiredKeyId)) return true;
+            var registry = WorldStateRegistryOverride ?? (WorldStateManager.Instance != null ? WorldStateManager.Instance.Registry : null);
+            if (registry != null && registry.TryGetState<PropLocationState>(requiredKeyId, out var state))
+            {
+                return state == PropLocationState.HeldByPlayer;
+            }
+            return false;
+        }
 
         private void Awake()
         {
@@ -75,9 +96,21 @@ namespace TomorrowsCrime.World
         {
             if (lockState == DoorLockState.Locked)
             {
-                Debug.Log($"[InteractableDoor] {doorDisplayName} is locked. Interaction cannot open it without key/unlock.");
-                TomorrowsCrime.Audio.AudioManager.Instance?.PlayLockClick();
-                return;
+                if (PlayerHasRequiredKey())
+                {
+                    UnlockAndOpen();
+                    TomorrowsCrime.Audio.AudioManager.Instance?.PlayLockClick();
+                    TomorrowsCrime.Audio.AudioManager.Instance?.PlayDoorCreak();
+                    TomorrowsCrime.UI.Core.UIManager.Instance?.ShowToast("DOOR UNLOCKED", $"{doorDisplayName} unlocked using keycard.", TomorrowsCrime.UI.Styling.UITheme.StatusSuccess);
+                    return;
+                }
+                else
+                {
+                    Debug.Log($"[InteractableDoor] {doorDisplayName} is locked. Keycard '{requiredKeyId}' required.");
+                    TomorrowsCrime.Audio.AudioManager.Instance?.PlayLockClick();
+                    TomorrowsCrime.UI.Core.UIManager.Instance?.ShowToast("DOOR LOCKED", $"{doorDisplayName} is secured with an electronic deadbolt. Find the room keycard.", TomorrowsCrime.UI.Styling.UITheme.StatusAmber);
+                    return;
+                }
             }
 
             ToggleOpen();

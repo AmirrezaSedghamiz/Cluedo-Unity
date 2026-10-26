@@ -13,7 +13,7 @@ namespace TomorrowsCrime.Player
     {
         [Header("Raycast Settings")]
         [Tooltip("Maximum distance in meters at which the player can interact with objects.")]
-        [SerializeField] private float interactionRange = 2.5f;
+        [SerializeField] private float interactionRange = 3.0f;
 
         [Tooltip("Layer mask filter for interactable geometry.")]
         [SerializeField] private LayerMask interactableLayers = ~0;

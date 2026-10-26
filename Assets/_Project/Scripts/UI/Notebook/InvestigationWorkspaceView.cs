@@ -947,17 +947,7 @@ namespace TomorrowsCrime.UI.Notebook
             GUILayout.BeginVertical(UITheme.CardStyle);
             GUILayout.Label($"<b>1. ACCUSED PERPETRATOR:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_accusedSuspect}</color>", UITheme.SubHeaderStyle);
             GUILayout.Space(6f);
-            GUILayout.BeginHorizontal();
-            foreach (var s in suspects)
-            {
-                bool isSel = _accusedSuspect == s;
-                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
-                if (GUILayout.Button(s, bStyle, GUILayout.Height(30f)))
-                {
-                    _accusedSuspect = s;
-                }
-            }
-            GUILayout.EndHorizontal();
+            DrawOptionGrid(suspects, _accusedSuspect, s => _accusedSuspect = s, columns: 2);
             GUILayout.EndVertical();
 
             GUILayout.Space(8f);
@@ -966,17 +956,7 @@ namespace TomorrowsCrime.UI.Notebook
             GUILayout.BeginVertical(UITheme.CardStyle);
             GUILayout.Label($"<b>2. MURDER WEAPON:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_chosenWeapon}</color>", UITheme.SubHeaderStyle);
             GUILayout.Space(6f);
-            GUILayout.BeginHorizontal();
-            foreach (var w in weapons)
-            {
-                bool isSel = _chosenWeapon == w;
-                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
-                if (GUILayout.Button(w, bStyle, GUILayout.Height(30f)))
-                {
-                    _chosenWeapon = w;
-                }
-            }
-            GUILayout.EndHorizontal();
+            DrawOptionGrid(weapons, _chosenWeapon, w => _chosenWeapon = w, columns: 2);
             GUILayout.EndVertical();
 
             GUILayout.Space(8f);
@@ -985,17 +965,7 @@ namespace TomorrowsCrime.UI.Notebook
             GUILayout.BeginVertical(UITheme.CardStyle);
             GUILayout.Label($"<b>3. CRIME SCENE LOCATION:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_chosenRoom}</color>", UITheme.SubHeaderStyle);
             GUILayout.Space(6f);
-            GUILayout.BeginHorizontal();
-            foreach (var rm in rooms)
-            {
-                bool isSel = _chosenRoom == rm;
-                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
-                if (GUILayout.Button(rm, bStyle, GUILayout.Height(30f)))
-                {
-                    _chosenRoom = rm;
-                }
-            }
-            GUILayout.EndHorizontal();
+            DrawOptionGrid(rooms, _chosenRoom, rm => _chosenRoom = rm, columns: 2);
             GUILayout.EndVertical();
 
             GUILayout.Space(8f);
@@ -1004,17 +974,7 @@ namespace TomorrowsCrime.UI.Notebook
             GUILayout.BeginVertical(UITheme.CardStyle);
             GUILayout.Label($"<b>4. UNDERLYING MOTIVE:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_chosenMotive}</color>", UITheme.SubHeaderStyle);
             GUILayout.Space(6f);
-            GUILayout.BeginHorizontal();
-            foreach (var m in motives)
-            {
-                bool isSel = _chosenMotive == m;
-                var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
-                if (GUILayout.Button(m, bStyle, GUILayout.Height(30f)))
-                {
-                    _chosenMotive = m;
-                }
-            }
-            GUILayout.EndHorizontal();
+            DrawOptionGrid(motives, _chosenMotive, m => _chosenMotive = m, columns: 2);
             GUILayout.EndVertical();
 
             GUILayout.EndScrollView();
@@ -1032,6 +992,28 @@ namespace TomorrowsCrime.UI.Notebook
             }
 
             GUILayout.EndArea();
+        }
+
+        private void DrawOptionGrid(List<string> options, string selectedOption, System.Action<string> onSelect, int columns = 2)
+        {
+            if (options == null || options.Count == 0) return;
+
+            for (int i = 0; i < options.Count; i += columns)
+            {
+                GUILayout.BeginHorizontal();
+                for (int j = 0; j < columns && (i + j) < options.Count; j++)
+                {
+                    string opt = options[i + j];
+                    bool isSel = selectedOption == opt;
+                    var bStyle = isSel ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+                    if (GUILayout.Button(opt, bStyle, GUILayout.Height(32f)))
+                    {
+                        onSelect(opt);
+                    }
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.Space(2f);
+            }
         }
     }
 }

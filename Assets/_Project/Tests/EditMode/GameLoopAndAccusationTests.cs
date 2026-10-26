@@ -10,6 +10,7 @@ using TomorrowsCrime.Procedural.Mystery;
 using TomorrowsCrime.Procedural.NPCs;
 using TomorrowsCrime.Simulation;
 using TomorrowsCrime.UI.Core;
+using TomorrowsCrime.World;
 
 namespace TomorrowsCrime.Tests.EditMode
 {
@@ -225,6 +226,48 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Assert.That(suspects, Does.Contain("Concierge Pierre"));
             Assert.That(rooms, Does.Contain("Room 102 Suite"));
+        }
+
+        [Test]
+        public void InteractableDoor_WithKeycardHeld_UnlocksAndOpens()
+        {
+            var worldMgrGo = new GameObject("Test_WorldStateMgr");
+            _spawnedObjects.Add(worldMgrGo);
+            var worldMgr = worldMgrGo.AddComponent<WorldStateManager>();
+
+            var doorGo = new GameObject("Test_Door");
+            _spawnedObjects.Add(doorGo);
+            var door = doorGo.AddComponent<InteractableDoor>();
+            door.RequiredKeyId = "key_room_102";
+
+            var registry = new WorldStateRegistry();
+            door.WorldStateRegistryOverride = registry;
+
+            var playerGo = new GameObject("Test_Player");
+            _spawnedObjects.Add(playerGo);
+
+            // Initially locked without keycard
+            Assert.AreEqual(DoorLockState.Locked, door.LockState);
+            Assert.AreEqual(DoorOpenState.Closed, door.OpenState);
+            Assert.That(door.InteractionPrompt, Does.Contain("Locked"));
+
+            door.Interact(playerGo);
+            Assert.AreEqual(DoorLockState.Locked, door.LockState, "Door must remain locked when player lacks key.");
+
+            // Player acquires keycard
+            registry.RegisterEntry("key_room_102", PropLocationState.HeldByPlayer);
+
+            Assert.That(door.InteractionPrompt, Does.Contain("Unlock"));
+
+            // Interacting now unlocks and opens
+            door.Interact(playerGo);
+            Assert.AreEqual(DoorLockState.Unlocked, door.LockState);
+            Assert.AreEqual(DoorOpenState.Open, door.OpenState);
+
+            // Loop reset relocks and closes
+            door.OnLoopReset();
+            Assert.AreEqual(DoorLockState.Locked, door.LockState);
+            Assert.AreEqual(DoorOpenState.Closed, door.OpenState);
         }
     }
 }

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26ccc26976028f741a1aab798f82a696, type: 3}
+  m_Name: evidence_reception_registry
+  m_EditorClassIdentifier: TomorrowsCrime.Runtime::TomorrowsCrime.Investigation.EvidenceDefinition
+  evidenceId: evidence_reception_registry
+  displayName: Reception Registry & Ledger
+  category: Documents
+  shortDescription: The leather-bound guest arrival register and room key distribution ledger.
+  detailedInspectionText: 'Official Meridian House front desk logbook. Entries confirm Madame Valerie checked into Room 102 earlier this evening. A cryptic notation beside Room 102 is scribbled in blue ink: ''Urgent: deliver parcel before midnight.'''
+  relatedEventId: evt_concierge_retrieve_key
+  relatedEvidenceIds: []

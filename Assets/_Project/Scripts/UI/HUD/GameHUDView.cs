@@ -18,17 +18,41 @@ namespace TomorrowsCrime.UI.HUD
     /// - Luxury leather dossier access pill displaying discovered clues count.
     /// Non-obtrusive peripheral layout maintaining immersive 3D world readability.
     /// </summary>
-    public class GameHUDView : MonoBehaviour
+    public class GameHUDView : MonoBehaviour, ILoopResetReceiver
     {
         private PlayerInteraction _playerInteraction;
         private PlayerController _playerController;
         private SimulationManager _simulationManager;
+        private float _rewindVignetteTimer = 0f;
+        private int _currentLoopNumber = 1;
 
         private void Start()
         {
             _playerInteraction = FindAnyObjectByType<PlayerInteraction>();
             _playerController = FindAnyObjectByType<PlayerController>();
             _simulationManager = SimulationManager.Instance;
+            _simulationManager?.RegisterResetReceiver(this);
+        }
+
+        private void OnDestroy()
+        {
+            _simulationManager?.UnregisterResetReceiver(this);
+        }
+
+        public void OnLoopReset()
+        {
+            _rewindVignetteTimer = 2.0f;
+            _currentLoopNumber = _simulationManager != null && _simulationManager.Clock != null
+                ? _simulationManager.Clock.LoopCount
+                : 1;
+        }
+
+        private void Update()
+        {
+            if (_rewindVignetteTimer > 0f)
+            {
+                _rewindVignetteTimer -= Time.deltaTime;
+            }
         }
 
         private void OnGUI()
@@ -44,6 +68,62 @@ namespace TomorrowsCrime.UI.HUD
             DrawInteractionReticle();
             DrawNotificationToasts();
             DrawDossierAccessPill();
+            DrawRewindTransitionVignette();
+        }
+
+        private void DrawRewindTransitionVignette()
+        {
+            if (_rewindVignetteTimer <= 0f) return;
+
+            float norm = _rewindVignetteTimer / 2.0f; // 1.0 down to 0.0
+
+            // Flash overlay: Early phase is bright temporal flash, fading to deep obsidian vignette
+            Color overlayColor;
+            if (norm > 0.65f)
+            {
+                float flash = (norm - 0.65f) / 0.35f;
+                overlayColor = new Color(0.85f, 0.95f, 1.0f, flash * 0.85f);
+            }
+            else
+            {
+                float fade = norm / 0.65f;
+                overlayColor = new Color(UITheme.MeridianMidnight.r, UITheme.MeridianMidnight.g, UITheme.MeridianMidnight.b, fade * 0.75f);
+            }
+
+            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), overlayColor);
+
+            // Theatrical title card
+            if (norm > 0.15f)
+            {
+                float bannerAlpha = Mathf.Clamp01(norm * 2f);
+                float bannerWidth = Mathf.Min(560f, Screen.width - 40f);
+                float bannerHeight = 90f;
+                float bx = (Screen.width - bannerWidth) * 0.5f;
+                float by = (Screen.height - bannerHeight) * 0.45f;
+
+                Rect bannerRect = new Rect(bx, by, bannerWidth, bannerHeight);
+                Color plaqueColor = new Color(UITheme.ObsidianSurface.r, UITheme.ObsidianSurface.g, UITheme.ObsidianSurface.b, 0.92f * bannerAlpha);
+                UITheme.DrawSolidRect(bannerRect, plaqueColor);
+                UITheme.DrawOrnateFrame(bannerRect,
+                    new Color(UITheme.PolishedBrass.r, UITheme.PolishedBrass.g, UITheme.PolishedBrass.b, bannerAlpha),
+                    new Color(UITheme.BrassHighlight.r, UITheme.BrassHighlight.g, UITheme.BrassHighlight.b, bannerAlpha), 2f);
+
+                var titleStyle = new GUIStyle(UITheme.TitleStyle)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 18,
+                    normal = { textColor = new Color(UITheme.BrassHighlight.r, UITheme.BrassHighlight.g, UITheme.BrassHighlight.b, bannerAlpha) }
+                };
+                GUI.Label(new Rect(bx, by + 12f, bannerWidth, 32f), $"TIME FRACTURE • LOOP {_currentLoopNumber} COMMENCES", titleStyle);
+
+                var subStyle = new GUIStyle(UITheme.SubHeaderStyle)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 12,
+                    normal = { textColor = new Color(UITheme.TextIvory.r, UITheme.TextIvory.g, UITheme.TextIvory.b, bannerAlpha * 0.9f) }
+                };
+                GUI.Label(new Rect(bx, by + 46f, bannerWidth, 24f), "The grandfather clock tolls midnight. Meridian House resets to 23:55.", subStyle);
+            }
         }
 
         private void DrawTimeLoopChronometer()

@@ -108,7 +108,11 @@ namespace TomorrowsCrime.EditorTools
             mats.TryGetValue("WoodMahogany", out var wallLowerMat);
             mats.TryGetValue("BrassGold", out var brassMat);
 
-            CreateArchitecturalWall("Wall_North_Back", envRoot.transform, new Vector3(0f, 0f, 12f), new Vector3(20f, 4.5f, 0.8f), wallLowerMat, wallUpperMat, brassMat, false);
+            // North Wall with Doorway Opening for Room 102 (Opening between X = -1.0 and +1.0, Y = 0 to 2.8)
+            CreateArchitecturalWall("Wall_North_WestFlank", envRoot.transform, new Vector3(-5.5f, 0f, 12f), new Vector3(9f, 4.5f, 0.8f), wallLowerMat, wallUpperMat, brassMat, false);
+            CreateArchitecturalWall("Wall_North_EastFlank", envRoot.transform, new Vector3(5.5f, 0f, 12f), new Vector3(9f, 4.5f, 0.8f), wallLowerMat, wallUpperMat, brassMat, false);
+            CreateArchitecturalWall("Wall_North_DoorLintel", envRoot.transform, new Vector3(0f, 2.8f, 12f), new Vector3(2f, 1.7f, 0.8f), wallLowerMat, wallUpperMat, brassMat, false);
+
             CreateArchitecturalWall("Wall_South_Entrance", envRoot.transform, new Vector3(0f, 0f, -12f), new Vector3(20f, 4.5f, 0.8f), wallLowerMat, wallUpperMat, brassMat, true);
             CreateArchitecturalWall("Wall_West", envRoot.transform, new Vector3(-10f, 0f, 0f), new Vector3(0.8f, 4.5f, 24f), wallLowerMat, wallUpperMat, brassMat, false);
             CreateArchitecturalWall("Wall_East", envRoot.transform, new Vector3(10f, 0f, 0f), new Vector3(0.8f, 4.5f, 24f), wallLowerMat, wallUpperMat, brassMat, false);
@@ -139,13 +143,37 @@ namespace TomorrowsCrime.EditorTools
 
             // 7. Reception Desk, Banker's Lamp & Solid Key Cubbies / Staff Lockers
             var deskPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
-            var desk = SpawnProp(deskPrefab, "Reception_Desk", envRoot.transform, new Vector3(0f, 0f, 4.5f), Vector3.zero, Vector3.one, mats);
+            var desk = SpawnProp(deskPrefab, "Reception_Desk", envRoot.transform, new Vector3(0f, 0f, 4.5f), new Vector3(0f, 180f, 0f), Vector3.one, mats);
+
+            // Ensure exact solid mesh collision for all reception desk surfaces
+            var deskFilters = desk.GetComponentsInChildren<MeshFilter>(true);
+            foreach (var mf in deskFilters)
+            {
+                if (mf.sharedMesh != null)
+                {
+                    var mc = mf.gameObject.GetComponent<MeshCollider>();
+                    if (mc == null) mc = mf.gameObject.AddComponent<MeshCollider>();
+                    mc.sharedMesh = mf.sharedMesh;
+                }
+            }
 
             // Front Mahogany Counter Solid Box Collider (Check-in side)
             var deskCollider = desk.AddComponent<BoxCollider>();
-            deskCollider.center = new Vector3(0f, 0.55f, 0f);
+            deskCollider.center = new Vector3(0f, 0.55f, 0.1f);
             deskCollider.size = new Vector3(5.4f, 1.1f, 1.4f);
             deskCollider.isTrigger = false;
+
+            // Inspectable Evidence on Front Counter (Registry Ledger)
+            var registryEvidence = GetOrCreateEvidenceAsset(
+                "evidence_reception_registry",
+                "Reception Registry & Ledger",
+                "Documents",
+                "The leather-bound guest arrival register and room key distribution ledger.",
+                "Official Meridian House front desk logbook. Entries confirm Madame Valerie checked into Room 102 earlier this evening. A cryptic notation beside Room 102 is scribbled in blue ink: 'Urgent: deliver parcel before midnight.'",
+                "evt_concierge_retrieve_key"
+            );
+            var deskInspectable = desk.AddComponent<InspectableEvidence>();
+            deskInspectable.Definition = registryEvidence;
 
             // Rear Key Cubbies & Staff Lockers Solid Collider (Blocks player and NPC navigation)
             var lockersGo = new GameObject("Reception_Lockers_Unit");
@@ -155,7 +183,7 @@ namespace TomorrowsCrime.EditorTools
 
             var lockersCollider = lockersGo.AddComponent<BoxCollider>();
             lockersCollider.center = new Vector3(0f, 1.15f, -1.77f);
-            lockersCollider.size = new Vector3(4.25f, 2.30f, 0.45f);
+            lockersCollider.size = new Vector3(4.25f, 2.30f, 0.55f);
             lockersCollider.isTrigger = false;
 
             // Inspectable Evidence for Key Cubbies & Staff Lockers
@@ -215,7 +243,7 @@ namespace TomorrowsCrime.EditorTools
             var memoGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
             memoGo.name = "Prop_Reception_ScheduleMemo";
             memoGo.transform.SetParent(envRoot.transform);
-            memoGo.transform.position = new Vector3(1.2f, 1.14f, 4.5f);
+            memoGo.transform.position = new Vector3(1.2f, 1.14f, 4.2f);
             memoGo.transform.localScale = new Vector3(0.42f, 0.02f, 0.55f);
             memoGo.transform.rotation = Quaternion.Euler(0f, -12f, 0f);
             var memoRenderer = memoGo.GetComponent<Renderer>();
@@ -277,6 +305,7 @@ namespace TomorrowsCrime.EditorTools
             soDoor.FindProperty("doorHingeTransform").objectReferenceValue = doorHinge.transform;
             soDoor.FindProperty("doorId").stringValue = "door_room_102";
             soDoor.FindProperty("doorDisplayName").stringValue = "Room 102 Door";
+            soDoor.FindProperty("requiredKeyId").stringValue = "key_room_102";
             soDoor.ApplyModifiedPropertiesWithoutUndo();
 
             // Wall Sconces Flanking Door 102
@@ -312,11 +341,14 @@ namespace TomorrowsCrime.EditorTools
             var doorInspectable = keypadGo.AddComponent<InspectableEvidence>();
             doorInspectable.Definition = doorEvidence;
 
-            // 13. AI Navigation Surface & Waypoints
+            // 13. Room 102 Crime Scene Suite (Beyond Door 102)
+            BuildRoom102Suite(envRoot.transform, mats);
+
+            // 14. AI Navigation Surface & Waypoints
             var waypointsRoot = new GameObject("[Waypoints]");
             var wpLobbyDesk = new GameObject("Waypoint_LobbyDesk");
             wpLobbyDesk.transform.SetParent(waypointsRoot.transform);
-            wpLobbyDesk.transform.position = new Vector3(0f, 0f, 5.8f);
+            wpLobbyDesk.transform.position = new Vector3(0f, 0f, 5.3f);
 
             var wpLobbyTable = new GameObject("Waypoint_LobbyTable");
             wpLobbyTable.transform.SetParent(waypointsRoot.transform);
@@ -332,9 +364,9 @@ namespace TomorrowsCrime.EditorTools
             navSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
             navSurface.BuildNavMesh();
 
-            // 14. Concierge Pierre Stylized Character Model
+            // 15. Concierge Pierre Stylized Character Model
             var pierrePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/NPC_Concierge_Pierre.obj");
-            var npcGo = SpawnProp(pierrePrefab, "NPC_Concierge", envRoot.transform, new Vector3(0f, 0f, 5.8f), new Vector3(0f, 180f, 0f), Vector3.one, mats);
+            var npcGo = SpawnProp(pierrePrefab, "NPC_Concierge", envRoot.transform, new Vector3(0f, 0f, 5.3f), new Vector3(0f, 180f, 0f), Vector3.one, mats);
 
             // Physics Collider for Interaction & Line of Sight
             var npcCollider = npcGo.AddComponent<CapsuleCollider>();
@@ -549,6 +581,171 @@ namespace TomorrowsCrime.EditorTools
                 : new Vector3(thickness, upperHeight, length);
             var upperRend = upper.GetComponent<Renderer>();
             if (upperRend != null && upperMat != null) upperRend.sharedMaterial = upperMat;
+        }
+
+        private static void BuildRoom102Suite(Transform parent, Dictionary<string, Material> mats)
+        {
+            var suiteRoot = new GameObject("[Room_102_CrimeScene]");
+            suiteRoot.transform.SetParent(parent);
+
+            mats.TryGetValue("CarpetBurgundy", out var carpetMat);
+            mats.TryGetValue("WoodMahogany", out var woodMat);
+            mats.TryGetValue("WallpaperEmerald", out var wallUpperMat);
+            mats.TryGetValue("BrassGold", out var brassMat);
+            mats.TryGetValue("ShirtWhite", out var paperMat);
+
+            // 1. Solid Room Floor Slab
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.name = "Floor_Room102_Carpet";
+            floor.transform.SetParent(suiteRoot.transform);
+            floor.transform.position = new Vector3(0f, -0.5f, 16.5f);
+            floor.transform.localScale = new Vector3(10f, 1f, 9f);
+            var fRend = floor.GetComponent<Renderer>();
+            if (fRend != null && carpetMat != null) fRend.sharedMaterial = carpetMat;
+
+            // 2. Solid Ceiling Slab
+            var ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ceiling.name = "Ceiling_Room102_Wood";
+            ceiling.transform.SetParent(suiteRoot.transform);
+            ceiling.transform.position = new Vector3(0f, 4.5f, 16.5f);
+            ceiling.transform.localScale = new Vector3(10f, 0.5f, 9f);
+            var cRend = ceiling.GetComponent<Renderer>();
+            if (cRend != null && woodMat != null) cRend.sharedMaterial = woodMat;
+
+            // 3. Perimeter Solid Walls
+            CreateArchitecturalWall("Wall_Room102_North", suiteRoot.transform, new Vector3(0f, 0f, 21f), new Vector3(10f, 4.5f, 0.6f), woodMat, wallUpperMat, brassMat, false);
+            CreateArchitecturalWall("Wall_Room102_West", suiteRoot.transform, new Vector3(-5f, 0f, 16.5f), new Vector3(0.6f, 4.5f, 9f), woodMat, wallUpperMat, brassMat, false);
+            CreateArchitecturalWall("Wall_Room102_East", suiteRoot.transform, new Vector3(5f, 0f, 16.5f), new Vector3(0.6f, 4.5f, 9f), woodMat, wallUpperMat, brassMat, false);
+
+            // 4. Four-Poster Bed with Luxury Velvet Duvet
+            var bedRoot = new GameObject("Prop_Room102_KingBed");
+            bedRoot.transform.SetParent(suiteRoot.transform);
+            bedRoot.transform.position = new Vector3(0f, 0f, 19.2f);
+
+            var bedBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bedBase.name = "Bed_Mattress_Duvet";
+            bedBase.transform.SetParent(bedRoot.transform);
+            bedBase.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            bedBase.transform.localScale = new Vector3(2.6f, 0.9f, 2.8f);
+            var bedRend = bedBase.GetComponent<Renderer>();
+            if (bedRend != null && carpetMat != null) bedRend.sharedMaterial = carpetMat;
+
+            var headboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            headboard.name = "Bed_Headboard";
+            headboard.transform.SetParent(bedRoot.transform);
+            headboard.transform.localPosition = new Vector3(0f, 1.3f, 1.35f);
+            headboard.transform.localScale = new Vector3(2.8f, 1.8f, 0.25f);
+            var hRend = headboard.GetComponent<Renderer>();
+            if (hRend != null && woodMat != null) hRend.sharedMaterial = woodMat;
+
+            // 5. Solid Mahogany Wardrobe
+            var wardrobe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wardrobe.name = "Prop_Room102_Wardrobe";
+            wardrobe.transform.SetParent(suiteRoot.transform);
+            wardrobe.transform.position = new Vector3(3.8f, 1.25f, 14.5f);
+            wardrobe.transform.localScale = new Vector3(1.6f, 2.5f, 0.7f);
+            var wRend = wardrobe.GetComponent<Renderer>();
+            if (wRend != null && woodMat != null) wRend.sharedMaterial = woodMat;
+
+            var wardrobeEvidence = GetOrCreateEvidenceAsset(
+                "evidence_room102_wardrobe",
+                "Madame Valerie's Wardrobe",
+                "Locations",
+                "A towering carved mahogany armoire with brass filigree handles.",
+                "Madame Valerie's wardrobe. Several evening gowns hang inside. On the top shelf, an ornate jewelry case has had its lock forced; the interior velvet is bare, and Madame Valerie's prized heirloom diamond necklace is missing.",
+                "evt_concierge_unlock_door"
+            );
+            var wardrobeInspect = wardrobe.AddComponent<InspectableEvidence>();
+            wardrobeInspect.Definition = wardrobeEvidence;
+
+            // 6. Mahogany Writing Bureau Desk
+            var deskBureau = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            deskBureau.name = "Prop_Room102_WritingDesk";
+            deskBureau.transform.SetParent(suiteRoot.transform);
+            deskBureau.transform.position = new Vector3(-3.5f, 0.55f, 16.5f);
+            deskBureau.transform.localScale = new Vector3(1.4f, 1.1f, 2.2f);
+            var dbRend = deskBureau.GetComponent<Renderer>();
+            if (dbRend != null && woodMat != null) dbRend.sharedMaterial = woodMat;
+
+            // 7. Physical Clue: Torn Blackmail Letter (On Bureau)
+            var letterGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            letterGo.name = "Prop_TornBlackmailLetter";
+            letterGo.transform.SetParent(suiteRoot.transform);
+            letterGo.transform.position = new Vector3(-3.4f, 1.14f, 16.8f);
+            letterGo.transform.localScale = new Vector3(0.35f, 0.02f, 0.45f);
+            letterGo.transform.rotation = Quaternion.Euler(0f, 18f, 0f);
+            var lRend = letterGo.GetComponent<Renderer>();
+            if (lRend != null && paperMat != null) lRend.sharedMaterial = paperMat;
+
+            var letterEvidence = GetOrCreateEvidenceAsset(
+                "evidence_blackmail_note",
+                "Torn Blackmail Letter",
+                "Documents",
+                "A scorched and torn letter bearing a threatening ultimatum.",
+                "Scorched scrap of hotel stationery found upon the writing bureau:\n\n'Madame Valerie,\nYour silence cannot be bought twice. Tonight at midnight, your secrets die with you. Meridian House will keep its peace.'\n\nSigned only with a solitary initial: '— P.'",
+                "evt_concierge_unlock_door"
+            );
+            var letterInspect = letterGo.AddComponent<InspectableEvidence>();
+            letterInspect.Definition = letterEvidence;
+
+            // 8. Physical Clue: Monogrammed Silk Handkerchief (On Floor Beside Bed)
+            var hankyGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            hankyGo.name = "Prop_SilkHandkerchief";
+            hankyGo.transform.SetParent(suiteRoot.transform);
+            hankyGo.transform.position = new Vector3(1.6f, 0.02f, 17.5f);
+            hankyGo.transform.localScale = new Vector3(0.3f, 0.02f, 0.3f);
+            hankyGo.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+            var hankyRend = hankyGo.GetComponent<Renderer>();
+            if (hankyRend != null && mats.TryGetValue("UniformNavy", out var navyMat)) hankyRend.sharedMaterial = navyMat;
+
+            var hankyEvidence = GetOrCreateEvidenceAsset(
+                "evidence_silk_handkerchief",
+                "Monogrammed Silk Handkerchief",
+                "Items",
+                "A fine silk handkerchief embroidered with gold thread.",
+                "A pristine midnight-navy silk handkerchief embroidered with the Meridian crest and the initial 'P'. Smudged with faint traces of machine oil and soot from the concierge key cabinet.",
+                "evt_concierge_unlock_door"
+            );
+            var hankyInspect = hankyGo.AddComponent<InspectableEvidence>();
+            hankyInspect.Definition = hankyEvidence;
+
+            // 9. Physical Clue: Heavy Brass Candlestick Murder Weapon
+            var candlestickPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_WallSconce.obj");
+            var candleGo = SpawnProp(candlestickPrefab, "Prop_MurderWeapon_Candlestick", suiteRoot.transform,
+                new Vector3(-2.8f, 0.08f, 15.2f), new Vector3(85f, 40f, 0f), new Vector3(0.7f, 0.7f, 0.7f), mats);
+            var candleCol = candleGo.AddComponent<BoxCollider>();
+            candleCol.center = new Vector3(0f, 0.1f, 0f);
+            candleCol.size = new Vector3(0.4f, 0.4f, 0.4f);
+
+            var weaponEvidence = GetOrCreateEvidenceAsset(
+                "evidence_brass_candlestick",
+                "Heavy Brass Candlestick",
+                "Weapons",
+                "A solid cast-brass candlestick with severe impact denting.",
+                "A heavy, ornate Art Deco brass candlestick found discarded upon the carpet. The heavy base shows distinct impact blunt-force trauma markings and traces of candle wax. Matches the fatal blow delivered inside Room 102.",
+                "evt_concierge_unlock_door"
+            );
+            var candleInspect = candleGo.AddComponent<InspectableEvidence>();
+            candleInspect.Definition = weaponEvidence;
+
+            // 10. Atmospheric Suite Lighting
+            var bedLightGo = new GameObject("Room102_BedsideLamp_Light");
+            bedLightGo.transform.SetParent(suiteRoot.transform);
+            bedLightGo.transform.position = new Vector3(1.8f, 1.4f, 19.5f);
+            var bedLight = bedLightGo.AddComponent<Light>();
+            bedLight.type = LightType.Point;
+            bedLight.color = new Color(1.0f, 0.85f, 0.6f);
+            bedLight.intensity = 1.8f;
+            bedLight.range = 7f;
+
+            var moonGlowGo = new GameObject("Room102_WindowMoonlight");
+            moonGlowGo.transform.SetParent(suiteRoot.transform);
+            moonGlowGo.transform.position = new Vector3(4.8f, 2.8f, 16.5f);
+            var moonLight = moonGlowGo.AddComponent<Light>();
+            moonLight.type = LightType.Point;
+            moonLight.color = new Color(0.45f, 0.60f, 0.90f);
+            moonLight.intensity = 1.6f;
+            moonLight.range = 8f;
         }
 
         private static void AddSconceLight(Transform parent)

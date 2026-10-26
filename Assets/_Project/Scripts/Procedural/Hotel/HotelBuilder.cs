@@ -291,6 +291,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     var deskRoot = new GameObject("Reception_Desk_Compound");
                     deskRoot.transform.SetParent(furnitureRoot.transform);
                     deskRoot.transform.position = new Vector3(0f, 0f, 10.5f);
+                    deskRoot.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
                     GameObject deskVisual;
                     if (deskObjPrefab != null)
@@ -299,6 +300,17 @@ namespace TomorrowsCrime.Procedural.Hotel
                         deskVisual.name = "Model";
                         deskVisual.transform.localPosition = Vector3.zero;
                         deskVisual.transform.localRotation = Quaternion.identity;
+
+                        var mfs = deskVisual.GetComponentsInChildren<MeshFilter>(true);
+                        foreach (var mf in mfs)
+                        {
+                            if (mf.sharedMesh != null)
+                            {
+                                var mc = mf.gameObject.GetComponent<MeshCollider>();
+                                if (mc == null) mc = mf.gameObject.AddComponent<MeshCollider>();
+                                mc.sharedMesh = mf.sharedMesh;
+                            }
+                        }
                     }
                     else
                     {
