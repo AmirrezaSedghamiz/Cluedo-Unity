@@ -38,7 +38,8 @@ namespace TomorrowsCrime.Player
 
         private void Update()
         {
-            if (_playerController != null && _playerController.IsInputBlocked)
+            if ((_playerController != null && _playerController.IsInputBlocked) ||
+                (TomorrowsCrime.UI.Core.UIManager.Instance != null && TomorrowsCrime.UI.Core.UIManager.Instance.IsModalOpen))
             {
                 CurrentInteractable = null;
                 CurrentPrompt = null;

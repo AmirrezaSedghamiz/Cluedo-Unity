@@ -79,7 +79,44 @@ A phased, iterative plan for developing *Tomorrow's Crime*.
 
 ---
 
-## Phase 6: Hotel Environment Expansion & Full Suspect Ensemble
+## Phase 6: Major UI Overhaul, Investigation 2.0 & Cross-Loop Deduction (Completed)
+- [x] Cohesive visual identity & styling system (`UITheme`):
+  - Charcoal, slate, warm paper, brass, teal, amber, and crimson palette.
+  - Custom card styles, badges, buttons, sliders, and typography tokens.
+- [x] Central UI State Coordinator (`UIManager`):
+  - Managed UI states (`InGameHUD`, `InvestigationNotebook`, `EvidenceDetailModal`, `PauseMenu`, `SettingsMenu`, `MainMenu`, `LoopSummaryOverlay`).
+  - Single-point input arbitration (cursor locking/unlocking, movement & look disabling).
+  - Non-blocking investigation policy vs pause-menu simulation suspension.
+  - Toast notification queue for clues and witnessed observations.
+- [x] First-person In-Game HUD (`GameHUDView`):
+  - Countdown clock (`MM:SS`) with normalized loop progress bar.
+  - Dynamic urgency color shifts (>60s brass, <60s amber, <15s pulsing crimson).
+  - Contextual reticle and interactive prompt badge on gaze.
+  - Investigation status indicator pill (`Tab / N`).
+- [x] Dedicated Evidence Reading Modal (`EvidenceInspectionModalView`):
+  - Warm paper reading view for discovered clues and documents.
+  - Clue category, examination narrative, and linked causal event tags.
+- [x] Investigation Workspace 2.0 (`InvestigationWorkspaceView`):
+  - 3-column layout with 5 integrated tabs.
+  - Evidence Library with category filtering and inspection details.
+  - Chronological Observation Timeline with cross-loop diff comparison (`CompareLoops`).
+  - Interactive Deduction Board with 2D card placement, notes, and semantic relationships (`Supports`, `Contradicts`, `RelatedTo`, `OccurredBefore`, `OccurredAfter`).
+  - Rejection of relationships referencing undiscovered evidence.
+  - Hypothesis Manager with theory formulation and evidence linking.
+  - Persistent freeform Field Notes scratchpad.
+- [x] Pause Menu, Main Menu & Game Settings (`GameSettingsManager`):
+  - Persistent settings via `PlayerPrefs`: Master Volume, Mouse Sensitivity, Quality Level, Fullscreen, and HUD Scale.
+  - Immediate reflection of mouse look sensitivity in `PlayerController`.
+- [x] Scene Visual Polish (`PrototypeSceneSetup`):
+  - Warm pendant ceiling light, charcoal flooring, mahogany doors/desks, walnut furniture.
+  - Integration of `[UserInterface]` hierarchy into `Prototype.unity`.
+- [x] Comprehensive automated test coverage:
+  - 14 new tests in `InvestigationSystem2Tests`.
+  - 71 / 71 total EditMode unit tests passing (100% pass rate).
+
+---
+
+## Phase 7: Hotel Environment Expansion & Full Suspect Ensemble
 - [ ] Multi-room Meridian House layout expansion (Lobby, Guest Room 102 interior, Service Corridor, Manager's Office).
 - [ ] Suspect ensemble expansion: author definitions and routines for remaining suspects.
 - [ ] Additional physical clues, documents, and environmental manipulation devices (breakers, phone lines).

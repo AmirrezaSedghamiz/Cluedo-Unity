@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Simulation;
+using TomorrowsCrime.UI.Core;
 using TomorrowsCrime.World;
 
 namespace TomorrowsCrime.Investigation
@@ -103,6 +104,11 @@ namespace TomorrowsCrime.Investigation
             if (isNew)
             {
                 Debug.Log($"[InspectableEvidence] NEW EVIDENCE DISCOVERED: '{evidenceDefinition.DisplayName}' [{evidenceDefinition.EvidenceId}] at {simTime:F1}s (Loop {loop}).");
+            }
+
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowEvidenceModal(evidenceDefinition);
             }
 
             OnEvidenceInspected?.Invoke(evidenceDefinition);

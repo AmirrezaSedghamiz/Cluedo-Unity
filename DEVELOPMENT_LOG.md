@@ -227,3 +227,72 @@ This document tracks dated, factual development milestones, technical design cho
     - `SimulationClockTests`: 6 / 6 passed
     - `WorldStateAndScenarioTests`: 10 / 10 passed
 - Rebuilt `Prototype.unity` via batchmode CLI with `Prop_Room102_Keycard`, `Prop_Reception_ScheduleMemo`, `Prop_Door102_CardReader`, and `NotebookUIController`.
+
+---
+
+## [2026-10-26] Milestone 6: Major UI Overhaul, Investigation 2.0 & Cross-Loop Deduction
+
+### Architectural Decisions
+1. **Design System & Visual Language (`UITheme` & `UIState`)**:
+   - Designed a comprehensive, period-appropriate modern detective UI palette: Deep Charcoal (`#17191C`), Dark Slate (`#23272C`), Aged Warm Paper (`#E9E2D5`), Polished Brass (`#B69A61`), Verdigris Teal (`#6D9C98`), Warm Amber (`#D99A4A`), and Crimson (`#B85C58`).
+   - Centralized styling tokens into `UITheme`, providing procedural solid textures, custom box/card styles, badges, buttons, sliders, and typography styles.
+   - Structured screen states through `UIState`: `InGameHUD`, `InvestigationNotebook`, `EvidenceDetailModal`, `PauseMenu`, `SettingsMenu`, `MainMenu`, `LoopSummaryOverlay`.
+2. **Central UI Coordinator (`UIManager`)**:
+   - Manages modal transitions, back navigation stack, and single-point input arbitration (`IsModalOpen`, `SetUIState`).
+   - Dispatches modal open/close events to lock/unlock mouse cursor (`Cursor.lockState`, `Cursor.visible`) and arbitrate player control.
+   - Maintains an animated toast notification queue (`QueueToast`) for discovered evidence and witnessed observations.
+   - Arbitrates simulation pausing: non-blocking for detective investigation/inspection, paused for pause menu and settings.
+3. **In-Game First-Person HUD (`GameHUDView`)**:
+   - Modernized status header with loop counter, countdown clock (`MM:SS`), and normalized loop progress bar.
+   - Color shifts based on remaining loop time: Polished Brass (>60s), Amber warning (15–60s), and pulsing Crimson danger (<15s).
+   - Contextual center reticle dynamically expanding into an interactive prompt badge when targeting inspectable objects within range.
+   - Bottom-right investigation indicator pill displaying real-time discovered clue and observation counts with `Tab / N` prompt.
+   - Diagnostic developer HUD (`SimulationDebugUI`) is now off by default and hidden behind `F1` / `` ` ``, automatically suppressed during active modals.
+4. **Dedicated Evidence Reading View (`EvidenceInspectionModalView`)**:
+   - Inspecting clues or documents in the world triggers a warm paper modal showing clue category badge, full examination text, discovery timestamp, and linked causal events.
+   - Closes seamlessly via `Escape`, `E`, or the Return button, returning control to first-person view.
+5. **Investigation Workspace 2.0 (`InvestigationWorkspaceView`)**:
+   - 3-column layout featuring five workspace tabs:
+     - **Evidence Library:** Category filters (`Physical`, `Document`, `Testimony`, `Environmental`), clue list with badges, and detailed inspector panel.
+     - **Timeline & Loop Comparison:** Chronological player observations tagged with loop index, sim timestamp, observation method (`PersonallyWitnessed`, `PhysicalInspection`, `HeardNoise`), and context summary. Includes loop-over-loop comparison mode (`CompareLoops(loopA, loopB)`) highlighting interventions and anomalies between runs.
+     - **Deduction Board:** 2D canvas workspace tracking coordinate nodes (`DeductionBoardNode`) with player notes, card dragging, and typed semantic relationships (`Supports`, `Contradicts`, `RelatedTo`, `OccurredBefore`, `OccurredAfter`) with explanations. Rejects relationships referencing undiscovered evidence.
+     - **Hypotheses Manager:** Formulate, modify, and delete deduction theories with attached evidence links and validity checks.
+     - **Field Notes:** Persistent freeform markdown-style scratchpad.
+6. **Persistent User Settings (`GameSettingsManager`)**:
+   - Manages Master Volume (0-1), Mouse Sensitivity (0.1-3.0), Graphics Quality Level (0-2), Display Mode (Fullscreen/Windowed), and HUD Scale (0.75-1.25).
+   - Automatically loads on awake and persists to `PlayerPrefs` on change.
+   - Integrated with `PlayerController.LookSensitivity` for immediate responsive feel.
+7. **Pause Menu & Main Menu (`PauseMenuView`, `SettingsMenuView`, `MainMenuView`)**:
+   - In-game Pause Menu (`Escape` or `P`) featuring Resume, Restart Loop, Settings, and Return to Menu options.
+   - Settings menu with sliders and dropdown-style buttons.
+8. **Scene Enhancement (`PrototypeSceneSetup`)**:
+   - Upgraded lobby atmosphere in `Prototype.unity`: added warm ceiling pendant light (`Color(1.0f, 0.92f, 0.78f)`), charcoal carpet flooring, rich mahogany doors/desks, walnut tables, and warm plaster walls.
+   - Added `[UserInterface]` hierarchy containing `UIManager`, `GameHUDView`, `EvidenceInspectionModalView`, `InvestigationWorkspaceView`, `PauseMenuView`, `SettingsMenuView`, `MainMenuView`, and `GameSettingsManager`.
+
+### Validation & Test Results
+- Authored 14 new comprehensive unit tests in `Assets/_Project/Tests/EditMode/InvestigationSystem2Tests.cs` validating all Step 6 Part J Section 11 requirements:
+  - Requirement 1: UI coordinator correctly manages active screen states.
+  - Requirement 2: Opening modal disables player look and movement input.
+  - Requirement 3: Closing modal restores player movement and look input.
+  - Requirement 4: Modal visibility correctly pauses or continues simulation per policy.
+  - Requirement 5: Evidence inspection modal displays correct metadata and full inspection text.
+  - Requirement 6: Timeline view organizes observations chronologically.
+  - Requirement 7: Cross-loop comparison isolates and compares observations between distinct loops.
+  - Requirement 8: Creating relationship between discovered evidence succeeds and persists.
+  - Requirement 9: Creating relationship referencing undiscovered evidence is rejected.
+  - Requirement 10: Deduction board node positions and notes persist.
+  - Requirement 11: Notification toasts queue and trigger on new evidence discovery.
+  - Requirement 12: Notification toasts queue and trigger on new player observation.
+  - Requirement 13: Settings manager modifies and persists player preferences.
+  - Requirement 14: Settings changes immediately update dependent gameplay systems (mouse sensitivity).
+- Ran complete Unity Test Framework EditMode suite via CLI:
+  - 71 total test cases executed.
+  - 71 passed, 0 failed, 0 inconclusive (100% pass rate).
+  - All test suites passing:
+    - `InvestigationSystem2Tests`: 14 / 14 passed
+    - `InvestigationSystemTests`: 14 / 14 passed
+    - `CausalEventEngineTests`: 15 / 15 passed
+    - `NPCSimulationTests`: 12 / 12 passed
+    - `WorldStateAndScenarioTests`: 10 / 10 passed
+    - `SimulationClockTests`: 6 / 6 passed
+- Executed `Tomorrow's Crime -> Build Prototype Scene` batchmode rebuild and confirmed clean scene serialization and NavMesh baking.

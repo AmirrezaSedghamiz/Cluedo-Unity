@@ -88,21 +88,57 @@ Step 5 implements the core detective loop, adhering to the foundational rule: **
 
 ---
 
-## 6. Controls
+## 6. Major UI Overhaul, Investigation 2.0 & Cross-Loop Deduction (Milestone 6)
 
-- **Move:** `W`, `A`, `S`, `D`
-- **Look:** Mouse (Cursor is automatically locked to screen)
-- **Sprint:** Hold `Left Shift`
-- **Interact / Inspect / Pick Up / Place:** `E` (Aim at objects when prompt appears)
-- **Toggle Investigation Notebook:** `Tab` or `N` (Opens Evidence, Timeline & Hypotheses)
-- **Fast Forward Time (Debug):** `1` (1x), `2` (2x), `5` (5x), `10x` button
-- **Pause / Resume Simulation:** `P`
-- **Manual Loop Reset:** `R`
-- **Toggle Diagnostic HUD:** `F1` or `~` (Shows clock, world state, causal history, and live NPC simulation diagnostics)
+Milestone 6 transforms the prototype from a developer graybox into a cohesive, atmospheric 1920s-tinged modern detective experience with a complete UI design system and an advanced cross-loop deduction workspace.
+
+### Core Features & Systems:
+1. **Unified Visual Identity & Styling (`UITheme`):**
+   - Professional detective color palette: Deep Charcoal (`#17191C`), Dark Slate (`#23272C`), Aged Warm Paper (`#E9E2D5`), Polished Brass (`#B69A61`), Verdigris Teal (`#6D9C98`), Warm Amber (`#D99A4A`), and Evidence Crimson (`#B85C58`).
+   - Reusable procedural texture generation, styled card panels, rounded pill badges, tab bars, and typography styles.
+2. **First-Person In-Game HUD (`GameHUDView`):**
+   - **Time-Loop Clock & Progress Bar:** Displays current loop index and countdown timer (`MM:SS`) with a normalized fill bar.
+   - **Dynamic Urgency Tints:** Subdued brass during standard loop time, warm amber below 60 seconds, and pulsing red under 15 seconds.
+   - **Contextual Reticle & Prompt:** Dot reticle dynamically morphs into an action prompt badge (`[E] Inspect Memo`, `[E] Pick up Keycard`) when gazing at interactables within range.
+   - **Discovery Toast Notification System:** Slide-in alert cards for newly discovered clues and witnessed observations.
+   - **Investigation Pill Indicator:** Quick-access notebook status widget displaying active clue and observation counts.
+3. **Dedicated Evidence Inspection Modal (`EvidenceInspectionModalView`):**
+   - Dedicated warm paper reading view opened immediately upon inspecting documents or physical clues.
+   - Shows clue category, display name, full narrative examination text, and related causal event tags.
+4. **Investigation Workspace 2.0 (`InvestigationWorkspaceView`):**
+   - **3-Column Detective Workspace:** Fast section tabs (`Evidence Library`, `Timeline & Comparison`, `Deduction Board`, `Hypotheses`, `Field Notes`).
+   - **Evidence Library & Details Panel:** Category filters, clue counts, inspection summaries, and relationship connections.
+   - **Loop Timeline & Cross-Loop Comparison:** Chronological event timeline recording loop index, timestamp, observation method (`PersonallyWitnessed`, `PhysicalInspection`, `HeardNoise`), and context. Includes comparison mode (`CompareLoops(loopA, loopB)`) highlighting interventions and deviations between runs.
+   - **Interactive Deduction Board:** 2D evidence workspace allowing detectives to position clue cards, attach notes, and create typed semantic relationships (`Supports`, `Contradicts`, `RelatedTo`, `OccurredBefore`, `OccurredAfter`) with explanations. Prevents connections to undiscovered evidence.
+   - **Hypothesis Manager:** Create, edit, and validate deduction theories with attached supporting/contradicting evidence.
+   - **Field Notes:** Persistent freeform markdown-style scratchpad.
+5. **Pause Menu, Main Menu & Game Settings (`GameSettingsManager`):**
+   - Centralized modal coordinator (`UIManager`) managing focus, input blocking, and transition states.
+   - In-game Pause Menu (`Esc` or `P`) allowing loop restart, settings configuration, or return to title.
+   - Persistent user settings via `PlayerPrefs`: Master Volume, Mouse Sensitivity (hooked to `PlayerController`), Graphics Quality, Display Mode (Fullscreen/Windowed), and HUD Scale.
+6. **Non-Blocking Simulation vs Pause Policy:**
+   - **Investigation Workspace & Clue Inspection:** The 5-minute Meridian House simulation continues ticking in the background, creating authentic tension while reviewing clues.
+   - **Pause Menu & Settings:** Explicitly halts simulation time (`SimulationManager.Instance.IsPaused = true`).
+7. **Developer Diagnostics (`SimulationDebugUI`):**
+   - The developer HUD is now hidden by default (`showUI = false`). It can be toggled on demand via `F1` or `` ` `` for debugging and is automatically suppressed while UI modals are open.
 
 ---
 
-## 7. Getting Started & Baking Navigation in Unity
+## 7. Controls
+
+- **Move:** `W`, `A`, `S`, `D`
+- **Look:** Mouse (Sensitivity configurable in Settings)
+- **Sprint:** Hold `Left Shift`
+- **Interact / Inspect / Pick Up / Place:** `E` (Aim at objects when prompt appears)
+- **Investigation Workspace 2.0:** `Tab` or `N`
+- **Pause Menu / Dismiss Modal:** `Escape` or `P`
+- **Manual Loop Reset:** `R`
+- **Toggle Developer Diagnostic HUD:** `F1` or `` ` `` (Suppressed while modals are active)
+- **Time Acceleration (Debug):** `1` (1x), `2` (2x), `5` (5x) (Active when Diagnostic HUD is enabled)
+
+---
+
+## 8. Getting Started & Running in Unity
 
 1. Open **Unity Hub**.
 2. Click **Add** -> **Add project from disk**.
@@ -110,5 +146,21 @@ Step 5 implements the core detective loop, adhering to the foundational rule: **
 4. Ensure the selected Editor version is **Unity 6000.6.7f1** (or matching Unity 6 LTS).
 5. Open the project.
 6. In the Project window, navigate to `Assets/_Project/Scenes/` and double-click `Prototype.unity`.
-7. **(Optional) Re-baking NavMesh:** Select `[Environment_HotelLobby]` in the Hierarchy. In the Inspector, locate the `NavMeshSurface` component and click **Bake**. (The scene is already pre-baked via `Tomorrow's Crime -> Build Prototype Scene`).
+7. **(Optional) Re-baking NavMesh & Scene:** Execute the menu item `Tomorrow's Crime -> Build Prototype Scene` to automatically configure lighting, materials, and bake navigation geometry.
 8. Press the **Play** button in the Unity toolbar.
+
+---
+
+## 9. Automated Test Suite
+
+The project includes an EditMode test suite with 100% pass rate:
+- **Total Tests:** 71
+- **Passed:** 71 / 71
+- **Failed:** 0
+- **Suites:**
+  - `InvestigationSystem2Tests` (14 tests)
+  - `InvestigationSystemTests` (14 tests)
+  - `CausalEventEngineTests` (15 tests)
+  - `NPCSimulationTests` (12 tests)
+  - `WorldStateAndScenarioTests` (10 tests)
+  - `SimulationClockTests` (6 tests)

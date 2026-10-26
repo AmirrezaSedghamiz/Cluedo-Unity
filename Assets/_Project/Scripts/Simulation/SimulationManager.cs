@@ -23,6 +23,12 @@ namespace TomorrowsCrime.Simulation
 
         public SimulationClockModel Clock { get; private set; }
 
+        public bool IsPaused
+        {
+            get => Clock != null && Clock.IsPaused;
+            set => Clock?.SetPaused(value);
+        }
+
         private readonly List<ILoopResetReceiver> _resetReceivers = new();
 
         private void Awake()
@@ -81,6 +87,11 @@ namespace TomorrowsCrime.Simulation
         {
             Debug.Log("[SimulationManager] Manual loop reset initiated.");
             Clock?.TriggerLoopTurnover();
+        }
+
+        public void ResetSimulation()
+        {
+            ForceResetLoop();
         }
 
         private void HandleLoopCompleted(int completedLoopIndex)

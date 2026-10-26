@@ -2,6 +2,13 @@ using System;
 
 namespace TomorrowsCrime.Investigation
 {
+    public enum ObservationMethod
+    {
+        DirectInspection,
+        WitnessedEvent,
+        Inferred
+    }
+
     /// <summary>
     /// Represents a factual observation that the player personally witnessed or experienced.
     /// Distinct from the internal causal simulation history.
@@ -16,6 +23,9 @@ namespace TomorrowsCrime.Investigation
         public string Description { get; }
         public string RelatedEventId { get; }
         public string RelatedEvidenceId { get; }
+        public ObservationMethod Method { get; }
+        public string SourceOrSubject { get; }
+        public string ContextSummary { get; }
 
         public PlayerObservationEntry(
             string observationId,
@@ -23,7 +33,10 @@ namespace TomorrowsCrime.Investigation
             int loopIndex,
             float simTime,
             string relatedEventId = null,
-            string relatedEvidenceId = null)
+            string relatedEvidenceId = null,
+            ObservationMethod method = ObservationMethod.WitnessedEvent,
+            string sourceOrSubject = null,
+            string contextSummary = null)
         {
             if (string.IsNullOrWhiteSpace(observationId)) throw new ArgumentException("ObservationId cannot be null or empty.", nameof(observationId));
             if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description cannot be null or empty.", nameof(description));
@@ -34,6 +47,9 @@ namespace TomorrowsCrime.Investigation
             SimTime = simTime;
             RelatedEventId = relatedEventId ?? string.Empty;
             RelatedEvidenceId = relatedEvidenceId ?? string.Empty;
+            Method = method;
+            SourceOrSubject = sourceOrSubject ?? string.Empty;
+            ContextSummary = contextSummary ?? string.Empty;
         }
 
         public string GetFormattedTimestamp()

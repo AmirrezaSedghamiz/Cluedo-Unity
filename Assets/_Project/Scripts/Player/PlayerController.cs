@@ -1,6 +1,8 @@
 using UnityEngine;
 using TomorrowsCrime.Core;
+using TomorrowsCrime.Settings;
 using TomorrowsCrime.Simulation;
+using TomorrowsCrime.UI.Core;
 
 namespace TomorrowsCrime.Player
 {
@@ -81,8 +83,12 @@ namespace TomorrowsCrime.Player
 
         private void HandleMouseLook()
         {
-            float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
-            float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
+            float activeSensitivity = GameSettingsManager.Instance != null
+                ? GameSettingsManager.Instance.MouseSensitivity
+                : mouseSensitivity;
+
+            float mouseX = Input.GetAxisRaw("Mouse X") * activeSensitivity;
+            float mouseY = Input.GetAxisRaw("Mouse Y") * activeSensitivity;
 
             transform.Rotate(Vector3.up * mouseX);
 
@@ -122,6 +128,9 @@ namespace TomorrowsCrime.Player
 
         private void HandleCursorToggle()
         {
+            // If UIManager is active, it handles Escape navigation centrally
+            if (UIManager.Instance != null) return;
+
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 Cursor.lockState = Cursor.lockState == CursorLockMode.Locked ? CursorLockMode.None : CursorLockMode.Locked;

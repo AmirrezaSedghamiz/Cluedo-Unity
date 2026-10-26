@@ -20,7 +20,7 @@ namespace TomorrowsCrime.Debugging
     /// </summary>
     public class SimulationDebugUI : MonoBehaviour
     {
-        [SerializeField] private bool showUI = true;
+        [SerializeField] private bool showUI = false;
 
         private GUIStyle _boxStyle;
         private GUIStyle _headerStyle;
@@ -125,6 +125,11 @@ namespace TomorrowsCrime.Debugging
 
         private void OnGUI()
         {
+            if (TomorrowsCrime.UI.Core.UIManager.Instance != null && TomorrowsCrime.UI.Core.UIManager.Instance.IsModalOpen)
+            {
+                return;
+            }
+
             InitStyles();
 
             // 1. Draw Center Interaction Prompt

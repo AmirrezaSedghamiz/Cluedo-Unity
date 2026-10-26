@@ -73,6 +73,8 @@ namespace TomorrowsCrime.Investigation
 
         private void Update()
         {
+            if (TomorrowsCrime.UI.Core.UIManager.Instance != null) return;
+
             if (Input.GetKeyDown(toggleKey) || Input.GetKeyDown(alternateToggleKey))
             {
                 SetOpen(!isOpen);
@@ -174,6 +176,7 @@ namespace TomorrowsCrime.Investigation
 
         private void OnGUI()
         {
+            if (TomorrowsCrime.UI.Core.UIManager.Instance != null) return;
             if (!isOpen) return;
 
             InitStyles();

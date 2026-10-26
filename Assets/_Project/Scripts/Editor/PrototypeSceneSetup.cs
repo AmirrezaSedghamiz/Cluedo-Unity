@@ -9,6 +9,11 @@ using TomorrowsCrime.Investigation;
 using TomorrowsCrime.NPC;
 using TomorrowsCrime.Player;
 using TomorrowsCrime.Simulation;
+using TomorrowsCrime.UI.Core;
+using TomorrowsCrime.UI.HUD;
+using TomorrowsCrime.UI.Menu;
+using TomorrowsCrime.UI.Modals;
+using TomorrowsCrime.UI.Notebook;
 using TomorrowsCrime.World;
 
 namespace TomorrowsCrime.EditorTools
@@ -54,6 +59,21 @@ namespace TomorrowsCrime.EditorTools
             floor.transform.SetParent(envRoot.transform);
             floor.transform.position = new Vector3(0f, -0.5f, 0f);
             floor.transform.localScale = new Vector3(20f, 1f, 24f);
+            var floorRenderer = floor.GetComponent<Renderer>();
+            if (floorRenderer != null)
+            {
+                floorRenderer.sharedMaterial.color = new Color(0.12f, 0.13f, 0.15f); // Deep charcoal
+            }
+
+            // Atmospheric Warm Chandelier / Pendant Light
+            var pendantLightGo = new GameObject("Lobby_PendantLight");
+            pendantLightGo.transform.SetParent(envRoot.transform);
+            pendantLightGo.transform.position = new Vector3(0f, 3.4f, 0f);
+            var pendantLight = pendantLightGo.AddComponent<Light>();
+            pendantLight.type = LightType.Point;
+            pendantLight.color = new Color(1.0f, 0.88f, 0.65f);
+            pendantLight.intensity = 2.4f;
+            pendantLight.range = 16f;
 
             // Boundary Walls
             CreateWall("Wall_North_Back", envRoot.transform, new Vector3(0f, 2f, 12f), new Vector3(20f, 4f, 1f));
@@ -67,6 +87,11 @@ namespace TomorrowsCrime.EditorTools
             counter.transform.SetParent(envRoot.transform);
             counter.transform.position = new Vector3(0f, 0.6f, 4f);
             counter.transform.localScale = new Vector3(6f, 1.2f, 1.2f);
+            var counterRenderer = counter.GetComponent<Renderer>();
+            if (counterRenderer != null)
+            {
+                counterRenderer.sharedMaterial.color = new Color(0.24f, 0.14f, 0.08f); // Rich mahogany
+            }
 
             // Create or load immutable evidence definitions
             var keyEvidence = GetOrCreateEvidenceAsset(
@@ -120,6 +145,11 @@ namespace TomorrowsCrime.EditorTools
             table.transform.SetParent(envRoot.transform);
             table.transform.position = new Vector3(0f, 0.45f, -3f);
             table.transform.localScale = new Vector3(2.0f, 0.9f, 1.2f);
+            var tableRenderer = table.GetComponent<Renderer>();
+            if (tableRenderer != null)
+            {
+                tableRenderer.sharedMaterial.color = new Color(0.28f, 0.18f, 0.10f); // Warm walnut
+            }
 
             // 4. Interactable Keycard (Room 102 Keycard resting on the table)
             var keyGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -147,6 +177,11 @@ namespace TomorrowsCrime.EditorTools
             doorLeaf.transform.SetParent(doorRoot.transform);
             doorLeaf.transform.localPosition = new Vector3(0.6f, 1.3f, 0f); // Pivot offset for realistic swing
             doorLeaf.transform.localScale = new Vector3(1.2f, 2.6f, 0.15f);
+            var doorLeafRenderer = doorLeaf.GetComponent<Renderer>();
+            if (doorLeafRenderer != null)
+            {
+                doorLeafRenderer.sharedMaterial.color = new Color(0.22f, 0.12f, 0.07f); // Rich mahogany
+            }
 
             var doorHinge = new GameObject("Door_Hinge");
             doorHinge.transform.SetParent(doorRoot.transform);
@@ -268,6 +303,16 @@ namespace TomorrowsCrime.EditorTools
             soScenario.FindProperty("npcTransform").objectReferenceValue = npcGo.transform;
             soScenario.ApplyModifiedPropertiesWithoutUndo();
 
+            // 10. Major UI Overhaul Systems
+            var uiRootGo = new GameObject("[UserInterface]");
+            uiRootGo.AddComponent<UIManager>();
+            uiRootGo.AddComponent<GameHUDView>();
+            uiRootGo.AddComponent<InvestigationWorkspaceView>();
+            uiRootGo.AddComponent<EvidenceInspectionModalView>();
+            uiRootGo.AddComponent<PauseMenuView>();
+            uiRootGo.AddComponent<SettingsMenuView>();
+            uiRootGo.AddComponent<MainMenuView>();
+
             // Ensure parent directory exists
             var dir = Path.GetDirectoryName(ScenePath);
             if (!Directory.Exists(dir))
@@ -327,6 +372,11 @@ namespace TomorrowsCrime.EditorTools
             wall.transform.SetParent(parent);
             wall.transform.position = position;
             wall.transform.localScale = scale;
+            var renderer = wall.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial.color = new Color(0.32f, 0.31f, 0.28f); // Warm muted stone
+            }
         }
     }
 }

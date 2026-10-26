@@ -56,10 +56,30 @@ flowchart TD
         Scenario -->|Records witnessed failure| Knowledge[InvestigationKnowledgeService]
         Knowledge -->|Persistent Discoveries| Knowledge
         Knowledge -.->|Survives Loop Reset| LoopMgr
+        Knowledge --> Relationships[Evidence Relationships]
+        Knowledge --> DeductionNodes[Deduction Board Nodes]
+        Knowledge --> Observations[Player Observations & Cross-Loop Comparison]
     end
 
-    subgraph UI & Diagnostics
-        DebugHUD[SimulationDebugUI] --> Clock
+    subgraph User Interface Architecture
+        UIMgr[UIManager] -->|Arbitrates UI State| UIStates[UIState Enum]
+        UIMgr -->|Blocks/Restores Input| Player
+        UIMgr -->|Controls Simulation Pause| LoopMgr
+        UIMgr --> HUDView[GameHUDView]
+        UIMgr --> ModalView[EvidenceInspectionModalView]
+        UIMgr --> WorkspaceView[InvestigationWorkspaceView]
+        UIMgr --> PauseView[PauseMenuView]
+        UIMgr --> SettingsView[SettingsMenuView]
+        HUDView -->|Reads Clock & Urgency| Clock
+        HUDView -->|Reads Prompts| Player
+        ModalView -->|Displays Clue Details| Knowledge
+        WorkspaceView -->|Displays Clues, Timeline & Deduction Board| Knowledge
+        SettingsView --> SettingsMgr[GameSettingsManager]
+        SettingsMgr -->|Applies Sensitivity| Player
+    end
+
+    subgraph Diagnostics
+        DebugHUD[SimulationDebugUI - F1] --> Clock
         DebugHUD --> WorldMgr
         DebugHUD --> Engine
         DebugHUD --> NPC
@@ -131,18 +151,24 @@ The simulation truth contains the complete objective state of hotel geometry, ob
   - Player-authored theories linking titles, explanations, and supporting evidence IDs. Supports full CRUD operations (create, update, delete).
   - Freeform scratchpad general notes that persist across loops.
 - **Persistent Store (`InvestigationKnowledgeService`):**
-  - Pure C# singleton preserving all discovered evidence, observation entries, hypotheses, and notes across loop turnovers.
-  - Deduplicates repeated discoveries and provides clean event subscriptions.
+  - Pure C# singleton preserving all discovered evidence, observation entries, hypotheses, evidence relationships, deduction board nodes, and notes across loop turnovers.
+  - Deduplicates repeated discoveries and provides clean event subscriptions (`OnNewEvidenceDiscoveredNotification`, `OnObservationNotification`).
+  - Rejects relationships targeting undiscovered evidence (`ArgumentException`).
+  - Provides `CompareLoops(int loopA, int loopB)` to isolate differences and anomalies across separate runs.
+- **Evidence Relationships (`EvidenceRelationship`):**
+  - Typed semantic links connecting evidence pairs with `EvidenceRelationshipType` (`Supports`, `Contradicts`, `RelatedTo`, `OccurredBefore`, `OccurredAfter`).
+  - Supports authored vs player-created flags and textual explanations.
+- **Deduction Board Data (`DeductionBoardNode`):**
+  - Stores 2D board coordinates (`x`, `y`) and freeform notes per discovered clue card.
 - **World Interaction Bridge (`InspectableEvidence`):**
   - Implements `IInteractable` to connect physical world objects to the first-person raycast interaction system.
   - Supports prerequisite holding item requirements (`requiresHoldingProp`, `requiredPropId`).
+  - Invokes `UIManager.Instance.ShowEvidenceModal(definition)` upon player inspection.
 - **Interactive Notebook Controller (`NotebookUIController`):**
-  - Toggled with `Tab` or `N`.
-  - Features three interactive sections: `Evidence`, `Timeline`, and `Hypotheses & Notes`.
-  - Blocks player input (`PlayerController.SetInputBlocked`) and unlocks the mouse cursor while live simulation continues running.
+  - Legacy lightweight IMGUI fallback controller; yields gracefully to `UIManager` when present.
 
 ### 3.7 Diagnostics & Observability (`TomorrowsCrime.Debugging`)
-- Real-time HUD (`SimulationDebugUI`) showing:
+- Real-time HUD (`SimulationDebugUI`) toggled via `F1` or `` ` `` (off by default):
   - Loop index, elapsed & remaining time, time-scale controls.
   - Keycard location (`At Table`, `Held by Player`, `Dropped Elsewhere`).
   - Door status (`Locked`, `Unlocked`).
@@ -150,4 +176,41 @@ The simulation truth contains the complete objective state of hotel geometry, ob
   - Live NPC simulation diagnostics (Name, ID, behavior state, navigation status, active activity, and decision reason).
   - Persistent discoveries list.
   - Center reticle and contextual interaction prompt.
-  - Controls help text (including `Tab/N=Notebook`).
+  - Automatically hidden when any UI modal is active.
+
+### 3.8 User Interface Architecture (`TomorrowsCrime.UI.*`)
+
+#### Visual Identity & Design Tokens (`TomorrowsCrime.UI.Styling.UITheme`):
+- Pure styling token repository.
+- Period-tinged modern detective color palette: Charcoal (`#17191C`), Slate (`#23272C`), Aged Warm Paper (`#E9E2D5`), Polished Brass (`#B69A61`), Verdigris Teal (`#6D9C98`), Warm Amber (`#D99A4A`), and Crimson (`#B85C58`).
+- Procedural solid textures and custom `GUIStyle` caches for cards, badges, buttons, sliders, and tab bars.
+
+#### UI State Arbitration (`TomorrowsCrime.UI.Core.UIManager`):
+- Singleton coordinator enforcing discrete modal states: `InGameHUD`, `InvestigationNotebook`, `EvidenceDetailModal`, `PauseMenu`, `SettingsMenu`, `MainMenu`, `LoopSummaryOverlay`.
+- Dispatches modal open/close lifecycle events:
+  - Unlocks cursor (`CursorLockMode.None`, `Cursor.visible = true`) and blocks player input (`PlayerController.SetInputBlocked(true)`).
+  - Restores cursor lock (`CursorLockMode.Locked`, `Cursor.visible = false`) and player input upon returning to `InGameHUD`.
+- Enforces simulation execution policy:
+  - **Non-blocking:** `InvestigationNotebook` and `EvidenceDetailModal` allow the 5-minute simulation to continue ticking in the background.
+  - **Paused:** `PauseMenu` and `SettingsMenu` explicitly halt simulation time (`SimulationManager.Instance.IsPaused = true`).
+- Toast Notification Queue: slide-in discovery banners for clues and observations with expiration timers.
+
+#### HUD & Views:
+- **GameHUDView:** First-person HUD displaying loop countdown, fill bar with urgency color shifts (>60s brass, <60s amber, <15s pulsing red), contextual reticle prompt badge, toasts, and investigation status pill.
+- **EvidenceInspectionModalView:** Focused warm-paper reading interface displaying clue category, title, examination narrative, and linked causal events.
+- **InvestigationWorkspaceView:** 3-column detective workspace featuring:
+  - *Evidence Library:* Clue list with category filters and detailed inspector.
+  - *Timeline & Comparison:* Chronological observations with cross-loop diff comparison.
+  - *Deduction Board:* 2D node placement, note editing, and semantic link creation (`Supports`, `Contradicts`, `RelatedTo`, `OccurredBefore`, `OccurredAfter`).
+  - *Hypotheses:* Theory formulation, editing, and evidence validation.
+  - *Field Notes:* Persistent freeform scratchpad.
+- **PauseMenuView & SettingsMenuView:** In-game pause modal and user settings menu.
+
+### 3.9 Settings Subsystem (`TomorrowsCrime.Settings.GameSettingsManager`)
+- Persistent settings service storing preferences in `PlayerPrefs`:
+  - `MasterVolume` (float 0.0 – 1.0)
+  - `MouseSensitivity` (float 0.1 – 3.0, driving `PlayerController.LookSensitivity`)
+  - `GraphicsQuality` (int 0 – 2)
+  - `IsFullscreen` (bool)
+  - `HUDScale` (float 0.75 – 1.25)
+- Fires `OnSettingsChanged` to immediately update dependent gameplay and rendering systems.
