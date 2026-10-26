@@ -233,3 +233,35 @@ The simulation truth contains the complete objective state of hotel geometry, ob
 - **`VisualRebootInspector.cs`:** Editor utility rendering 3D camera viewpoints offscreen to high-resolution `RenderTexture` (1920x1080) and encoding to PNG files in `Docs/Screenshots/`. Captures lobby overview, character portrait, reception desk, center table, and Room 102 entrance.
 - **`RuntimeVisualCapture.cs`:** Automates PlayMode execution across discrete frames to capture live UI screens: Main Menu (`Shot_06`), In-Game HUD (`Shot_07`), Case Dossier Workspace (`Shot_08`), and Evidence Inspection Modal (`Shot_09`).
 - Guarantees visual quality can be assessed and verified through inspected images rather than subjective assertions.
+
+### 3.12 Procedural Generation Pipeline & Living Hotel Architecture (`TomorrowsCrime.Procedural.*`)
+
+#### Coordinated Generation Pipeline:
+- **`GenerationPipeline`:** Master controller orchestrating seed initialization, architectural layout, scenario ground truth generation, solvability validation, NPC population, routine scheduling, and room object placements.
+- **Reproducible Determinism (`SeededRandom`, `InvestigationSeed`):** Multi-stream SplitMix64 / Xoshiro256** PRNG maintaining isolated streams (`Layout`, `NPCs`, `Objects`, `Scenario`, `Cosmetics`) to prevent cross-domain contamination.
+  - *New Investigation:* Generates new seed and world configuration, clears case-specific knowledge.
+  - *Time-Loop Reset:* Preserves current seed, ground truth, and player discoveries, restoring physical state and NPCs to baseline.
+
+#### Multi-Floor Architectural Layout (`TomorrowsCrime.Procedural.Hotel`):
+- **`HotelLayoutTemplate` & `HotelBuilder`:** 12 distinct rooms across 2 floors with explicit 3D bounds and typed placement anchors:
+  - *Ground Floor:* Grand Lobby, Reception, Dining Hall, Kitchen, Service Corridor & Staircase, Staff Office, Utility Room.
+  - *Upper Floor:* Second Floor Gallery, Suite 101, VIP Suite 102, Room 103, Housekeeping Storage.
+- Physical geometry with solid floors, ceilings, walls with framed doorway cutouts, and 16-step staircase with walk ramp collider.
+- **Collision Integrity (`WorldCollisionAuditor`):** Audits non-trigger colliders across all rooms, verifies door obstruction when closed, and validates player CharacterController geometry (center `(0, 1.0, 0)`, stepOffset `0.35m`).
+
+#### Room-Aware Object Placement (`TomorrowsCrime.Procedural.Objects`):
+- **`RoomObjectPlacer` & `ObjectDefinition`:** 14+ item catalog across 7 categories (`Key`, `Utensil`, `Valuable`, `Container`, `Tool`, `Document`, `Clutter`).
+- Places mandatory scenario evidence first (murder weapon, access key, motive documents) at valid room anchors, followed by ambient clutter with a 40% empty search probability.
+
+#### NPC Ecosystem & Needs Model (`TomorrowsCrime.Procedural.NPCs`):
+- **`NPCPopulationGenerator` & `NPCProfile`:** 10-person character roster spanning staff (Pierre, Celeste, Marcel, Clara, Otto, Adler) and guests (Lord Harrington, Madame Valerie, Dr. Sterling, Vivian Monroe).
+- **`NPCNeedsModel`:** Simulation-driven needs (`Energy`, `Hunger`, `Stress`, `Social`) ticked according to simulation clock time.
+- **`NPCRoutinePlan`:** Scheduled 300-second routines with activities, destinations, and station requirements across rooms.
+
+#### Mystery Ground Truth & Bounded Solver (`TomorrowsCrime.Procedural.Mystery`):
+- **`CrimeScenarioGenerator` & `MysteryGroundTruth`:** Generates victim, culprit, motive, murder method, weapon, crime scene, murder timestamp, causal timeline, and mandatory evidence threads.
+- **`MysterySolvabilityValidator`:** Bounded solver verifying 8 strict solvability criteria (valid distinct culprit, chronological timeline within 300s, weapon/scene existence, reachable evidence threads, innocent suspect alibis for deductive elimination, access keys, non-contradictory motive, valid object placements). Retries invalid configurations up to 10 attempts.
+- **`ScenarioEventBridge`:** Compiles timeline events into runtime `EventDefinition` instances with preconditions and effects, registered into `CausalEventEngine`.
+
+#### Developer Generation Inspector (`TomorrowsCrime.Procedural.Debugging`):
+- **`GenerationInspectorUI`:** Developer console (toggled via `F2`) showing seed code, ground truth, NPC roster, room summary, object placements, and 8-criteria validation diagnostics. Enables seed loading, random generation, and replay debugging.

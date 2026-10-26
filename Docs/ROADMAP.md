@@ -135,10 +135,43 @@ A phased, iterative plan for developing *Tomorrow's Crime*.
 
 ---
 
-## Phase 8: Hotel Environment Expansion & Full Suspect Ensemble
-- [ ] Multi-room Meridian House layout expansion (Lobby, Guest Room 102 interior, Service Corridor, Manager's Office).
-- [ ] Suspect ensemble expansion: author definitions and routines for remaining suspects.
-- [ ] Additional physical clues, documents, and environmental manipulation devices (breakers, phone lines).
-- [ ] Audio design (clock ticking, ambient tension, loop transition stingers, footstep audio).
-- [ ] Visual polish (lighting, post-processing volume profiles, materials).
-- [ ] Automated integration test suite and final release build.
+## Phase 8: The Living Hotel — Procedural World, NPC Ecosystem & Replayable Mystery Generation (Completed)
+- [x] Physical boundary & collision hardening:
+  - Corrected `CharacterController` capsule geometry: center `(0, 1.0, 0)`, stepOffset `0.35m`, slopeLimit `45°`, skinWidth `0.08m`.
+  - Added non-trigger box colliders to lobby pillars and environment geometry.
+  - Implemented `WorldCollisionAuditor` validating solid boundaries across all rooms, floors, ceilings, and doors.
+- [x] Multi-floor architectural layout (`HotelLayoutTemplate.cs` & `HotelBuilder.cs`):
+  - 12 distinct rooms across 2 floors with explicit 3D bounds and typed placement anchors.
+  - Ground Floor: Lobby, Reception, Dining Hall, Kitchen, Service Corridor & Staircase, Staff Office, Utility Room.
+  - Upper Floor: Second Floor Gallery, Suite 101, VIP Suite 102, Room 103, Housekeeping Storage.
+  - 16-step staircase with mahogany treads and smooth walk ramp collider.
+  - Perimeter walls with framed doorway openings and synchronized swinging doors.
+- [x] Room-aware object placement system (`RoomObjectPlacer.cs`):
+  - Catalog of 14+ contextual items across 7 categories (`Key`, `Utensil`, `Valuable`, `Container`, `Tool`, `Document`, `Clutter`).
+  - Mandatory scenario evidence placed first at eligible anchors; ambient clutter placed with a 40% empty search probability.
+- [x] Populated NPC ecosystem & simulation-driven needs (`NPCPopulationGenerator.cs`, `NPCNeedsModel.cs`):
+  - 10-person character roster (Pierre, Celeste, Marcel, Clara, Otto, Adler, Harrington, Valerie, Sterling, Monroe).
+  - Dynamic simulation-time needs model (`Energy`, `Hunger`, `Stress`, `Social`).
+  - Scheduled 300-second routine plans across rooms.
+- [x] Replayable murder mystery generation & bounded solver (`CrimeScenarioGenerator.cs`, `MysterySolvabilityValidator.cs`):
+  - Internal Ground Truth: victim, culprit, motive, murder method, weapon, crime scene, murder timestamp, causal timeline, and mandatory evidence threads.
+  - Bounded solver evaluating 8 foundational solvability criteria with automatic deterministic retry policy.
+  - Causal event compilation via `ScenarioEventBridge` registering timeline steps with `CausalEventEngine`.
+- [x] Reproducible randomness & seed management (`SeededRandom.cs`, `InvestigationSeed.cs`):
+  - SplitMix64 / Xoshiro256** PRNG with isolated domain streams (`Layout`, `NPCs`, `Objects`, `Scenario`, `Cosmetics`).
+  - Clear separation between New Investigation (new seed, fresh state, reset knowledge) and Time-Loop Reset (preserves seed, ground truth, and player discoveries).
+- [x] Developer Generation Inspector (`GenerationInspectorUI.cs`):
+  - Toggled via `F2`.
+  - Displays seed code, Ground Truth, NPC ecosystem, hotel layout, object placements, and 8-criteria validation diagnostics.
+  - Interactive seed controls: load seed, new random seed, replay investigation.
+- [x] Comprehensive automated testing:
+  - 16 new unit tests in `ProceduralGenerationTests.cs`.
+  - Automated 100-seed batch stress test (`MultiSeedBatchRunner.cs`): 100 / 100 seeds passed (100% pass rate, avg 0.17 ms/seed).
+  - 87 / 87 total EditMode unit tests passing (100% pass rate, 0 failed).
+
+---
+
+## Phase 9: Audio Design, Polish & Release Packaging
+- [ ] Atmospheric audio design (period jazz radio, rain/thunder, loop reset stingers, footstep audio).
+- [ ] Post-processing volume profile polish (bloom, color grading, vignette).
+- [ ] Standalone release build packaging.

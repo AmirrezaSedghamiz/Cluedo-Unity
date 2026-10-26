@@ -160,7 +160,45 @@ Milestone 7 replaces the game's visual presentation from the ground up, establis
 
 ---
 
-## 8. Controls
+## 8. The Living Hotel: Procedural World, NPC Ecosystem & Replayable Mystery Generation (Milestone 8)
+
+Milestone 8 transforms *Tomorrow's Crime* into a replayable detective simulation where every new investigation produces a distinct, coherent, and provably solvable murder mystery within an expanded multi-floor environment.
+
+### Core Procedural Architecture & Systems:
+1. **Multi-Floor Hotel Layout (`HotelLayoutTemplate.cs`, `HotelBuilder.cs`)**:
+   - 12 distinct rooms across 2 floors with explicit 3D bounds and typed placement anchors:
+     - **Ground Floor:** Grand Lobby (`room_lobby`), Front Reception (`room_reception`), Dining Hall (`room_dining`), Hotel Kitchen (`room_kitchen`), East Service Corridor & Staircase (`room_corridor_ground`), Manager's Office (`room_staff_office`), Maintenance & Utility Room (`room_utility`).
+     - **Upper Floor:** Second Floor Gallery & Landing (`room_upper_corridor`), Suite 101 (`room_guest_101`), VIP Suite 102 (`room_guest_102`), Guest Room 103 (`room_guest_103`), Housekeeping Storage (`room_housekeeping`).
+   - Central 16-step mahogany staircase with smooth ramp collider for seamless navigation between floors.
+   - Solid floor slabs, ceiling slabs, and perimeter walls with framed doorway openings.
+2. **Physical Boundary & Collision Hardening (`WorldCollisionAuditor.cs`)**:
+   - Corrected `CharacterController` geometry: center `(0, 1.0, 0)`, height `2.0m`, step offset `0.35m`, slope limit `45°`, skin width `0.08m`.
+   - Added solid box colliders to lobby pillars and all environmental props.
+   - Comprehensive audit utility validating solid boundaries across all rooms, floors, ceilings, and doors.
+3. **Room-Aware Object Placement (`RoomObjectPlacer.cs`)**:
+   - 14+ contextual item catalog across 7 categories (`Key`, `Utensil`, `Valuable`, `Container`, `Tool`, `Document`, `Clutter`).
+   - Mandatory scenario evidence placed first at eligible anchors (weapon in culprit's domain, key in lobby, blackmail letter at crime scene).
+   - Remaining anchors populated with ambient clutter using a 40% empty search probability for authentic detective investigation.
+4. **NPC Ecosystem & Simulation-Driven Needs (`NPCPopulationGenerator.cs`, `NPCNeedsModel.cs`)**:
+   - 10-person character roster: Pierre (Concierge), Celeste (Receptionist), Marcel (Chef), Clara (Maid), Otto (Engineer), Adler (Manager), Lord Harrington (101), Madame Valerie (102), Dr. Sterling (103), Vivian Monroe (Journalist).
+   - Dynamic simulation-time needs model (`Energy`, `Hunger`, `Stress`, `Social`).
+   - 300-second scheduled routine plans with activities, destinations, and station requirements across rooms.
+5. **Replayable Murder Mystery Generation & Solvability Validator (`CrimeScenarioGenerator.cs`, `MysterySolvabilityValidator.cs`)**:
+   - Generates internal Ground Truth: victim, culprit, motive, murder method, weapon, crime scene, murder timestamp, causal timeline, and mandatory evidence threads.
+   - Bounded solver evaluating 8 foundational solvability criteria before allowing an investigation to start.
+   - Causal event compilation via `ScenarioEventBridge` registering timeline steps with `CausalEventEngine`.
+6. **Reproducible Randomness & Domain Streams (`SeededRandom.cs`, `InvestigationSeed.cs`)**:
+   - Deterministic SplitMix64 / Xoshiro256** PRNG with isolated domain streams (`Layout`, `NPCs`, `Objects`, `Scenario`, `Cosmetics`).
+   - **New Investigation:** Generates new seed, world configuration, and mystery; resets player knowledge.
+   - **Time-Loop Reset:** Reuses current seed and ground truth; preserves player discoveries, hypotheses, and timeline.
+7. **Developer Generation Inspector (`GenerationInspectorUI.cs`)**:
+   - Toggled via **`F2`**.
+   - Displays seed code, Ground Truth, NPC ecosystem, hotel layout, object placements, and 8-criteria validation diagnostics.
+   - Interactive controls: Load Seed, New Random Seed, Replay Investigation.
+
+---
+
+## 9. Controls
 
 - **Move:** `W`, `A`, `S`, `D`
 - **Look:** Mouse (Sensitivity configurable in Settings)
@@ -170,11 +208,12 @@ Milestone 7 replaces the game's visual presentation from the ground up, establis
 - **Pause Menu / Dismiss Modal:** `Escape` or `P`
 - **Manual Loop Reset:** `R`
 - **Toggle Developer Diagnostic HUD:** `F1` or `` ` `` (Suppressed while modals are active)
+- **Toggle Developer Generation Inspector:** `F2` (Inspect seed, ground truth, and NPC routines)
 - **Time Acceleration (Debug):** `1` (1x), `2` (2x), `5` (5x) (Active when Diagnostic HUD is enabled)
 
 ---
 
-## 9. Getting Started & Running in Unity
+## 10. Getting Started & Running in Unity
 
 1. Open **Unity Hub**.
 2. Click **Add** -> **Add project from disk**.
@@ -187,12 +226,20 @@ Milestone 7 replaces the game's visual presentation from the ground up, establis
 
 ---
 
-## 10. Automated Test Suite
+## 11. Automated Test Suite
 
 The project includes an EditMode test suite with 100% pass rate:
-- **Total Tests:** 71
-- **Passed:** 71 / 71
+- **Total Tests:** 87
+- **Passed:** 87 / 87
 - **Failed:** 0
+- **Suites:**
+  - `ProceduralGenerationTests` (16 tests, including 100-seed automated batch stress test)
+  - `InvestigationSystem2Tests` (14 tests)
+  - `InvestigationSystemTests` (14 tests)
+  - `CausalEventEngineTests` (15 tests)
+  - `NPCSimulationTests` (12 tests)
+  - `WorldStateAndScenarioTests` (10 tests)
+  - `SimulationClockTests` (6 tests)
 - **Suites:**
   - `InvestigationSystem2Tests` (14 tests)
   - `InvestigationSystemTests` (14 tests)

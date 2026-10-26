@@ -378,3 +378,82 @@ Replaced the game's visual presentation from the ground up to establish a distin
      - 71 passed, 0 failed, 0 inconclusive (100% pass rate).
      - Zero gameplay regressions.
 
+---
+
+## [2026-10-26] Milestone 8: The Living Hotel — Procedural World, NPC Ecosystem & Replayable Mystery Generation
+
+### Executive Summary
+Transformed *Tomorrow's Crime* into a replayable detective simulation where every new investigation produces a distinct, coherent, and provably solvable murder mystery. Expanded the single-room prototype into a multi-floor 12-room hotel layout, hardened physical collision boundaries, introduced room-aware object placement with ambient clutter, created an active 10-person NPC ecosystem with needs and scheduled routines, connected scenario events to the causal engine, and built a bounded solvability validator. Validated across 87 EditMode tests and a 100-seed automated batch with a 100% pass rate.
+
+### 1. Collision Hardening & Physical Boundaries
+- **CharacterController Configuration**:
+  - Corrected `CharacterController` capsule geometry: offset `center` to `(0, 1.0, 0)` with height `2.0m` (positioning capsule base at floor level), configured `stepOffset` to `0.35m` (for smooth stair ascent), `slopeLimit` to `45°`, and `skinWidth` to `0.08m`.
+- **Architectural Solid Boundaries**:
+  - Added non-trigger `BoxCollider` components to lobby columns (`Pillar_West`, `Pillar_East`).
+  - Added physical collision checking to `WorldCollisionAuditor` auditing floors, ceilings, walls, doors, large furniture, and desks.
+  - Verified closed doors obstruct passage (`ValidateDoorPassage`), while door swinging clears passage.
+
+### 2. Multi-Floor Hotel Architecture
+- **Room Definitions & Layout (`HotelLayoutTemplate.cs`)**:
+  - Created 12 distinct rooms across 2 floors with explicit 3D bounds and typed placement anchors:
+    - **Ground Floor (Y = 0m to 4.5m):** Grand Lobby (`room_lobby`), Front Reception (`room_reception`), Dining Hall (`room_dining`), Hotel Kitchen (`room_kitchen`), East Service Corridor & Staircase (`room_corridor_ground`), Manager's Office (`room_staff_office`), Maintenance & Utility Room (`room_utility`).
+    - **Upper Floor (Y = 5.0m to 9.5m):** Second Floor Gallery & Landing (`room_upper_corridor`), Suite 101 (`room_guest_101`), VIP Suite 102 (`room_guest_102`), Guest Room 103 (`room_guest_103`), Housekeeping Storage (`room_housekeeping`).
+- **Physical Construction (`HotelBuilder.cs`)**:
+  - Instantiates solid floor slabs, ceiling slabs, and perimeter walls with framed doorway openings.
+  - Central 16-step staircase with mahogany treads and invisible smooth ramp collider connecting Floor 1 and Floor 2.
+  - Instantiates `InteractableDoor` instances with brass frames, swinging hinges, and key-gated locks.
+
+### 3. Procedural Room Population & Object Placement
+- **Object Catalog (`RoomObjectPlacer.cs`)**:
+  - Rich catalog of 14+ contextual items across 7 categories (`Key`, `Utensil`, `Valuable`, `Container`, `Tool`, `Document`, `Clutter`).
+- **Placement Algorithm**:
+  - Places mandatory scenario evidence first at eligible anchors (e.g. murder weapon in culprit's domain, key in lobby, blackmail letter at crime scene).
+  - Populates remaining anchors with ambient contextual clutter using a 40% empty search probability for authentic investigative pacing.
+
+### 4. NPC Ecosystem, Needs Model & Routines
+- **10-Character Roster (`NPCPopulationGenerator.cs`)**:
+  - Staff: Pierre (Concierge), Celeste (Receptionist), Marcel (Chef), Clara (Maid), Otto (Engineer), Adler (Hotel Manager).
+  - Guests/Suspects: Lord Harrington (101), Madame Valerie (102), Dr. Sterling (103), Vivian Monroe (Journalist).
+- **Simulation-Driven Needs Model (`NPCNeedsModel.cs`)**:
+  - Ticks `Energy`, `Hunger`, `Stress`, and `Social` based on simulation clock time (independent of framerate).
+- **Scheduled Routine Plans (`NPCRoutinePlan.cs`)**:
+  - Comprehensive 300-second routines with activities, destinations, and station requirements across rooms.
+
+### 5. Replayable Murder Mystery Generation & Solvability Validator
+- **Internal Ground Truth (`MysteryGroundTruth.cs`, `CrimeScenarioGenerator.cs`)**:
+  - Generates victim, culprit, motive, murder method, weapon, crime scene, murder timestamp, causal timeline, and mandatory evidence threads.
+- **Bounded Solvability Validator (`MysterySolvabilityValidator.cs`)**:
+  - Evaluates 8 strict solvability criteria:
+    1. Culprit is a valid suspect and distinct from victim.
+    2. Crime timeline is chronologically ordered within 300s.
+    3. Murder weapon and crime scene exist in layout.
+    4. Required evidence threads are mapped and discoverable.
+    5. Innocent suspects have verified alibis for deductive elimination.
+    6. Access key requirements are defined and satisfiable.
+    7. Motive is coherent and non-contradictory.
+    8. Mandatory object placements target valid room definitions.
+- **Causal Event Compilation (`ScenarioEventBridge.cs`)**:
+  - Compiles the crime timeline into runtime `EventDefinition` instances with preconditions and effects, registered into `CausalEventEngine`.
+
+### 6. Reproducible Randomness & Seed Management
+- **Deterministic PRNG (`SeededRandom.cs`, `InvestigationSeed.cs`)**:
+  - SplitMix64 / Xoshiro256** implementation with isolated domain sub-streams (`Layout`, `NPCs`, `Objects`, `Scenario`, `Cosmetics`).
+  - Strict lifecycle separation:
+    - **New Investigation:** New seed, fresh world configuration, new mystery, clears case-specific knowledge.
+    - **Time-Loop Reset:** Reuses current seed and ground truth, preserves player discoveries/hypotheses/timeline, restores physical state and NPCs to baseline.
+
+### 7. Developer Debugging Console
+- **`GenerationInspectorUI.cs` (Toggled via `F2`)**:
+  - Developer console displaying current seed, Ground Truth, NPC ecosystem, hotel layout, object placements, and 8-criteria validation diagnostics.
+  - Interactive seed controls: load seed, generate random seed, replay investigation.
+
+### 8. Verification & Multi-Seed Automated Testing
+- **16 New Unit Tests (`ProceduralGenerationTests.cs`)**:
+  - Validates seed reproducibility, layout rules, door connections, object catalogs, NPC stability, routines, timeline consistency, solvability validator, event compilation, collision audit, and knowledge reset.
+- **100-Seed Batch Stress Test (`MultiSeedBatchRunner.cs`)**:
+  - Tested 100 distinct seeds through the generation and solvability solver:
+  - **100 / 100 seeds passed (100% pass rate, 0 failed, avg 0.17 ms/seed)**.
+- **Total Test Suite**:
+  - **87 / 87 tests passed (100% pass rate, 0 failed)** across all 7 test suites. Zero gameplay regressions.
+
+

@@ -113,10 +113,15 @@ namespace TomorrowsCrime.EditorTools
             CreateArchitecturalWall("Wall_West", envRoot.transform, new Vector3(-10f, 0f, 0f), new Vector3(0.8f, 4.5f, 24f), wallLowerMat, wallUpperMat, brassMat, false);
             CreateArchitecturalWall("Wall_East", envRoot.transform, new Vector3(10f, 0f, 0f), new Vector3(0.8f, 4.5f, 24f), wallLowerMat, wallUpperMat, brassMat, false);
 
-            // 5. Fluted Architectural Columns with Corinthian Brass Capitals
+            // 5. Fluted Architectural Columns with Corinthian Brass Capitals (Solid Colliders)
             var pillarPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Pillar.obj");
-            SpawnProp(pillarPrefab, "Pillar_West", envRoot.transform, new Vector3(-5f, 0f, 0f), Vector3.zero, Vector3.one, mats);
-            SpawnProp(pillarPrefab, "Pillar_East", envRoot.transform, new Vector3(5f, 0f, 0f), Vector3.zero, Vector3.one, mats);
+            var colPillarWest = SpawnProp(pillarPrefab, "Pillar_West", envRoot.transform, new Vector3(-5f, 0f, 0f), Vector3.zero, Vector3.one, mats).AddComponent<BoxCollider>();
+            colPillarWest.center = new Vector3(0f, 2.25f, 0f);
+            colPillarWest.size = new Vector3(1.1f, 4.5f, 1.1f);
+
+            var colPillarEast = SpawnProp(pillarPrefab, "Pillar_East", envRoot.transform, new Vector3(5f, 0f, 0f), Vector3.zero, Vector3.one, mats).AddComponent<BoxCollider>();
+            colPillarEast.center = new Vector3(0f, 2.25f, 0f);
+            colPillarEast.size = new Vector3(1.1f, 4.5f, 1.1f);
 
             // 6. Grand Art Deco Chandelier
             var chandelierPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Chandelier.obj");
@@ -325,15 +330,19 @@ namespace TomorrowsCrime.EditorTools
             soNpc.FindProperty("waypointRoom102Door").objectReferenceValue = wpRoom102Door.transform;
             soNpc.ApplyModifiedPropertiesWithoutUndo();
 
-            // 15. First-Person Player Rig
+            // 15. First-Person Player Rig (Collision Hardened)
             var playerGo = new GameObject("Player");
             playerGo.tag = "Player";
-            playerGo.transform.position = new Vector3(0f, 1.0f, -8f);
+            playerGo.transform.position = new Vector3(0f, 0f, -8f);
 
             var characterController = playerGo.AddComponent<CharacterController>();
             characterController.height = 2.0f;
             characterController.radius = 0.45f;
-            characterController.center = new Vector3(0f, 0f, 0f);
+            characterController.center = new Vector3(0f, 1.0f, 0f);
+            characterController.stepOffset = 0.35f;
+            characterController.slopeLimit = 45f;
+            characterController.skinWidth = 0.08f;
+            characterController.minMoveDistance = 0.001f;
 
             var playerController = playerGo.AddComponent<PlayerController>();
             var playerInteraction = playerGo.AddComponent<PlayerInteraction>();
@@ -341,7 +350,7 @@ namespace TomorrowsCrime.EditorTools
             var cameraGo = new GameObject("Main Camera");
             cameraGo.tag = "MainCamera";
             cameraGo.transform.SetParent(playerGo.transform);
-            cameraGo.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+            cameraGo.transform.localPosition = new Vector3(0f, 1.75f, 0f);
             cameraGo.transform.localRotation = Quaternion.identity;
 
             var cam = cameraGo.AddComponent<Camera>();
@@ -381,6 +390,11 @@ namespace TomorrowsCrime.EditorTools
             uiRootGo.AddComponent<PauseMenuView>();
             uiRootGo.AddComponent<SettingsMenuView>();
             uiRootGo.AddComponent<MainMenuView>();
+            uiRootGo.AddComponent<TomorrowsCrime.Procedural.Debugging.GenerationInspectorUI>();
+
+            // Run Collision Audit
+            var audit = TomorrowsCrime.Procedural.Validation.WorldCollisionAuditor.AuditEnvironment(envRoot);
+            Debug.Log($"[PrototypeSceneSetup] Collision Audit: {audit}");
 
             // Save Scene
             var dir = Path.GetDirectoryName(ScenePath);
