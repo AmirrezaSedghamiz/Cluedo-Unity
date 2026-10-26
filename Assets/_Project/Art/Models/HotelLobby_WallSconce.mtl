@@ -1,0 +1,85 @@
+# Material definitions for Tomorrow's Crime
+newmtl UniformNavy
+Kd 0.11 0.18 0.29
+Ks 0.4 0.4 0.5
+Ns 30
+illum 2
+
+newmtl BrassGold
+Kd 0.83 0.69 0.22
+Ks 0.95 0.85 0.45
+Ns 100
+illum 2
+
+newmtl ShirtWhite
+Kd 0.96 0.96 0.95
+Ks 0.2 0.2 0.2
+Ns 10
+illum 2
+
+newmtl TieBurgundy
+Kd 0.42 0.11 0.18
+Ks 0.6 0.3 0.3
+Ns 45
+illum 2
+
+newmtl TrousersCharcoal
+Kd 0.12 0.14 0.18
+Ks 0.2 0.2 0.2
+Ns 15
+illum 2
+
+newmtl ShoesLeather
+Kd 0.07 0.07 0.09
+Ks 0.85 0.85 0.85
+Ns 80
+illum 2
+
+newmtl SkinStylized
+Kd 0.88 0.70 0.60
+Ks 0.3 0.3 0.3
+Ns 20
+illum 2
+
+newmtl HairDark
+Kd 0.11 0.09 0.08
+Ks 0.4 0.4 0.4
+Ns 35
+illum 2
+
+newmtl WoodMahogany
+Kd 0.20 0.10 0.07
+Ks 0.7 0.5 0.4
+Ns 65
+illum 2
+
+newmtl WoodWalnut
+Kd 0.25 0.15 0.10
+Ks 0.65 0.45 0.35
+Ns 55
+illum 2
+
+newmtl MarbleBlack
+Kd 0.08 0.09 0.10
+Ks 0.92 0.92 0.92
+Ns 90
+illum 2
+
+newmtl MarbleIvory
+Kd 0.93 0.91 0.88
+Ks 0.88 0.88 0.88
+Ns 85
+illum 2
+
+newmtl AmberGlow
+Kd 1.00 0.72 0.25
+Ke 1.00 0.75 0.25
+Ks 0.5 0.5 0.5
+Ns 30
+illum 2
+
+newmtl EmeraldGreen
+Kd 0.11 0.38 0.14
+Ks 0.85 0.85 0.85
+Ns 75
+illum 2

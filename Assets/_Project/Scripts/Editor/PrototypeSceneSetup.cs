@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -18,6 +19,13 @@ using TomorrowsCrime.World;
 
 namespace TomorrowsCrime.EditorTools
 {
+    /// <summary>
+    /// Constructs the complete visual reboot of Meridian House for Tomorrow's Crime.
+    /// Step 7: Modern Cluedo-Inspired Art Direction.
+    /// Replaces graybox primitives with bespoke stylized 3D models, rich PBR materials,
+    /// architectural wainscoting, checker marble flooring, fluted columns, Art Deco chandeliers,
+    /// a fully realized stylized Concierge Pierre character model, and a multi-source lighting rig.
+    /// </summary>
     [InitializeOnLoad]
     public static class PrototypeSceneSetup
     {
@@ -40,60 +48,111 @@ namespace TomorrowsCrime.EditorTools
         [MenuItem("Tomorrow's Crime/Build Prototype Scene", priority = 1)]
         public static void BuildPrototypeScene()
         {
+            Debug.Log("[Tomorrow's Crime] Commencing Step 7 Complete Visual Reboot Scene Build...");
+
+            // 1. Setup PBR Materials & Model Assets
+            var mats = ArtAssetSetup.CreateOrUpdateMaterials();
+
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            // 1. Lighting
-            var lightGo = new GameObject("Directional Light");
-            var light = lightGo.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.color = new Color(1.0f, 0.96f, 0.90f);
-            light.intensity = 1.2f;
-            lightGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            // 2. Chiaroscuro Lighting Rig
+            // Soft cool midnight ambient moonlight (5500K)
+            var moonLightGo = new GameObject("Moonlight_Directional");
+            var moonLight = moonLightGo.AddComponent<Light>();
+            moonLight.type = LightType.Directional;
+            moonLight.color = new Color(0.55f, 0.65f, 0.85f); // Cool midnight blue
+            moonLight.intensity = 0.45f;
+            moonLightGo.transform.rotation = Quaternion.Euler(60f, -40f, 0f);
 
-            // 2. Graybox Hotel Lobby Environment
+            // 3. Architectural Meridian House Lobby Environment
             var envRoot = new GameObject("[Environment_HotelLobby]");
 
-            // Floor
+            // Floor Base (Checker Italian Marble)
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            floor.name = "Floor";
+            floor.name = "Floor_CheckerMarble";
             floor.transform.SetParent(envRoot.transform);
             floor.transform.position = new Vector3(0f, -0.5f, 0f);
             floor.transform.localScale = new Vector3(20f, 1f, 24f);
             var floorRenderer = floor.GetComponent<Renderer>();
-            if (floorRenderer != null)
+            if (floorRenderer != null && mats.TryGetValue("FloorCheckerMarble", out var floorMat))
             {
-                floorRenderer.sharedMaterial.color = new Color(0.12f, 0.13f, 0.15f); // Deep charcoal
+                floorRenderer.sharedMaterial = floorMat;
             }
 
-            // Atmospheric Warm Chandelier / Pendant Light
-            var pendantLightGo = new GameObject("Lobby_PendantLight");
-            pendantLightGo.transform.SetParent(envRoot.transform);
-            pendantLightGo.transform.position = new Vector3(0f, 3.4f, 0f);
-            var pendantLight = pendantLightGo.AddComponent<Light>();
-            pendantLight.type = LightType.Point;
-            pendantLight.color = new Color(1.0f, 0.88f, 0.65f);
-            pendantLight.intensity = 2.4f;
-            pendantLight.range = 16f;
-
-            // Boundary Walls
-            CreateWall("Wall_North_Back", envRoot.transform, new Vector3(0f, 2f, 12f), new Vector3(20f, 4f, 1f));
-            CreateWall("Wall_South_Entrance", envRoot.transform, new Vector3(0f, 2f, -12f), new Vector3(20f, 4f, 1f));
-            CreateWall("Wall_West", envRoot.transform, new Vector3(-10f, 2f, 0f), new Vector3(1f, 4f, 24f));
-            CreateWall("Wall_East", envRoot.transform, new Vector3(10f, 2f, 0f), new Vector3(1f, 4f, 24f));
-
-            // Interior: Reception Desk
-            var counter = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            counter.name = "Reception_Counter";
-            counter.transform.SetParent(envRoot.transform);
-            counter.transform.position = new Vector3(0f, 0.6f, 4f);
-            counter.transform.localScale = new Vector3(6f, 1.2f, 1.2f);
-            var counterRenderer = counter.GetComponent<Renderer>();
-            if (counterRenderer != null)
+            // Central Luxury Velvet Carpet Runner (Leading to Reception & Room 102)
+            var carpet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            carpet.name = "Carpet_Runner_Burgundy";
+            carpet.transform.SetParent(envRoot.transform);
+            carpet.transform.position = new Vector3(0f, 0.015f, 0f);
+            carpet.transform.localScale = new Vector3(4.2f, 0.03f, 23f);
+            var carpetRenderer = carpet.GetComponent<Renderer>();
+            if (carpetRenderer != null && mats.TryGetValue("CarpetBurgundy", out var carpetMat))
             {
-                counterRenderer.sharedMaterial.color = new Color(0.24f, 0.14f, 0.08f); // Rich mahogany
+                carpetRenderer.sharedMaterial = carpetMat;
             }
 
-            // Create or load immutable evidence definitions
+            // Ceiling (Dark Coffered Wood Ceiling)
+            var ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ceiling.name = "Ceiling_CofferedWood";
+            ceiling.transform.SetParent(envRoot.transform);
+            ceiling.transform.position = new Vector3(0f, 4.5f, 0f);
+            ceiling.transform.localScale = new Vector3(20f, 0.5f, 24f);
+            var ceilingRenderer = ceiling.GetComponent<Renderer>();
+            if (ceilingRenderer != null && mats.TryGetValue("WoodMahogany", out var woodMat))
+            {
+                ceilingRenderer.sharedMaterial = woodMat;
+            }
+
+            // 4. Architectural Walls with Dark Mahogany Wainscoting & Emerald Wallpaper
+            mats.TryGetValue("WallpaperEmerald", out var wallUpperMat);
+            mats.TryGetValue("WoodMahogany", out var wallLowerMat);
+            mats.TryGetValue("BrassGold", out var brassMat);
+
+            CreateArchitecturalWall("Wall_North_Back", envRoot.transform, new Vector3(0f, 0f, 12f), new Vector3(20f, 4.5f, 0.8f), wallLowerMat, wallUpperMat, brassMat, false);
+            CreateArchitecturalWall("Wall_South_Entrance", envRoot.transform, new Vector3(0f, 0f, -12f), new Vector3(20f, 4.5f, 0.8f), wallLowerMat, wallUpperMat, brassMat, true);
+            CreateArchitecturalWall("Wall_West", envRoot.transform, new Vector3(-10f, 0f, 0f), new Vector3(0.8f, 4.5f, 24f), wallLowerMat, wallUpperMat, brassMat, false);
+            CreateArchitecturalWall("Wall_East", envRoot.transform, new Vector3(10f, 0f, 0f), new Vector3(0.8f, 4.5f, 24f), wallLowerMat, wallUpperMat, brassMat, false);
+
+            // 5. Fluted Architectural Columns with Corinthian Brass Capitals
+            var pillarPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Pillar.obj");
+            SpawnProp(pillarPrefab, "Pillar_West", envRoot.transform, new Vector3(-5f, 0f, 0f), Vector3.zero, Vector3.one, mats);
+            SpawnProp(pillarPrefab, "Pillar_East", envRoot.transform, new Vector3(5f, 0f, 0f), Vector3.zero, Vector3.one, mats);
+
+            // 6. Grand Art Deco Chandelier
+            var chandelierPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Chandelier.obj");
+            var chandelier = SpawnProp(chandelierPrefab, "Lobby_GrandChandelier", envRoot.transform, new Vector3(0f, 4.3f, 0f), Vector3.zero, Vector3.one, mats);
+
+            // Warm Radiant Chandelier Point Light
+            var chandelierLightGo = new GameObject("Chandelier_PointLight");
+            chandelierLightGo.transform.SetParent(chandelier.transform);
+            chandelierLightGo.transform.localPosition = new Vector3(0f, -0.8f, 0f);
+            var chandelierLight = chandelierLightGo.AddComponent<Light>();
+            chandelierLight.type = LightType.Point;
+            chandelierLight.color = new Color(1.0f, 0.88f, 0.65f); // 2700K warm tungsten
+            chandelierLight.intensity = 3.2f;
+            chandelierLight.range = 18f;
+
+            // 7. Reception Desk & Banker's Lamp
+            var deskPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
+            var desk = SpawnProp(deskPrefab, "Reception_Desk", envRoot.transform, new Vector3(0f, 0f, 4.5f), Vector3.zero, Vector3.one, mats);
+            var deskCollider = desk.AddComponent<BoxCollider>();
+            deskCollider.center = new Vector3(0f, 0.55f, 0f);
+            deskCollider.size = new Vector3(5.4f, 1.1f, 1.4f);
+
+            // Banker's Desk Lamp with glowing emerald shade
+            var bankerLampPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/Prop_BankerLamp.obj");
+            var bankerLamp = SpawnProp(bankerLampPrefab, "Prop_BankerLamp", desk.transform, new Vector3(-1.8f, 1.12f, 0.2f), new Vector3(0f, 35f, 0f), new Vector3(1.1f, 1.1f, 1.1f), mats);
+
+            var bankerLightGo = new GameObject("BankerLamp_Glow");
+            bankerLightGo.transform.SetParent(bankerLamp.transform);
+            bankerLightGo.transform.localPosition = new Vector3(0f, 0.3f, 0f);
+            var bankerLight = bankerLightGo.AddComponent<Light>();
+            bankerLight.type = LightType.Point;
+            bankerLight.color = new Color(0.6f, 0.95f, 0.7f); // Emerald tinted warm glow
+            bankerLight.intensity = 1.4f;
+            bankerLight.range = 4f;
+
+            // 8. Immutable Evidence Definitions & World Props
             var keyEvidence = GetOrCreateEvidenceAsset(
                 "evidence_room102_keycard",
                 "Room 102 Keycard",
@@ -121,72 +180,66 @@ namespace TomorrowsCrime.EditorTools
                 "evt_concierge_unlock_door"
             );
 
-            // Schedule Memo Evidence on Reception Desk
+            // Schedule Memo Evidence on Reception Desk (Linen Paper)
             var memoGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
             memoGo.name = "Prop_Reception_ScheduleMemo";
             memoGo.transform.SetParent(envRoot.transform);
-            memoGo.transform.position = new Vector3(1.5f, 1.22f, 4f);
-            memoGo.transform.localScale = new Vector3(0.4f, 0.04f, 0.5f);
+            memoGo.transform.position = new Vector3(1.2f, 1.14f, 4.5f);
+            memoGo.transform.localScale = new Vector3(0.42f, 0.02f, 0.55f);
+            memoGo.transform.rotation = Quaternion.Euler(0f, -12f, 0f);
             var memoRenderer = memoGo.GetComponent<Renderer>();
-            if (memoRenderer != null)
+            if (memoRenderer != null && mats.TryGetValue("ShirtWhite", out var memoMat))
             {
-                memoRenderer.sharedMaterial.color = new Color(0.92f, 0.90f, 0.82f);
+                memoRenderer.sharedMaterial = memoMat;
             }
             var memoInspectable = memoGo.AddComponent<InspectableEvidence>();
             memoInspectable.Definition = memoEvidence;
 
-            // Lobby Columns
-            CreateWall("Pillar_West", envRoot.transform, new Vector3(-5f, 2f, 0f), new Vector3(1f, 4f, 1f));
-            CreateWall("Pillar_East", envRoot.transform, new Vector3(5f, 2f, 0f), new Vector3(1f, 4f, 1f));
+            // 9. Round Burled Walnut Center Table
+            var tablePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_CenterTable.obj");
+            var table = SpawnProp(tablePrefab, "Table_LobbyKeyTable", envRoot.transform, new Vector3(0f, 0f, -3f), Vector3.zero, Vector3.one, mats);
+            var tableCollider = table.AddComponent<CylinderColliderSubstitute>();
+            var colBox = table.AddComponent<BoxCollider>();
+            colBox.center = new Vector3(0f, 0.4f, 0f);
+            colBox.size = new Vector3(2.1f, 0.85f, 2.1f);
 
-            // 3. Lobby Table (Holds the Keycard)
-            var table = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            table.name = "Table_LobbyKeyTable";
-            table.transform.SetParent(envRoot.transform);
-            table.transform.position = new Vector3(0f, 0.45f, -3f);
-            table.transform.localScale = new Vector3(2.0f, 0.9f, 1.2f);
-            var tableRenderer = table.GetComponent<Renderer>();
-            if (tableRenderer != null)
-            {
-                tableRenderer.sharedMaterial.color = new Color(0.28f, 0.18f, 0.10f); // Warm walnut
-            }
+            // 10. Stylized Detailed Keycard on Table
+            var keyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/Prop_Keycard_Detailed.obj");
+            var keyGo = SpawnProp(keyPrefab, "Prop_Room102_Keycard", envRoot.transform, new Vector3(0f, 0.83f, -3f), new Vector3(0f, 25f, 0f), Vector3.one, mats);
+            var keyCollider = keyGo.AddComponent<BoxCollider>();
+            keyCollider.center = new Vector3(0f, 0.02f, 0f);
+            keyCollider.size = new Vector3(0.45f, 0.15f, 0.35f);
 
-            // 4. Interactable Keycard (Room 102 Keycard resting on the table)
-            var keyGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            keyGo.name = "Prop_Room102_Keycard";
-            keyGo.transform.SetParent(envRoot.transform);
-            keyGo.transform.position = new Vector3(0f, 0.95f, -3f);
-            keyGo.transform.localScale = new Vector3(0.35f, 0.06f, 0.22f);
             var interactableKey = keyGo.AddComponent<InteractableKey>();
             interactableKey.KeyEvidence = keyEvidence;
 
-            // Give key a distinct golden/amber appearance
-            var keyRenderer = keyGo.GetComponent<Renderer>();
-            if (keyRenderer != null)
-            {
-                keyRenderer.sharedMaterial.color = new Color(0.95f, 0.75f, 0.15f);
-            }
+            // 11. Luxury Velvet Armchairs in Lounge Area
+            var chairPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Armchair.obj");
+            var chair1 = SpawnProp(chairPrefab, "Armchair_West", envRoot.transform, new Vector3(-3.2f, 0f, -3.0f), new Vector3(0f, 55f, 0f), Vector3.one, mats);
+            var chair1Col = chair1.AddComponent<BoxCollider>();
+            chair1Col.center = new Vector3(0f, 0.5f, 0f);
+            chair1Col.size = new Vector3(0.9f, 1.0f, 0.9f);
 
-            // 5. Destination Door (Room 102 Door at North Wall)
+            var chair2 = SpawnProp(chairPrefab, "Armchair_East", envRoot.transform, new Vector3(3.2f, 0f, -3.0f), new Vector3(0f, -55f, 0f), Vector3.one, mats);
+            var chair2Col = chair2.AddComponent<BoxCollider>();
+            chair2Col.center = new Vector3(0f, 0.5f, 0f);
+            chair2Col.size = new Vector3(0.9f, 1.0f, 0.9f);
+
+            // 12. Destination Door: Room 102 with Fluted Architrave & Brass Hardware
             var doorRoot = new GameObject("Destination_Door_Room102");
             doorRoot.transform.SetParent(envRoot.transform);
             doorRoot.transform.position = new Vector3(0f, 0f, 11.4f);
 
-            var doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            doorLeaf.name = "Door_Leaf";
-            doorLeaf.transform.SetParent(doorRoot.transform);
-            doorLeaf.transform.localPosition = new Vector3(0.6f, 1.3f, 0f); // Pivot offset for realistic swing
-            doorLeaf.transform.localScale = new Vector3(1.2f, 2.6f, 0.15f);
-            var doorLeafRenderer = doorLeaf.GetComponent<Renderer>();
-            if (doorLeafRenderer != null)
-            {
-                doorLeafRenderer.sharedMaterial.color = new Color(0.22f, 0.12f, 0.07f); // Rich mahogany
-            }
-
             var doorHinge = new GameObject("Door_Hinge");
             doorHinge.transform.SetParent(doorRoot.transform);
-            doorHinge.transform.localPosition = Vector3.zero;
-            doorLeaf.transform.SetParent(doorHinge.transform);
+            doorHinge.transform.localPosition = new Vector3(-0.65f, 0f, 0f); // Pivot at left jamb
+
+            var doorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Door102.obj");
+            var doorLeaf = SpawnProp(doorPrefab, "Door_Leaf", doorHinge.transform, new Vector3(0.65f, 0f, 0f), Vector3.zero, Vector3.one, mats);
+
+            var doorBoxCollider = doorLeaf.AddComponent<BoxCollider>();
+            doorBoxCollider.center = new Vector3(0f, 1.4f, 0f);
+            doorBoxCollider.size = new Vector3(1.6f, 2.8f, 0.3f);
 
             var doorComponent = doorRoot.AddComponent<InteractableDoor>();
             var soDoor = new SerializedObject(doorComponent);
@@ -195,53 +248,70 @@ namespace TomorrowsCrime.EditorTools
             soDoor.FindProperty("doorDisplayName").stringValue = "Room 102 Door";
             soDoor.ApplyModifiedPropertiesWithoutUndo();
 
-            // Door Card Reader / Lockplate Evidence
+            // Wall Sconces Flanking Door 102
+            var sconcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_WallSconce.obj");
+            var sconceWest = SpawnProp(sconcePrefab, "Sconce_DoorWest", envRoot.transform, new Vector3(-1.8f, 2.2f, 11.5f), new Vector3(0f, 180f, 0f), Vector3.one, mats);
+            AddSconceLight(sconceWest.transform);
+
+            var sconceEast = SpawnProp(sconcePrefab, "Sconce_DoorEast", envRoot.transform, new Vector3(1.8f, 2.2f, 11.5f), new Vector3(0f, 180f, 0f), Vector3.one, mats);
+            AddSconceLight(sconceEast.transform);
+
+            // Electronic Card Reader Plate
             var keypadGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
             keypadGo.name = "Prop_Door102_CardReader";
             keypadGo.transform.SetParent(doorRoot.transform);
-            keypadGo.transform.localPosition = new Vector3(0.85f, 1.3f, -0.05f);
-            keypadGo.transform.localScale = new Vector3(0.18f, 0.28f, 0.08f);
+            keypadGo.transform.localPosition = new Vector3(0.95f, 1.35f, -0.1f);
+            keypadGo.transform.localScale = new Vector3(0.18f, 0.32f, 0.08f);
             var keypadRenderer = keypadGo.GetComponent<Renderer>();
-            if (keypadRenderer != null)
+            if (keypadRenderer != null && mats.TryGetValue("BrassGold", out var readerBrassMat))
             {
-                keypadRenderer.sharedMaterial.color = new Color(0.25f, 0.28f, 0.32f);
+                keypadRenderer.sharedMaterial = readerBrassMat;
             }
+
+            // Glowing Indicator Light on Card Reader (Crimson = Locked)
+            var cardReaderLightGo = new GameObject("CardReader_LED");
+            cardReaderLightGo.transform.SetParent(keypadGo.transform);
+            cardReaderLightGo.transform.localPosition = new Vector3(0f, 0.3f, -0.6f);
+            var cardReaderLight = cardReaderLightGo.AddComponent<Light>();
+            cardReaderLight.type = LightType.Point;
+            cardReaderLight.color = new Color(0.9f, 0.15f, 0.15f); // Crimson lock LED
+            cardReaderLight.intensity = 1.0f;
+            cardReaderLight.range = 1.5f;
+
             var doorInspectable = keypadGo.AddComponent<InspectableEvidence>();
             doorInspectable.Definition = doorEvidence;
 
-            // 6. Navigation Surface & Waypoints
+            // 13. AI Navigation Surface & Waypoints
             var waypointsRoot = new GameObject("[Waypoints]");
             var wpLobbyDesk = new GameObject("Waypoint_LobbyDesk");
             wpLobbyDesk.transform.SetParent(waypointsRoot.transform);
-            wpLobbyDesk.transform.position = new Vector3(0f, 0f, 5.5f);
+            wpLobbyDesk.transform.position = new Vector3(0f, 0f, 5.8f);
 
             var wpLobbyTable = new GameObject("Waypoint_LobbyTable");
             wpLobbyTable.transform.SetParent(waypointsRoot.transform);
-            wpLobbyTable.transform.position = new Vector3(0f, 0f, -1.8f);
+            wpLobbyTable.transform.position = new Vector3(0f, 0f, -1.6f);
 
             var wpRoom102Door = new GameObject("Waypoint_Room102Door");
             wpRoom102Door.transform.SetParent(waypointsRoot.transform);
-            wpRoom102Door.transform.position = new Vector3(0f, 0f, 10.2f);
+            wpRoom102Door.transform.position = new Vector3(0f, 0f, 9.8f);
 
-            // Bake NavMesh Surface across lobby
+            // Bake Navigation Mesh
             var navSurface = envRoot.AddComponent<Unity.AI.Navigation.NavMeshSurface>();
             navSurface.collectObjects = Unity.AI.Navigation.CollectObjects.All;
             navSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
             navSurface.BuildNavMesh();
 
-            // 7. Concierge NPC with NavMeshAgent & NPCController
-            var npcGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            npcGo.name = "NPC_Concierge";
-            npcGo.transform.SetParent(envRoot.transform);
-            npcGo.transform.position = new Vector3(0f, 1.0f, 5.5f); // Starts at reception desk
-            npcGo.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            npcGo.transform.localScale = new Vector3(0.9f, 1.0f, 0.9f);
-            var npcRenderer = npcGo.GetComponent<Renderer>();
-            if (npcRenderer != null)
-            {
-                npcRenderer.sharedMaterial.color = new Color(0.2f, 0.35f, 0.7f); // Navy concierge uniform
-            }
+            // 14. Concierge Pierre Stylized Character Model
+            var pierrePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/NPC_Concierge_Pierre.obj");
+            var npcGo = SpawnProp(pierrePrefab, "NPC_Concierge", envRoot.transform, new Vector3(0f, 0f, 5.8f), new Vector3(0f, 180f, 0f), Vector3.one, mats);
 
+            // Physics Collider for Interaction & Line of Sight
+            var npcCollider = npcGo.AddComponent<CapsuleCollider>();
+            npcCollider.radius = 0.45f;
+            npcCollider.height = 2.0f;
+            npcCollider.center = new Vector3(0f, 1.0f, 0f);
+
+            // NavMeshAgent for Movement
             var agent = npcGo.AddComponent<UnityEngine.AI.NavMeshAgent>();
             agent.speed = 3.0f;
             agent.stoppingDistance = 0.8f;
@@ -255,7 +325,7 @@ namespace TomorrowsCrime.EditorTools
             soNpc.FindProperty("waypointRoom102Door").objectReferenceValue = wpRoom102Door.transform;
             soNpc.ApplyModifiedPropertiesWithoutUndo();
 
-            // 8. Player Rig with Interaction System
+            // 15. First-Person Player Rig
             var playerGo = new GameObject("Player");
             playerGo.tag = "Player";
             playerGo.transform.position = new Vector3(0f, 1.0f, -8f);
@@ -285,7 +355,7 @@ namespace TomorrowsCrime.EditorTools
             soInteract.FindProperty("playerCamera").objectReferenceValue = cam;
             soInteract.ApplyModifiedPropertiesWithoutUndo();
 
-            // 9. Simulation & World State Systems
+            // 16. Simulation & World State Systems
             var simSystemsGo = new GameObject("[SimulationSystems]");
             var simManager = simSystemsGo.AddComponent<SimulationManager>();
             var worldStateManager = simSystemsGo.AddComponent<WorldStateManager>();
@@ -294,16 +364,15 @@ namespace TomorrowsCrime.EditorTools
             simSystemsGo.AddComponent<SimulationDebugUI>();
             simSystemsGo.AddComponent<NotebookUIController>();
 
-            // Configure Scenario Controller
             var soScenario = new SerializedObject(scenarioController);
-            soScenario.FindProperty("retrieveKeyTime").floatValue = 30.0f; // 00:30 into loop
-            soScenario.FindProperty("unlockDoorTime").floatValue = 35.0f;  // 00:35 into loop
+            soScenario.FindProperty("retrieveKeyTime").floatValue = 30.0f;
+            soScenario.FindProperty("unlockDoorTime").floatValue = 35.0f;
             soScenario.FindProperty("keyId").stringValue = "key_room_102";
             soScenario.FindProperty("doorId").stringValue = "door_room_102";
             soScenario.FindProperty("npcTransform").objectReferenceValue = npcGo.transform;
             soScenario.ApplyModifiedPropertiesWithoutUndo();
 
-            // 10. Major UI Overhaul Systems
+            // 17. User Interface Hierarchy
             var uiRootGo = new GameObject("[UserInterface]");
             uiRootGo.AddComponent<UIManager>();
             uiRootGo.AddComponent<GameHUDView>();
@@ -313,23 +382,125 @@ namespace TomorrowsCrime.EditorTools
             uiRootGo.AddComponent<SettingsMenuView>();
             uiRootGo.AddComponent<MainMenuView>();
 
-            // Ensure parent directory exists
-            var dir = Path.GetDirectoryName(ScenePath);
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
             // Save Scene
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[Tomorrow's Crime] Prototype scene saved successfully to: {ScenePath}");
+            var dir = Path.GetDirectoryName(ScenePath);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            // Register in EditorBuildSettings
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            Debug.Log($"[Tomorrow's Crime] Modern Cluedo-Reboot Prototype scene saved successfully to: {ScenePath}");
+
             var scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             EditorBuildSettings.scenes = scenes;
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        private static GameObject SpawnProp(GameObject prefab, string name, Transform parent,
+            Vector3 localPos, Vector3 localRot, Vector3 localScale, Dictionary<string, Material> mats)
+        {
+            GameObject instance;
+            if (prefab != null)
+            {
+                instance = Object.Instantiate(prefab, parent);
+            }
+            else
+            {
+                instance = new GameObject(name);
+                instance.transform.SetParent(parent);
+            }
+
+            instance.name = name;
+            instance.transform.localPosition = localPos;
+            instance.transform.localRotation = Quaternion.Euler(localRot);
+            instance.transform.localScale = localScale;
+
+            // Apply PBR materials by matching mesh name or submesh index
+            AssignMaterialsRecursively(instance, mats);
+
+            return instance;
+        }
+
+        private static void AssignMaterialsRecursively(GameObject go, Dictionary<string, Material> mats)
+        {
+            var renderers = go.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                var sharedMats = r.sharedMaterials;
+                for (int i = 0; i < sharedMats.Length; i++)
+                {
+                    if (sharedMats[i] != null)
+                    {
+                        string matName = sharedMats[i].name.Replace(" (Instance)", "");
+                        if (mats.TryGetValue(matName, out var foundMat))
+                        {
+                            sharedMats[i] = foundMat;
+                        }
+                    }
+                }
+                r.sharedMaterials = sharedMats;
+            }
+        }
+
+        private static void CreateArchitecturalWall(string name, Transform parent, Vector3 position, Vector3 scale,
+            Material lowerMat, Material upperMat, Material trimMat, bool hasDoorway)
+        {
+            var wallRoot = new GameObject(name);
+            wallRoot.transform.SetParent(parent);
+            wallRoot.transform.position = position;
+
+            // Determine if north/south or east/west
+            bool isNorthSouth = scale.x > scale.z;
+            float length = isNorthSouth ? scale.x : scale.z;
+            float thickness = isNorthSouth ? scale.z : scale.x;
+
+            float lowerHeight = 1.8f;
+            float upperHeight = scale.y - lowerHeight;
+
+            // Lower Wainscoting (Dark Mahogany)
+            var lower = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lower.name = "Wainscoting_Mahogany";
+            lower.transform.SetParent(wallRoot.transform);
+            lower.transform.localPosition = new Vector3(0f, lowerHeight * 0.5f, 0f);
+            lower.transform.localScale = isNorthSouth
+                ? new Vector3(length, lowerHeight, thickness)
+                : new Vector3(thickness, lowerHeight, length);
+            var lowerRend = lower.GetComponent<Renderer>();
+            if (lowerRend != null && lowerMat != null) lowerRend.sharedMaterial = lowerMat;
+
+            // Chair Rail Brass Trim
+            var trim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            trim.name = "ChairRail_Brass";
+            trim.transform.SetParent(wallRoot.transform);
+            trim.transform.localPosition = new Vector3(0f, lowerHeight, 0f);
+            trim.transform.localScale = isNorthSouth
+                ? new Vector3(length, 0.08f, thickness * 1.15f)
+                : new Vector3(thickness * 1.15f, 0.08f, length);
+            var trimRend = trim.GetComponent<Renderer>();
+            if (trimRend != null && trimMat != null) trimRend.sharedMaterial = trimMat;
+
+            // Upper Wall (Emerald Art Deco Wallpaper)
+            var upper = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            upper.name = "Wallpaper_Emerald";
+            upper.transform.SetParent(wallRoot.transform);
+            upper.transform.localPosition = new Vector3(0f, lowerHeight + upperHeight * 0.5f, 0f);
+            upper.transform.localScale = isNorthSouth
+                ? new Vector3(length, upperHeight, thickness)
+                : new Vector3(thickness, upperHeight, length);
+            var upperRend = upper.GetComponent<Renderer>();
+            if (upperRend != null && upperMat != null) upperRend.sharedMaterial = upperMat;
+        }
+
+        private static void AddSconceLight(Transform parent)
+        {
+            var lightGo = new GameObject("Sconce_PointLight");
+            lightGo.transform.SetParent(parent);
+            lightGo.transform.localPosition = new Vector3(0f, 0.1f, -0.2f);
+            var light = lightGo.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(1.0f, 0.82f, 0.55f);
+            light.intensity = 1.8f;
+            light.range = 6.0f;
         }
 
         private static EvidenceDefinition GetOrCreateEvidenceAsset(
@@ -364,19 +535,10 @@ namespace TomorrowsCrime.EditorTools
 
             return asset;
         }
-
-        private static void CreateWall(string name, Transform parent, Vector3 position, Vector3 scale)
-        {
-            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            wall.name = name;
-            wall.transform.SetParent(parent);
-            wall.transform.position = position;
-            wall.transform.localScale = scale;
-            var renderer = wall.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.sharedMaterial.color = new Color(0.32f, 0.31f, 0.28f); // Warm muted stone
-            }
-        }
     }
+
+    /// <summary>
+    /// Tag marker component for cylindrical furniture.
+    /// </summary>
+    public class CylinderColliderSubstitute : MonoBehaviour { }
 }

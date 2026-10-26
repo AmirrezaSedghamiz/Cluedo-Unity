@@ -116,7 +116,26 @@ A phased, iterative plan for developing *Tomorrow's Crime*.
 
 ---
 
-## Phase 7: Hotel Environment Expansion & Full Suspect Ensemble
+## Phase 7: Complete Visual Reboot — Modern Cluedo-Inspired Art Direction (Completed)
+- [x] Reference study of modern *CLUEDO* (Hasbro 2023 / Marmalade 2023) and comprehensive Art Bible (`Docs/ART_DIRECTION.md`).
+- [x] Bespoke stylized 3D human character model: `NPC_Concierge_Pierre.obj` (1.82m concierge with sculpted facial planes, styled swept hair, stiff white collar, burgundy silk cravat, double-breasted navy coat with brass buttons and epaulets).
+- [x] Custom 3D architectural & prop models: reception desk with key-cubbies, round walnut center table, Room 102 mahogany door, fluted columns with Corinthian capitals, 6-arm Art Deco brass chandelier, geometric wall sconces, glowing emerald banker's lamp, stamped gold keycard, and bordeaux velvet armchairs.
+- [x] High-resolution texture suite: checker marble with brass inlays, Art Deco emerald damask wallpaper, polished mahogany wood grain, antique pocket watch dial, archival parchment card, gold wax seal monogram, and leather dossier folder texture.
+- [x] Standard PBR material generation pipeline (`ArtAssetSetup.cs`) supporting Built-in and URP pipelines with 17 materials.
+- [x] Architectural Meridian House lobby rebuild (`PrototypeSceneSetup.cs`) with two-tier wainscoted walls, warm tungsten chandelier (`2700K`), and NavMesh surface baking.
+- [x] Complete UI reboot:
+  - Jewel-tone visual tokens in `UITheme` (Meridian Midnight, Polished Brass, Bordeaux Crimson, Peacock Teal, Emerald Green, Aged Parchment).
+  - Theatrical Main Menu with gold wax seal monogram and Art Deco double framing.
+  - In-Game HUD with antique pocket watch chronometer, animated diamond reticle, and wax seal toasts.
+  - Archival Evidence Reading Modal with quotation callout and causal event links.
+  - 3-column Confidential Dossier Workspace with Roman numeral tabs, gold metrics, and category filters.
+  - Matching luxury styling across Pause Menu and Settings.
+- [x] Automated visual inspection pipeline (`VisualRebootInspector.cs` and `RuntimeVisualCapture.cs`) capturing 9 verified 1920x1080 screenshots in `Docs/Screenshots/`.
+- [x] 100% test preservation: 71 / 71 tests passing with zero gameplay regressions.
+
+---
+
+## Phase 8: Hotel Environment Expansion & Full Suspect Ensemble
 - [ ] Multi-room Meridian House layout expansion (Lobby, Guest Room 102 interior, Service Corridor, Manager's Office).
 - [ ] Suspect ensemble expansion: author definitions and routines for remaining suspects.
 - [ ] Additional physical clues, documents, and environmental manipulation devices (breakers, phone lines).

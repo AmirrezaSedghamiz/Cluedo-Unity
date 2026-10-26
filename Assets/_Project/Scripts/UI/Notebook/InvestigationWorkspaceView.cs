@@ -98,12 +98,12 @@ namespace TomorrowsCrime.UI.Notebook
         private void DrawTopBar()
         {
             Rect barRect = new Rect(0, 0, Screen.width, 56f);
-            UITheme.DrawSolidRect(barRect, UITheme.SlateSurface);
-            UITheme.DrawBorder(barRect, UITheme.BorderSubtle, 1f);
+            UITheme.DrawSolidRect(barRect, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(barRect, UITheme.PolishedBrass, UITheme.BrassHighlight, 1.5f);
 
-            // Title
-            Rect titleRect = new Rect(24f, 12f, 320f, 32f);
-            GUI.Label(titleRect, "MERIDIAN HOUSE <size=14><color=#9BA0A6>— INCIDENT DOSSIER</color></size>", UITheme.TitleStyle);
+            // Title with Gold Embossed Case Dossier
+            Rect titleRect = new Rect(24f, 12f, 440f, 32f);
+            GUI.Label(titleRect, "MERIDIAN HOUSE <size=13><color=#D4AF37>— CONFIDENTIAL DOSSIER</color></size>", UITheme.TitleStyle);
 
             // Clock & Loop Status on Top Right
             var simMgr = SimulationManager.Instance;
@@ -112,17 +112,17 @@ namespace TomorrowsCrime.UI.Notebook
             int min = (int)(elapsed / 60f);
             int sec = (int)(elapsed % 60f);
 
-            Rect statusRect = new Rect(Screen.width - 380f, 16f, 220f, 24f);
+            Rect statusRect = new Rect(Screen.width - 440f, 16f, 270f, 24f);
             var statusStyle = new GUIStyle(UITheme.BodyStyle)
             {
                 alignment = TextAnchor.MiddleRight,
                 fontSize = 12
             };
-            GUI.Label(statusRect, $"ACTIVE SIMULATION: <color=#B69A61>LOOP {loop:D2}</color> @ <color=#6D9C98>{min:00}:{sec:00}</color>", statusStyle);
+            GUI.Label(statusRect, $"ACTIVE INCIDENT: <color=#D4AF37>LOOP {loop:D2}</color> @ <color=#E5A93C>{min:00}:{sec:00}</color>", statusStyle);
 
             // Close Button
-            Rect closeBtnRect = new Rect(Screen.width - 130f, 12f, 110f, 32f);
-            if (GUI.Button(closeBtnRect, "Close [Esc]", UITheme.PrimaryButtonStyle))
+            Rect closeBtnRect = new Rect(Screen.width - 150f, 10f, 130f, 36f);
+            if (UITheme.DrawLuxeButton(closeBtnRect, "RETURN [ESC]", isPrimary: true))
             {
                 UIManager.Instance.SetState(UIState.InGameHUD);
             }
@@ -130,19 +130,25 @@ namespace TomorrowsCrime.UI.Notebook
 
         private void DrawNavigationColumn(Rect rect)
         {
-            UITheme.DrawSolidRect(rect, UITheme.SlateSurface);
-            UITheme.DrawBorder(rect, UITheme.BorderSubtle, 1f);
+            UITheme.DrawSolidRect(rect, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(rect, UITheme.PolishedBrass, UITheme.BrassDark, 1.5f);
 
             GUILayout.BeginArea(new Rect(rect.x + 12f, rect.y + 16f, rect.width - 24f, rect.height - 32f));
 
-            GUILayout.Label("INVESTIGATION SECTIONS", UITheme.SubHeaderStyle);
+            GUILayout.BeginHorizontal();
+            Rect sealRect = GUILayoutUtility.GetRect(28f, 28f, GUILayout.Width(28f), GUILayout.Height(28f));
+            UITheme.DrawWaxSeal(sealRect);
+            GUILayout.Space(6f);
+            GUILayout.Label("CASE DOSSIER", UITheme.SubHeaderStyle);
+            GUILayout.EndHorizontal();
+
             GUILayout.Space(12f);
 
-            DrawSectionTab("1. Evidence Library", NotebookSection.EvidenceLibrary);
-            DrawSectionTab("2. Loop Timeline", NotebookSection.LoopTimeline);
-            DrawSectionTab("3. Deduction Board", NotebookSection.DeductionBoard);
-            DrawSectionTab("4. Hypotheses", NotebookSection.HypothesisManager);
-            DrawSectionTab("5. Field Notes", NotebookSection.FieldNotes);
+            DrawSectionTab("I. Evidence Archive", NotebookSection.EvidenceLibrary);
+            DrawSectionTab("II. Loop Timeline", NotebookSection.LoopTimeline);
+            DrawSectionTab("III. Deduction Board", NotebookSection.DeductionBoard);
+            DrawSectionTab("IV. Case Hypotheses", NotebookSection.HypothesisManager);
+            DrawSectionTab("V. Field Scratchpad", NotebookSection.FieldNotes);
 
             GUILayout.FlexibleSpace();
 
@@ -154,12 +160,12 @@ namespace TomorrowsCrime.UI.Notebook
             int rels = knowledge != null ? knowledge.RelationshipCount : 0;
 
             GUILayout.BeginVertical(UITheme.CardStyle);
-            GUILayout.Label("DOSSIER METRICS", UITheme.SubHeaderStyle);
+            GUILayout.Label("INVESTIGATION METRICS", UITheme.SubHeaderStyle);
             GUILayout.Space(4f);
-            GUILayout.Label($"Cataloged Clues: <color=#F5F3EF>{clues}</color>", UITheme.BodyStyle);
-            GUILayout.Label($"Witnessed Events: <color=#F5F3EF>{obs}</color>", UITheme.BodyStyle);
-            GUILayout.Label($"Active Hypotheses: <color=#F5F3EF>{hypos}</color>", UITheme.BodyStyle);
-            GUILayout.Label($"Deductive Links: <color=#F5F3EF>{rels}</color>", UITheme.BodyStyle);
+            GUILayout.Label($"Cataloged Clues: <color=#D4AF37>{clues}</color>", UITheme.BodyStyle);
+            GUILayout.Label($"Witnessed Events: <color=#D4AF37>{obs}</color>", UITheme.BodyStyle);
+            GUILayout.Label($"Active Hypotheses: <color=#D4AF37>{hypos}</color>", UITheme.BodyStyle);
+            GUILayout.Label($"Deductive Links: <color=#D4AF37>{rels}</color>", UITheme.BodyStyle);
             GUILayout.EndVertical();
 
             GUILayout.EndArea();
@@ -180,8 +186,8 @@ namespace TomorrowsCrime.UI.Notebook
 
         private void DrawCenterWorkspace(Rect rect)
         {
-            UITheme.DrawSolidRect(rect, UITheme.CharcoalBackground);
-            UITheme.DrawBorder(rect, UITheme.BorderSubtle, 1f);
+            UITheme.DrawSolidRect(rect, UITheme.MeridianMidnight);
+            UITheme.DrawOrnateFrame(rect, UITheme.PolishedBrass, UITheme.BrassDark, 1.5f);
 
             Rect contentRect = new Rect(rect.x + 16f, rect.y + 16f, rect.width - 32f, rect.height - 32f);
 
@@ -214,21 +220,22 @@ namespace TomorrowsCrime.UI.Notebook
         {
             GUILayout.BeginArea(rect);
 
-            GUILayout.BeginHorizontal();
             GUILayout.Label("DISCOVERED EVIDENCE CATALOG", UITheme.HeaderStyle);
-            GUILayout.FlexibleSpace();
+            GUILayout.Space(6f);
 
-            // Category Filter Bar
-            GUILayout.Label("Filter:", UITheme.BodyMutedStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Filter:", UITheme.BodyMutedStyle, GUILayout.Width(45f));
             string[] filters = { "All", "Keys & Access", "Documents", "Locations" };
             foreach (var f in filters)
             {
                 var style = _evidenceCategoryFilter == f ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
-                if (GUILayout.Button(f, style, GUILayout.Height(26f)))
+                if (GUILayout.Button(f, style, GUILayout.Height(24f), GUILayout.MinWidth(85f)))
                 {
                     _evidenceCategoryFilter = f;
                 }
+                GUILayout.Space(4f);
             }
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.Space(12f);
@@ -812,8 +819,8 @@ namespace TomorrowsCrime.UI.Notebook
         // --- RIGHT DETAIL PANEL ---
         private void DrawRightDetailPanel(Rect rect)
         {
-            UITheme.DrawSolidRect(rect, UITheme.SlateSurface);
-            UITheme.DrawBorder(rect, UITheme.BorderSubtle, 1f);
+            UITheme.DrawSolidRect(rect, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(rect, UITheme.PolishedBrass, UITheme.BrassHighlight, 1.5f);
 
             GUILayout.BeginArea(new Rect(rect.x + 16f, rect.y + 16f, rect.width - 32f, rect.height - 32f));
 

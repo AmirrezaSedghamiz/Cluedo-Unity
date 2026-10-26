@@ -9,7 +9,7 @@ namespace TomorrowsCrime.UI.Menu
     /// <summary>
     /// Interactive Settings view allowing player to tune audio volume, mouse sensitivity,
     /// graphics quality presets, display mode, and HUD scaling.
-    /// Persists preferences via GameSettingsManager.
+    /// Rebuilt for Step 7: Modern Cluedo Art Direction (Meridian House Aesthetic).
     /// </summary>
     public class SettingsMenuView : MonoBehaviour
     {
@@ -47,81 +47,76 @@ namespace TomorrowsCrime.UI.Menu
             if (!_isLoaded) LoadFromSettings();
 
             // Background
-            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), new Color(0.06f, 0.07f, 0.08f, 0.88f));
+            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), new Color(0.04f, 0.06f, 0.09f, 0.90f));
 
-            float width = 480f;
-            float height = 480f;
+            float width = Mathf.Min(520f, Screen.width - 60f);
+            float height = 520f;
             float x = (Screen.width - width) * 0.5f;
             float y = (Screen.height - height) * 0.5f;
             Rect rect = new Rect(x, y, width, height);
 
-            UITheme.DrawSolidRect(rect, UITheme.SlateSurface);
-            UITheme.DrawBorder(rect, UITheme.MutedBrass, 2f);
+            UITheme.DrawSolidRect(rect, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(rect, UITheme.PolishedBrass, UITheme.BrassHighlight, 2.5f);
 
-            GUILayout.BeginArea(new Rect(x + 24f, y + 24f, width - 48f, height - 48f));
+            // Header Plaque
+            Rect headerRect = new Rect(x + 12f, y + 12f, width - 24f, 54f);
+            UITheme.DrawGoldHeader(headerRect, "INVESTIGATION PREFERENCES", "SYSTEM CONTROLS & GRAPHICS CONFIGURATION");
 
-            GUILayout.Label("INVESTIGATION SETTINGS", UITheme.TitleStyle);
-            GUILayout.Space(14f);
+            GUILayout.BeginArea(new Rect(x + 28f, y + 78f, width - 56f, height - 146f));
 
             // 1. Audio Volume
-            GUILayout.Label($"Master Audio Volume: {Mathf.RoundToInt(_volume * 100f)}%", UITheme.SubHeaderStyle);
+            GUILayout.Label($"<b>Master Audio Volume:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{Mathf.RoundToInt(_volume * 100f)}%</color>", UITheme.SubHeaderStyle);
             _volume = GUILayout.HorizontalSlider(_volume, 0f, 1f);
-            GUILayout.Space(10f);
+            GUILayout.Space(12f);
 
             // 2. Mouse Sensitivity
-            GUILayout.Label($"Mouse Look Sensitivity: {_sensitivity:F1}x", UITheme.SubHeaderStyle);
+            GUILayout.Label($"<b>Mouse Look Sensitivity:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_sensitivity:F1}x</color>", UITheme.SubHeaderStyle);
             _sensitivity = GUILayout.HorizontalSlider(_sensitivity, 0.2f, 4.0f);
-            GUILayout.Space(10f);
+            GUILayout.Space(12f);
 
             // 3. Graphics Quality
-            GUILayout.Label("Graphics Quality Preset:", UITheme.SubHeaderStyle);
+            GUILayout.Label("<b>Visual Quality Preset:</b>", UITheme.SubHeaderStyle);
             GUILayout.BeginHorizontal();
             string[] names = QualitySettings.names;
             for (int i = 0; i < Mathf.Min(4, names.Length); i++)
             {
                 var btnStyle = _quality == i ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
-                if (GUILayout.Button(names[i], btnStyle, GUILayout.Height(26f)))
+                if (GUILayout.Button(names[i].ToUpper(), btnStyle, GUILayout.Height(28f)))
                 {
                     _quality = i;
                 }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(10f);
+            GUILayout.Space(12f);
 
             // 4. Display Mode
-            GUILayout.Label("Display Mode:", UITheme.SubHeaderStyle);
+            GUILayout.Label("<b>Display Mode:</b>", UITheme.SubHeaderStyle);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Fullscreen", _fullscreen ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle, GUILayout.Height(26f)))
+            var fullStyle = _fullscreen ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+            if (GUILayout.Button("FULLSCREEN EXCLUSIVE", fullStyle, GUILayout.Height(28f)))
             {
                 _fullscreen = true;
             }
-            if (GUILayout.Button("Windowed", !_fullscreen ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle, GUILayout.Height(26f)))
+            var winStyle = !_fullscreen ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle;
+            if (GUILayout.Button("WINDOWED", winStyle, GUILayout.Height(28f)))
             {
                 _fullscreen = false;
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(10f);
+            GUILayout.Space(12f);
 
             // 5. HUD Scaling
-            GUILayout.Label($"HUD Scale: {Mathf.RoundToInt(_hudScale * 100f)}%", UITheme.SubHeaderStyle);
-            GUILayout.BeginHorizontal();
-            float[] scales = { 0.8f, 1.0f, 1.2f };
-            string[] scaleLabels = { "80%", "100% (Default)", "120%" };
-            for (int i = 0; i < scales.Length; i++)
-            {
-                bool active = Mathf.Approximately(_hudScale, scales[i]);
-                if (GUILayout.Button(scaleLabels[i], active ? UITheme.PrimaryButtonStyle : UITheme.ButtonStyle, GUILayout.Height(26f)))
-                {
-                    _hudScale = scales[i];
-                }
-            }
-            GUILayout.EndHorizontal();
+            GUILayout.Label($"<b>Interface Scale:</b> <color=#{ColorUtility.ToHtmlStringRGB(UITheme.BrassHighlight)}>{_hudScale:F2}x</color>", UITheme.SubHeaderStyle);
+            _hudScale = GUILayout.HorizontalSlider(_hudScale, 0.75f, 1.25f);
 
-            GUILayout.FlexibleSpace();
+            GUILayout.EndArea();
 
-            // Bottom Buttons
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Apply & Save Preferences", UITheme.PrimaryButtonStyle, GUILayout.Height(36f)))
+            // Footer Actions
+            float btnWidth = (width - 66f) * 0.5f;
+            float btnY = y + height - 58f;
+
+            Rect btnApply = new Rect(x + 28f, btnY, btnWidth, 42f);
+            if (UITheme.DrawLuxeButton(btnApply, "APPLY & SAVE", isPrimary: true))
             {
                 var sm = GameSettingsManager.Instance;
                 if (sm != null)
@@ -131,18 +126,16 @@ namespace TomorrowsCrime.UI.Menu
                     sm.SetGraphicsQuality(_quality);
                     sm.SetFullscreen(_fullscreen);
                     sm.SetHudScale(_hudScale);
-                    sm.SaveSettings();
                 }
                 uiMgr.HandleEscape();
             }
 
-            if (GUILayout.Button("Back [Esc]", UITheme.ButtonStyle, GUILayout.Width(100f), GUILayout.Height(36f)))
+            Rect btnCancel = new Rect(x + 38f + btnWidth, btnY, btnWidth, 42f);
+            if (UITheme.DrawLuxeButton(btnCancel, "DISCARD [BACK]", isPrimary: false))
             {
+                LoadFromSettings();
                 uiMgr.HandleEscape();
             }
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndArea();
         }
     }
 }

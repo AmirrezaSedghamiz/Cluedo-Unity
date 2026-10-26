@@ -214,3 +214,22 @@ The simulation truth contains the complete objective state of hotel geometry, ob
   - `IsFullscreen` (bool)
   - `HUDScale` (float 0.75 – 1.25)
 - Fires `OnSettingsChanged` to immediately update dependent gameplay and rendering systems.
+
+### 3.10 Art Direction & PBR Asset Pipeline (`TomorrowsCrime.EditorTools.ArtAssetSetup`)
+
+#### Modern Cluedo Visual Language:
+- Replaces primitive graybox assets with stylized semi-realistic characters and opulent 1920s Art Deco hotel architecture inspired by Hasbro's 2023 *Clue* reboot and Marmalade Game Studio's digital adaptation.
+- **Jewel-Tone Color Tokens:** Meridian Midnight (`#0D1B2A`), Polished Brass (`#D4AF37`), Bordeaux Crimson (`#6B1D2F`), Peacock Teal (`#1D4E5B`), Emerald Green (`#1B4332`), and Aged Parchment (`#F3EBDD`).
+- **PBR Material Pipeline:** `ArtAssetSetup.cs` programmatically generates and updates 17 Standard PBR materials with dual-assigned properties (`_Color`/`_BaseColor`, `_Glossiness`/`_Smoothness`, `_Metallic`, `_MainTex`, `_BaseMap`, `_EmissionColor`) ensuring pipeline compatibility between Built-in and URP pipelines.
+- **Custom Stylized 3D Models (`Assets/_Project/Art/Models/`):**
+  - Character: `NPC_Concierge_Pierre.obj` (stylized 1.82m human concierge with sculpted facial planes, swept hair, high stiff white collar, burgundy silk cravat, double-breasted royal navy livery coat with dual brass button rows and gold epaulets).
+  - Environment & Props: `HotelLobby_ReceptionDesk.obj`, `HotelLobby_CenterTable.obj`, `HotelLobby_Door102.obj`, `HotelLobby_Pillar.obj`, `HotelLobby_Chandelier.obj`, `HotelLobby_WallSconce.obj`, `Prop_BankerLamp.obj`, `Prop_Keycard_Detailed.obj`, `HotelLobby_Armchair.obj`.
+- **Texture Suite (`Assets/_Project/Art/Textures/` and `Assets/_Project/UI/Sprites/`):**
+  - Checker marble floor with brass inlays, Art Deco emerald damask wallpaper, polished mahogany wood grain, antique pocket watch dial, archival parchment card, gold wax seal monogram, and leather dossier folder texture.
+
+### 3.11 Automated Visual Inspection Pipeline (`TomorrowsCrime.EditorTools`)
+
+#### Automated Screenshot Capture & Regression Verification:
+- **`VisualRebootInspector.cs`:** Editor utility rendering 3D camera viewpoints offscreen to high-resolution `RenderTexture` (1920x1080) and encoding to PNG files in `Docs/Screenshots/`. Captures lobby overview, character portrait, reception desk, center table, and Room 102 entrance.
+- **`RuntimeVisualCapture.cs`:** Automates PlayMode execution across discrete frames to capture live UI screens: Main Menu (`Shot_06`), In-Game HUD (`Shot_07`), Case Dossier Workspace (`Shot_08`), and Evidence Inspection Modal (`Shot_09`).
+- Guarantees visual quality can be assessed and verified through inspected images rather than subjective assertions.

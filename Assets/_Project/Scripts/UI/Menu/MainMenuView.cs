@@ -5,8 +5,10 @@ using TomorrowsCrime.UI.Styling;
 namespace TomorrowsCrime.UI.Menu
 {
     /// <summary>
-    /// Atmospheric Main Menu view for Tomorrow's Crime.
-    /// Provides Start Investigation, Settings, and Quit controls.
+    /// Theatrical, atmospheric Main Menu view for Tomorrow's Crime.
+    /// Rebuilt for Step 7: Modern Cluedo Art Direction (Meridian House Aesthetic).
+    /// Features Art Deco gold framing, embossed monogram seal, letter-spaced typography,
+    /// and polished luxury interactive buttons.
     /// </summary>
     public class MainMenuView : MonoBehaviour
     {
@@ -15,44 +17,87 @@ namespace TomorrowsCrime.UI.Menu
             var uiMgr = UIManager.Instance;
             if (uiMgr == null || uiMgr.CurrentState != UIState.MainMenu) return;
 
-            // Full screen backdrop
-            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), UITheme.CharcoalBackground);
+            // Fullscreen Meridian Midnight Backdrop
+            Rect fullScreen = new Rect(0, 0, Screen.width, Screen.height);
+            UITheme.DrawSolidRect(fullScreen, UITheme.MeridianMidnight);
 
-            // Centered Title Block
-            float menuWidth = 440f;
-            float menuHeight = 360f;
+            // Subtle Art Deco perimeter border around screen
+            UITheme.DrawOrnateFrame(new Rect(16f, 16f, Screen.width - 32f, Screen.height - 32f),
+                new Color(UITheme.PolishedBrass.r, UITheme.PolishedBrass.g, UITheme.PolishedBrass.b, 0.4f),
+                UITheme.PolishedBrass, 1.5f);
+
+            // Centered Main Title Card
+            float menuWidth = Mathf.Min(560f, Screen.width - 60f);
+            float menuHeight = 520f;
             float x = (Screen.width - menuWidth) * 0.5f;
             float y = (Screen.height - menuHeight) * 0.5f;
             Rect menuRect = new Rect(x, y, menuWidth, menuHeight);
 
-            UITheme.DrawSolidRect(menuRect, UITheme.SlateSurface);
-            UITheme.DrawBorder(menuRect, UITheme.MutedBrass, 2f);
+            // Obsidian Card Surface
+            UITheme.DrawSolidRect(menuRect, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(menuRect, UITheme.PolishedBrass, UITheme.BrassHighlight, 2.5f);
 
-            GUILayout.BeginArea(new Rect(x + 30f, y + 30f, menuWidth - 60f, menuHeight - 60f));
+            // Top Gold Wax Seal Monogram
+            float sealSize = 72f;
+            Rect sealRect = new Rect(x + (menuWidth - sealSize) * 0.5f, y + 24f, sealSize, sealSize);
+            UITheme.DrawWaxSeal(sealRect);
 
-            GUILayout.Label("TOMORROW'S CRIME", UITheme.TitleStyle);
-            GUILayout.Space(2f);
-            GUILayout.Label("<color=#6D9C98>MERIDIAN HOUSE — A TIME-LOOP MYSTERY</color>", UITheme.SubHeaderStyle);
-            GUILayout.Space(4f);
-            GUILayout.Label("Midnight repeats every five minutes. The hotel resets, but your discoveries, deductive connections, and field notes endure.", UITheme.BodyMutedStyle);
+            // Title & Subtitle Block
+            float contentY = y + 104f;
+            Rect titleRect = new Rect(x + 20f, contentY, menuWidth - 40f, 36f);
+            var titleStyle = new GUIStyle(UITheme.TitleStyle)
+            {
+                fontSize = 28,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.BrassHighlight }
+            };
+            GUI.Label(titleRect, "TOMORROW'S CRIME", titleStyle);
 
-            GUILayout.Space(24f);
+            contentY += 38f;
+            Rect subTitleRect = new Rect(x + 20f, contentY, menuWidth - 40f, 22f);
+            var subStyle = new GUIStyle(UITheme.SubHeaderStyle)
+            {
+                fontSize = 13,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.PeacockTeal }
+            };
+            GUI.Label(subTitleRect, "MERIDIAN HOUSE • A TIME-LOOP MYSTERY", subStyle);
 
-            if (GUILayout.Button("Begin Investigation", UITheme.PrimaryButtonStyle, GUILayout.Height(42f)))
+            contentY += 28f;
+            // Gold separator rule
+            UITheme.DrawSolidRect(new Rect(x + 40f, contentY, menuWidth - 80f, 1.5f), UITheme.PolishedBrass);
+
+            contentY += 16f;
+            Rect narrativeRect = new Rect(x + 36f, contentY, menuWidth - 72f, 54f);
+            var narrStyle = new GUIStyle(UITheme.BodyStyle)
+            {
+                fontSize = 12,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.TextIvory }
+            };
+            GUI.Label(narrativeRect, "Midnight repeats every five minutes. The hotel resets, but your discoveries, deductive connections, and field notes endure.", narrStyle);
+
+            contentY += 66f;
+            // Primary & Secondary Buttons
+            float btnWidth = menuWidth - 80f;
+            float btnX = x + 40f;
+
+            Rect btnStart = new Rect(btnX, contentY, btnWidth, 48f);
+            if (UITheme.DrawLuxeButton(btnStart, "BEGIN INVESTIGATION", isPrimary: true))
             {
                 uiMgr.SetState(UIState.InGameHUD);
             }
 
-            GUILayout.Space(10f);
-
-            if (GUILayout.Button("Settings & Controls", UITheme.ButtonStyle, GUILayout.Height(36f)))
+            contentY += 58f;
+            Rect btnSettings = new Rect(btnX, contentY, btnWidth, 42f);
+            if (UITheme.DrawLuxeButton(btnSettings, "SETTINGS & PREFERENCES", isPrimary: false))
             {
                 uiMgr.SetState(UIState.SettingsMenu);
             }
 
-            GUILayout.Space(10f);
-
-            if (GUILayout.Button("Exit Incident", UITheme.ButtonStyle, GUILayout.Height(36f)))
+            contentY += 52f;
+            Rect btnExit = new Rect(btnX, contentY, btnWidth, 42f);
+            if (UITheme.DrawLuxeButton(btnExit, "EXIT INCIDENT", isPrimary: false))
             {
                 Application.Quit();
 #if UNITY_EDITOR
@@ -60,10 +105,15 @@ namespace TomorrowsCrime.UI.Menu
 #endif
             }
 
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("<size=10><color=#9BA0A6>Version 0.6.0 LTS • Unity 6 Engine</color></size>", UITheme.BodyMutedStyle);
-
-            GUILayout.EndArea();
+            // Footer Credits
+            Rect footerRect = new Rect(x, y + menuHeight - 34f, menuWidth, 24f);
+            var footStyle = new GUIStyle(UITheme.BodyMutedStyle)
+            {
+                fontSize = 11,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.TextMuted }
+            };
+            GUI.Label(footerRect, "MERIDIAN HOUSE DOSSIER • STEP 7 REBOOT • UNITY 6 LTS", footStyle);
         }
     }
 }

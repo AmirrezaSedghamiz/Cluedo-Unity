@@ -6,8 +6,10 @@ using TomorrowsCrime.UI.Styling;
 namespace TomorrowsCrime.UI.Modals
 {
     /// <summary>
-    /// Dedicated reading and inspection view for discovered clues and physical evidence.
-    /// Rendered with authentic warm paper styling, high text contrast, and actionable buttons.
+    /// Dedicated inspection view for examined clues and physical evidence.
+    /// Rebuilt for Step 7: Modern Cluedo Art Direction (Meridian House Aesthetic).
+    /// Displays archival case card, gold foil borders, category stamp, full examination narrative,
+    /// discovery context, and direct links to the master dossier.
     /// </summary>
     public class EvidenceInspectionModalView : MonoBehaviour
     {
@@ -19,97 +21,110 @@ namespace TomorrowsCrime.UI.Modals
             var evidence = uiMgr.CurrentInspectedEvidence;
             if (evidence == null) return;
 
-            // Semi-transparent atmospheric dark overlay behind modal
-            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), new Color(0.05f, 0.05f, 0.06f, 0.75f));
+            // Semi-transparent dramatic vignette backdrop
+            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), new Color(0.04f, 0.06f, 0.09f, 0.85f));
 
-            // Modal container
-            float modalWidth = Mathf.Min(680f, Screen.width - 60f);
-            float modalHeight = Mathf.Min(480f, Screen.height - 60f);
+            // Main Archival Modal Dimensions
+            float modalWidth = Mathf.Min(740f, Screen.width - 60f);
+            float modalHeight = Mathf.Min(540f, Screen.height - 60f);
             float x = (Screen.width - modalWidth) * 0.5f;
             float y = (Screen.height - modalHeight) * 0.5f;
             Rect modalRect = new Rect(x, y, modalWidth, modalHeight);
 
-            // Paper document background
-            UITheme.DrawSolidRect(modalRect, UITheme.PaperSurface);
-            UITheme.DrawBorder(modalRect, UITheme.MutedBrass, 2f);
+            // Aged Parchment Surface with Gold Foil Framing
+            UITheme.DrawParchmentCard(modalRect);
+            UITheme.DrawOrnateFrame(modalRect, UITheme.PolishedBrass, UITheme.BrassHighlight, 2.5f);
 
-            // Document Header Bar
-            Rect headerBar = new Rect(x, y, modalWidth, 50f);
-            UITheme.DrawSolidRect(headerBar, UITheme.SlateSurface);
-            UITheme.DrawBorder(headerBar, UITheme.BorderSubtle, 1f);
+            // Top Header Plaque (Obsidian & Gold)
+            Rect headerBar = new Rect(x + 10f, y + 10f, modalWidth - 20f, 54f);
+            UITheme.DrawSolidRect(headerBar, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(headerBar, UITheme.PolishedBrass, UITheme.BrassDark, 1.5f);
 
-            Rect titleRect = new Rect(x + 20f, y + 12f, modalWidth - 160f, 28f);
-            var headerStyle = new GUIStyle(UITheme.HeaderStyle)
+            // Wax Seal Icon on Left of Header
+            Rect sealRect = new Rect(headerBar.x + 8f, headerBar.y + 7f, 40f, 40f);
+            UITheme.DrawWaxSeal(sealRect);
+
+            // Evidence Title
+            Rect titleRect = new Rect(headerBar.x + 56f, headerBar.y + 12f, headerBar.width - 230f, 30f);
+            var titleStyle = new GUIStyle(UITheme.HeaderStyle)
             {
-                fontSize = 17,
-                normal = { textColor = UITheme.MutedBrass }
+                fontSize = 18,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = UITheme.BrassHighlight }
             };
-            GUI.Label(titleRect, $"FIELD EVIDENCE: {evidence.DisplayName.ToUpper()}", headerStyle);
+            GUI.Label(titleRect, evidence.DisplayName.ToUpper(), titleStyle);
 
-            // Category badge in header
-            Rect categoryBadge = new Rect(x + modalWidth - 130f, y + 14f, 110f, 22f);
-            UITheme.DrawSolidRect(categoryBadge, UITheme.SlateSurfaceLight);
-            UITheme.DrawBorder(categoryBadge, UITheme.DesaturatedTeal, 1f);
+            // Category Stamp Badge on Right of Header
+            float catWidth = 200f;
+            Rect catBadge = new Rect(headerBar.xMax - catWidth - 12f, headerBar.y + 14f, catWidth, 26f);
+            UITheme.DrawSolidRect(catBadge, UITheme.MeridianMidnight);
+            UITheme.DrawBorder(catBadge, UITheme.PeacockTeal, 1.5f);
             var catStyle = new GUIStyle(UITheme.BadgeStyle)
             {
-                normal = { textColor = UITheme.TextPrimary }
+                fontSize = 11,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.TextIvory }
             };
-            GUI.Label(categoryBadge, evidence.Category, catStyle);
+            GUI.Label(catBadge, $"CATEGORY: {evidence.Category.ToUpper()}", catStyle);
 
-            // Content Body (Paper Document Style)
-            float contentY = y + 70f;
+            // Document Content Area (Paper Body)
+            float contentY = y + 80f;
 
-            // Short summary
-            Rect summaryRect = new Rect(x + 30f, contentY, modalWidth - 60f, 40f);
-            var subStyle = new GUIStyle(UITheme.PaperBodyStyle)
+            // Short Description Quote Banner
+            Rect summaryRect = new Rect(x + 36f, contentY, modalWidth - 72f, 44f);
+            UITheme.DrawSolidRect(summaryRect, new Color(0.90f, 0.86f, 0.78f, 0.6f));
+            UITheme.DrawBorder(summaryRect, new Color(0.70f, 0.60f, 0.45f, 0.5f), 1f);
+
+            var summaryStyle = new GUIStyle(UITheme.PaperBodyStyle)
             {
                 fontSize = 14,
-                fontStyle = FontStyle.Italic
+                fontStyle = FontStyle.Italic,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.TextDarkInk }
             };
-            GUI.Label(summaryRect, $"\"{evidence.ShortDescription}\"", subStyle);
+            GUI.Label(summaryRect, $"\"{evidence.ShortDescription}\"", summaryStyle);
 
-            contentY += 45f;
-            UITheme.DrawSolidRect(new Rect(x + 30f, contentY, modalWidth - 60f, 1f), new Color(0.75f, 0.70f, 0.65f));
-            contentY += 15f;
+            contentY += 58f;
+            // Divider Line
+            UITheme.DrawSolidRect(new Rect(x + 36f, contentY, modalWidth - 72f, 1.5f), UITheme.PolishedBrass);
+            contentY += 16f;
 
-            // Detailed inspection text
-            Rect detailRect = new Rect(x + 30f, contentY, modalWidth - 60f, modalHeight - 210f);
+            // Full Examination Narrative
+            Rect detailRect = new Rect(x + 36f, contentY, modalWidth - 72f, modalHeight - 260f);
             var detailStyle = new GUIStyle(UITheme.PaperBodyStyle)
             {
                 fontSize = 13,
-                wordWrap = true
+                wordWrap = true,
+                normal = { textColor = UITheme.TextDarkInk }
             };
             GUI.Label(detailRect, evidence.DetailedInspectionText, detailStyle);
 
-            // Related event tag if defined
+            // Context & Causal Link Footer
+            float footerY = y + modalHeight - 88f;
             if (!string.IsNullOrEmpty(evidence.RelatedEventId))
             {
-                Rect eventTagRect = new Rect(x + 30f, y + modalHeight - 90f, modalWidth - 60f, 24f);
-                var tagStyle = new GUIStyle(UITheme.PaperBodyStyle)
+                Rect eventRect = new Rect(x + 36f, footerY - 26f, modalWidth - 72f, 22f);
+                var eventStyle = new GUIStyle(UITheme.PaperBodyStyle)
                 {
                     fontSize = 11,
-                    fontStyle = FontStyle.Bold
+                    fontStyle = FontStyle.Bold,
+                    normal = { textColor = UITheme.PeacockTeal }
                 };
-                GUI.Label(eventTagRect, $"Causal Relationship: Associated with schedule routine [{evidence.RelatedEventId}]", tagStyle);
+                GUI.Label(eventRect, $"LINKED INCIDENT EVENT: [{evidence.RelatedEventId}]", eventStyle);
             }
 
-            // Bottom Action Bar
-            Rect actionBar = new Rect(x, y + modalHeight - 55f, modalWidth, 55f);
-            UITheme.DrawSolidRect(actionBar, UITheme.SlateSurface);
-            UITheme.DrawBorder(actionBar, UITheme.BorderSubtle, 1f);
-
-            // Close button
-            Rect closeBtnRect = new Rect(x + modalWidth - 190f, y + modalHeight - 45f, 170f, 34f);
-            if (GUI.Button(closeBtnRect, "Return to Search [Esc]", UITheme.PrimaryButtonStyle))
-            {
-                uiMgr.CloseModal();
-            }
-
-            // Open in notebook button
-            Rect notebookBtnRect = new Rect(x + 20f, y + modalHeight - 45f, 210f, 34f);
-            if (GUI.Button(notebookBtnRect, "Open Full Notebook [Tab]", UITheme.ButtonStyle))
+            // Action Buttons
+            float btnWidth = (modalWidth - 92f) * 0.5f;
+            Rect btnNotebook = new Rect(x + 36f, footerY, btnWidth, 42f);
+            if (UITheme.DrawLuxeButton(btnNotebook, "OPEN IN CASE DOSSIER [TAB]", isPrimary: true))
             {
                 uiMgr.SetState(UIState.InvestigationNotebook);
+            }
+
+            Rect btnClose = new Rect(x + 46f + btnWidth, footerY, btnWidth, 42f);
+            if (UITheme.DrawLuxeButton(btnClose, "RESUME INVESTIGATION [ESC / E]", isPrimary: false))
+            {
+                uiMgr.SetState(UIState.InGameHUD);
             }
         }
     }

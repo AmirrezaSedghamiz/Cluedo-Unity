@@ -124,7 +124,43 @@ Milestone 6 transforms the prototype from a developer graybox into a cohesive, a
 
 ---
 
-## 7. Controls
+## 7. Modern Cluedo-Inspired Visual Reboot (Milestone 7)
+
+Milestone 7 replaces the game's visual presentation from the ground up, establishing an opulent, theatrical aesthetic inspired by the modern reimagined *CLUEDO* board game (Hasbro 2023) and its official digital adaptation (Marmalade Game Studio 2023).
+
+### Key Visual Reboot Pillars:
+1. **Stylized 3D Character Presentation (`NPC_Concierge_Pierre.obj`)**:
+   - 1.82m stylized human concierge model with strong silhouette, sculpted facial planes, side-parted styled hair, high stiff white collar, and burgundy silk cravat.
+   - Double-breasted royal navy livery coat with dual brass button rows, gold epaulets, burgundy pocket square, charcoal pressed trousers, and black Oxford shoes.
+   - Fully integrated with Unity `NavMeshAgent` and patrol schedule.
+2. **Architectural Meridian House Lobby (`Prototype.unity`)**:
+   - **Flooring:** High-contrast emerald green and ivory checker marble bordered by gold brass inlays, bisected by a plush bordeaux velvet runner.
+   - **Walls:** Two-tier architectural walls with dark mahogany wainscoting, brass dado rails, and emerald damask wallpaper with gold fan arches.
+   - **Architectural Details:** Fluted architectural columns with Corinthian brass capitals and a grand 6-arm Art Deco brass chandelier with warm tungsten illumination (`2700K`).
+   - **Furniture & Props:** Curved fluted mahogany reception desk with rear key-cubby rack, glowing emerald glass banker's desk lamp, round burled walnut center table with stamped brass Room 102 keycard, and bordeaux velvet armchairs.
+   - **Room 102 Entrance:** Heavy paneled mahogany double door with raised moldings, brass kickplate, brass lever handle, flanking geometric wall sconces, and electronic card reader with crimson indicator LED.
+3. **Theatrical Case-Dossier Interface**:
+   - **Visual Tokens (`UITheme`):** Jewel-tone palette featuring Meridian Midnight (`#0D1B2A`), Polished Brass (`#D4AF37`), Bordeaux Crimson (`#6B1D2F`), Peacock Teal (`#1D4E5B`), Emerald Green (`#1B4332`), and Aged Parchment (`#F3EBDD`).
+   - **Main Menu:** Theatrical centered title card with gold wax seal monogram, serif typography, and luxury interactive buttons.
+   - **In-Game HUD:** Antique pocket watch chronometer, animated diamond focus reticle, wax seal perception toasts, and leather dossier access pill.
+   - **Evidence Reading Modal:** Archival parchment card with category wax stamp, quotation callout, narrative analysis, and causal event links.
+   - **Investigation Workspace:** 3-column confidential dossier layout with Roman numeral tabs, gold metrics, and category filters.
+4. **Verified High-Resolution Screenshots (`Docs/Screenshots/`)**:
+   - `Shot_01_Lobby_Overview.png`: Grand architectural lobby overview.
+   - `Shot_02_Concierge_Pierre_Character.png`: Portrait of Concierge Pierre.
+   - `Shot_03_Reception_Desk_BankerLamp.png`: Reception desk and glowing emerald banker's lamp.
+   - `Shot_04_Table_And_Keycard.png`: Central walnut table with stamped gold keycard.
+   - `Shot_05_Room102_Entrance.png`: Room 102 double door, sconces, and card reader.
+   - `Shot_06_Main_Menu_View.png`: Theatrical main menu with gold monogram seal.
+   - `Shot_07_InGame_HUD_View.png`: In-game HUD with pocket chronometer and toast alert.
+   - `Shot_08_Case_Dossier_Workspace.png`: 3-column case dossier workspace.
+   - `Shot_09_Evidence_Inspection_Modal.png`: Archival evidence inspection card.
+5. **Art Bible Reference:**
+   - Detailed art direction principles, reference studies, and specifications are documented in [`Docs/ART_DIRECTION.md`](Docs/ART_DIRECTION.md).
+
+---
+
+## 8. Controls
 
 - **Move:** `W`, `A`, `S`, `D`
 - **Look:** Mouse (Sensitivity configurable in Settings)
@@ -138,7 +174,7 @@ Milestone 6 transforms the prototype from a developer graybox into a cohesive, a
 
 ---
 
-## 8. Getting Started & Running in Unity
+## 9. Getting Started & Running in Unity
 
 1. Open **Unity Hub**.
 2. Click **Add** -> **Add project from disk**.
@@ -151,7 +187,7 @@ Milestone 6 transforms the prototype from a developer graybox into a cohesive, a
 
 ---
 
-## 9. Automated Test Suite
+## 10. Automated Test Suite
 
 The project includes an EditMode test suite with 100% pass rate:
 - **Total Tests:** 71

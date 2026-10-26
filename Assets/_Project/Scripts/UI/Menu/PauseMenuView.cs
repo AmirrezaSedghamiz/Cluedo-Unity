@@ -7,8 +7,8 @@ namespace TomorrowsCrime.UI.Menu
 {
     /// <summary>
     /// Pause Menu for Tomorrow's Crime.
-    /// Safely pauses live simulation and provides restart loop, settings, and main menu options.
-    /// Distinguishes restarting the current loop from resetting persistent player knowledge.
+    /// Rebuilt for Step 7: Modern Cluedo Art Direction (Meridian House Aesthetic).
+    /// Safely halts live simulation and provides restart loop, settings, and main menu controls.
     /// </summary>
     public class PauseMenuView : MonoBehaviour
     {
@@ -18,53 +18,55 @@ namespace TomorrowsCrime.UI.Menu
             if (uiMgr == null || uiMgr.CurrentState != UIState.PauseMenu) return;
 
             // Semi-transparent atmospheric dark overlay
-            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), new Color(0.06f, 0.07f, 0.08f, 0.85f));
+            UITheme.DrawSolidRect(new Rect(0, 0, Screen.width, Screen.height), new Color(0.04f, 0.06f, 0.09f, 0.88f));
 
-            float menuWidth = 420f;
-            float menuHeight = 390f;
+            float menuWidth = Mathf.Min(480f, Screen.width - 60f);
+            float menuHeight = 440f;
             float x = (Screen.width - menuWidth) * 0.5f;
             float y = (Screen.height - menuHeight) * 0.5f;
             Rect menuRect = new Rect(x, y, menuWidth, menuHeight);
 
-            UITheme.DrawSolidRect(menuRect, UITheme.SlateSurface);
-            UITheme.DrawBorder(menuRect, UITheme.MutedBrass, 2f);
+            UITheme.DrawSolidRect(menuRect, UITheme.ObsidianSurface);
+            UITheme.DrawOrnateFrame(menuRect, UITheme.PolishedBrass, UITheme.BrassHighlight, 2.5f);
 
-            GUILayout.BeginArea(new Rect(x + 24f, y + 24f, menuWidth - 48f, menuHeight - 48f));
+            // Top Header Plaque
+            Rect headerRect = new Rect(x + 12f, y + 12f, menuWidth - 24f, 54f);
+            UITheme.DrawGoldHeader(headerRect, "INVESTIGATION HALTED", "MERIDIAN HOUSE SIMULATION SUSPENDED");
 
-            GUILayout.Label("INVESTIGATION PAUSED", UITheme.TitleStyle);
-            GUILayout.Space(4f);
-            GUILayout.Label("Meridian House simulation halted.", UITheme.BodyMutedStyle);
-            GUILayout.Space(16f);
+            float contentY = y + 80f;
+            float btnWidth = menuWidth - 60f;
+            float btnX = x + 30f;
 
-            if (GUILayout.Button("Resume Investigation [Esc]", UITheme.PrimaryButtonStyle, GUILayout.Height(38f)))
+            Rect btnResume = new Rect(btnX, contentY, btnWidth, 44f);
+            if (UITheme.DrawLuxeButton(btnResume, "RESUME INVESTIGATION [ESC]", isPrimary: true))
             {
                 uiMgr.SetState(UIState.InGameHUD);
             }
 
-            GUILayout.Space(8f);
-
-            if (GUILayout.Button("Restart Current Loop [R]", UITheme.ButtonStyle, GUILayout.Height(36f)))
+            contentY += 54f;
+            Rect btnRestart = new Rect(btnX, contentY, btnWidth, 40f);
+            if (UITheme.DrawLuxeButton(btnRestart, "RESTART CURRENT 5-MIN LOOP [R]", isPrimary: false))
             {
                 uiMgr.TriggerLoopResetFromMenu();
             }
 
-            GUILayout.Space(8f);
-
-            if (GUILayout.Button("Settings & Controls", UITheme.ButtonStyle, GUILayout.Height(36f)))
+            contentY += 48f;
+            Rect btnSettings = new Rect(btnX, contentY, btnWidth, 40f);
+            if (UITheme.DrawLuxeButton(btnSettings, "SETTINGS & PREFERENCES", isPrimary: false))
             {
                 uiMgr.SetState(UIState.SettingsMenu);
             }
 
-            GUILayout.Space(8f);
-
-            if (GUILayout.Button("Main Menu", UITheme.ButtonStyle, GUILayout.Height(36f)))
+            contentY += 48f;
+            Rect btnMenu = new Rect(btnX, contentY, btnWidth, 40f);
+            if (UITheme.DrawLuxeButton(btnMenu, "RETURN TO TITLE MENU", isPrimary: false))
             {
                 uiMgr.SetState(UIState.MainMenu);
             }
 
-            GUILayout.Space(8f);
-
-            if (GUILayout.Button("Quit to Desktop", UITheme.ButtonStyle, GUILayout.Height(36f)))
+            contentY += 48f;
+            Rect btnExit = new Rect(btnX, contentY, btnWidth, 40f);
+            if (UITheme.DrawLuxeButton(btnExit, "QUIT TO DESKTOP", isPrimary: false))
             {
                 Application.Quit();
 #if UNITY_EDITOR
@@ -72,10 +74,15 @@ namespace TomorrowsCrime.UI.Menu
 #endif
             }
 
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("<i>Note: Restarting a loop resets physical objects & NPC positions, but preserves all evidence and notes in your dossier.</i>", UITheme.BodyMutedStyle);
-
-            GUILayout.EndArea();
+            // Persistence Guarantee Notice
+            Rect noticeRect = new Rect(x + 20f, y + menuHeight - 34f, menuWidth - 40f, 24f);
+            var noticeStyle = new GUIStyle(UITheme.BodyMutedStyle)
+            {
+                fontSize = 10,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = UITheme.TextMuted }
+            };
+            GUI.Label(noticeRect, "<i>Loop resets restore physical positions while permanently preserving all case discoveries.</i>", noticeStyle);
         }
     }
 }

@@ -296,3 +296,85 @@ This document tracks dated, factual development milestones, technical design cho
     - `WorldStateAndScenarioTests`: 10 / 10 passed
     - `SimulationClockTests`: 6 / 6 passed
 - Executed `Tomorrow's Crime -> Build Prototype Scene` batchmode rebuild and confirmed clean scene serialization and NavMesh baking.
+
+---
+
+## [2026-10-26] Milestone 7: Complete Visual Reboot (Modern Cluedo-Inspired Art Direction)
+
+### Executive Summary
+Replaced the game's visual presentation from the ground up to establish a distinctive, theatrical, and luxurious aesthetic inspired by the modern reimagined *CLUEDO* board game (Hasbro 2023) and its official digital adaptation (Marmalade Game Studio 2023). Replaced all graybox cubes, capsules, flat UI panels, and prototype materials with bespoke 3D models, rich PBR materials, procedural textures, dramatic chiaroscuro lighting, and an archival case-dossier user interface. All non-visual simulation systems (five-minute clock, causal events, NPC patrol, persistent notebook, and deduction graph) were preserved with a 100% test pass rate (71/71 tests).
+
+### Reference Research & Art Direction Specification
+1. **Reference Study**:
+   - Analyzed official artwork and gameplay from Hasbro's 2023 *Clue* reboot and Marmalade Game Studio's digital release.
+   - Identified core aesthetic pillars: distinctive stylized character silhouettes with sculpted planes, opulent interior architecture with dramatic warm/cool chiaroscuro contrast, confident jewel-toned palettes, tactile physical materials (wood grain, marble, velvet, brass), and archival case-dossier UI cards with wax seal accents.
+2. **Art Bible (`Docs/ART_DIRECTION.md`)**:
+   - Authored a comprehensive 10-section art direction guide defining character design rules, the 8-color jewel-tone system, architectural specifications for Meridian House, lighting setups, tactile material parameters, and UI design standards.
+
+### Asset Creation & Pipeline Infrastructure
+1. **Custom Stylized 3D OBJ Models (`Assets/_Project/Art/Models/`)**:
+   - `NPC_Concierge_Pierre.obj` & `.mtl`: 1.82m stylized human concierge model featuring sculpted facial planes, swept hair, high white collar, burgundy silk cravat, double-breasted royal navy livery coat with dual brass button rows and gold epaulets, charcoal trousers, and black Oxford shoes.
+   - `HotelLobby_ReceptionDesk.obj`: Curved Art Deco reception counter with fluted mahogany panels, black granite top, polished brass trim, and rear key-cubby rack.
+   - `HotelLobby_CenterTable.obj`: Round burled walnut center table with cabriole legs and brass ring apron.
+   - `HotelLobby_Door102.obj`: Heavy paneled mahogany double door with raised moldings, brass kickplate, brass lever handle, and fluted architrave casing.
+   - `HotelLobby_Pillar.obj`: Fluted architectural column with carved dark mahogany plinth and Corinthian brass capital.
+   - `HotelLobby_Chandelier.obj`: 6-arm Art Deco brass chandelier with candle sleeves and glowing amber caps.
+   - `HotelLobby_WallSconce.obj`: Geometric Art Deco brass wall sconce with frosted amber shade.
+   - `Prop_BankerLamp.obj`: Brass desk lamp with glowing emerald green glass shade.
+   - `Prop_Keycard_Detailed.obj`: Stamped brass keycard with "102 - MERIDIAN" emblem and magnetic stripe.
+   - `HotelLobby_Armchair.obj`: Bordeaux velvet armchair with dark walnut frame.
+2. **High-Resolution Textures (`Assets/_Project/Art/Textures/` and `Assets/_Project/UI/Sprites/`)**:
+   - `Floor_CheckerMarble.png`: 512x512 tileable emerald and ivory checker marble with brass inlay lines.
+   - `Wallpaper_ArtDecoDamask.png`: 512x512 emerald damask wallpaper with gold fan arches.
+   - `Wood_PolishedMahogany.png`: 512x512 polished dark mahogany wood grain.
+   - `UI_PocketWatch_Dial.png`: 512x512 antique pocket watch chronometer dial with roman numerals.
+   - `UI_Parchment_Card.png`: 512x512 archival case card with gold foil border and corner ornaments.
+   - `UI_WaxSeal_Gold.png`: 256x256 stamped Meridian House gold wax seal monogram.
+   - `UI_Dossier_Folder.png`: 512x512 midnight navy leather dossier folder texture.
+3. **PBR Material Generation Pipeline (`Assets/_Project/Scripts/Editor/ArtAssetSetup.cs`)**:
+   - Generates 17 Standard PBR materials with dual-assigned properties (`_Color`/`_BaseColor`, `_Glossiness`/`_Smoothness`, `_Metallic`, `_MainTex`, `_BaseMap`, `_EmissionColor`) supporting both Built-in and URP pipelines.
+
+### Environment & Character Integration
+1. **Meridian House Lobby Rebuild (`Assets/_Project/Scripts/Editor/PrototypeSceneSetup.cs`)**:
+   - Replaced graybox floor with checker marble and burgundy carpet runner.
+   - Added two-tier architectural walls with mahogany wainscoting, brass dado trim, and emerald damask wallpaper.
+   - Placed fluted columns, grand 6-arm chandelier with warm tungsten point light (`2700K`, 3.2 intensity), reception desk with glowing emerald banker's lamp, center table with stamped brass keycard, and bordeaux armchairs.
+   - Integrated Room 102 double door with brass lever, flanking wall sconces, and electronic card reader.
+   - Replaced blue capsule concierge with `NPC_Concierge_Pierre` model, wired to `NavMeshAgent` and patrol waypoints. Baked `NavMeshSurface`.
+
+### Complete User Interface Redesign
+1. **Design Tokens (`UITheme.cs`)**:
+   - Implemented jewel-tone palette: Meridian Midnight (`#0D1B2A`), Polished Brass (`#D4AF37`), Bordeaux Crimson (`#6B1D2F`), Peacock Teal (`#1D4E5B`), Emerald Green (`#1B4332`), Aged Parchment (`#F3EBDD`).
+   - Procedural Art Deco double-line frames (`DrawOrnateFrame`), section headers with Roman numerals, and wax seal stamps.
+2. **In-Game HUD (`GameHUDView.cs`)**:
+   - Vintage Art Deco pocket watch chronometer showing remaining loop countdown (`MM:SS`) and normalized loop progress.
+   - Animated diamond focus reticle with brass corner brackets.
+   - Sealed perception toasts and leather dossier access pill.
+3. **Main Menu (`MainMenuView.cs`)**:
+   - Theatrical centered title card with gold wax seal monogram, serif typography, and luxury buttons.
+4. **Evidence Inspection Modal (`EvidenceInspectionModalView.cs`)**:
+   - Archival parchment card with wax category seal, quote banner, examination narrative, and causal event links.
+5. **Investigation Workspace (`InvestigationWorkspaceView.cs`)**:
+   - 3-column dossier workspace with Roman numeral tabs, investigation metrics, and category filter buttons.
+6. **Menus (`PauseMenuView.cs`, `SettingsMenuView.cs`)**:
+   - Rebuilt with matching brass headers, sliders, and luxury button styling.
+
+### Verification & Visual Inspection
+1. **Screenshot Captures (`Docs/Screenshots/`)**:
+   - Authored `VisualRebootInspector.cs` (capturing 3D perspectives) and `RuntimeVisualCapture.cs` (capturing live PlayMode UI).
+   - Captured and visually inspected 9 high-resolution 1920x1080 PNG screenshots:
+     - `Shot_01_Lobby_Overview.png`: Architectural grand lobby from entrance.
+     - `Shot_02_Concierge_Pierre_Character.png`: Medium-close portrait of Concierge Pierre.
+     - `Shot_03_Reception_Desk_BankerLamp.png`: Curved reception desk and emerald banker's lamp.
+     - `Shot_04_Table_And_Keycard.png`: Central walnut table with stamped gold keycard.
+     - `Shot_05_Room102_Entrance.png`: Room 102 mahogany door, sconces, and card reader.
+     - `Shot_06_Main_Menu_View.png`: Theatrical main menu with gold monogram seal.
+     - `Shot_07_InGame_HUD_View.png`: First-person HUD with pocket chronometer and toast.
+     - `Shot_08_Case_Dossier_Workspace.png`: 3-column case dossier workspace.
+     - `Shot_09_Evidence_Inspection_Modal.png`: Archival evidence parchment card.
+2. **Automated Test Results**:
+   - Ran complete Unity EditMode test suite via batch mode CLI:
+     - 71 total tests executed across 6 test suites.
+     - 71 passed, 0 failed, 0 inconclusive (100% pass rate).
+     - Zero gameplay regressions.
+
