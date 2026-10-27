@@ -126,10 +126,39 @@ namespace TomorrowsCrime.Procedural.Core
                 inspector.SetInvestigation(_currentInvestigation);
             }
 
-            // 5. Clean up knowledge store
+            // 5. Build physical 4-floor procedural hotel environment
+            if (activeMode == SessionGameMode.ProceduralHotelCase)
+            {
+                if (_spawnedWorldRoot != null)
+                {
+                    Destroy(_spawnedWorldRoot);
+                }
+
+                // Deactivate static prototype lobby if present
+                var staticLobby = GameObject.Find("[Environment_HotelLobby]");
+                if (staticLobby != null)
+                {
+                    staticLobby.SetActive(false);
+                }
+
+                var mats = ResolveMaterials();
+                _spawnedWorldRoot = GenerationPipeline.BuildPlayableWorld(_currentInvestigation, null, mats);
+
+                // Position player at ground lobby spawn
+                var player = FindAnyObjectByType<Player.PlayerController>();
+                if (player != null)
+                {
+                    var cc = player.GetComponent<CharacterController>();
+                    if (cc != null) cc.enabled = false;
+                    player.transform.position = new Vector3(0f, 0.5f, -4f);
+                    if (cc != null) cc.enabled = true;
+                }
+            }
+
+            // 6. Clean up knowledge store
             InvestigationKnowledgeService.Instance?.Clear();
 
-            // 6. Reset simulation clock to 00:00
+            // 7. Reset simulation clock to 00:00
             SimulationManager.Instance?.ResetSimulation();
 
             if (playFanfare)
@@ -140,6 +169,23 @@ namespace TomorrowsCrime.Procedural.Core
                     $"Meridian House generated for Seed: {seed.SeedCode}. Case: '{_currentInvestigation.GroundTruth.CaseTitle}'.",
                     TomorrowsCrime.UI.Styling.UITheme.BrassHighlight);
             }
+        }
+
+        private Dictionary<string, Material> ResolveMaterials()
+        {
+            var dict = new Dictionary<string, Material>();
+#if UNITY_EDITOR
+            var type = System.Type.GetType("TomorrowsCrime.EditorTools.ArtAssetSetup, TomorrowsCrime.Editor");
+            if (type != null)
+            {
+                var method = type.GetMethod("CreateOrUpdateMaterials", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (method != null)
+                {
+                    return method.Invoke(null, null) as Dictionary<string, Material> ?? dict;
+                }
+            }
+#endif
+            return dict;
         }
 
         public void OnLoopReset()

@@ -368,5 +368,129 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Object.DestroyImmediate(testRoot);
         }
+
+        [Test]
+        public void Layout_GeneratesFourFloorsAndFortyDistinctRooms()
+        {
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+
+            Assert.AreEqual(40, rooms.Count, "Hotel layout must generate exactly 40 distinct rooms (10 per floor across 4 floors).");
+
+            var floorCounts = new Dictionary<int, int>();
+            var roomIds = new HashSet<string>();
+
+            foreach (var room in rooms)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(room.RoomId), "RoomId must not be empty.");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(room.DisplayName), "DisplayName must not be empty.");
+                Assert.IsTrue(roomIds.Add(room.RoomId), $"Duplicate room ID detected: '{room.RoomId}'");
+
+                if (!floorCounts.ContainsKey(room.FloorIndex)) floorCounts[room.FloorIndex] = 0;
+                floorCounts[room.FloorIndex]++;
+
+                Assert.Greater(room.Bounds.size.x, 3.0f, $"Room '{room.RoomId}' width must be realistic.");
+                Assert.Greater(room.Bounds.size.z, 3.0f, $"Room '{room.RoomId}' depth must be realistic.");
+                Assert.AreEqual(4.5f, room.Bounds.size.y, 0.01f, $"Room '{room.RoomId}' height must be 4.5m.");
+            }
+
+            Assert.AreEqual(4, floorCounts.Count, "Hotel layout must span exactly 4 floors (Floors 0, 1, 2, 3).");
+            for (int f = 0; f < 4; f++)
+            {
+                Assert.IsTrue(floorCounts.ContainsKey(f), $"Floor {f} must exist.");
+                Assert.AreEqual(10, floorCounts[f], $"Floor {f} must have exactly 10 distinct rooms.");
+            }
+        }
+
+        [Test]
+        public void Layout_SeededGenerationProducesMeaningfulSpatialAndThematicVariation()
+        {
+            var rngA = new SeededRandom(11111);
+            var rngB = new SeededRandom(99999);
+            var rngSame = new SeededRandom(11111);
+
+            var roomsA = HotelLayoutTemplate.CreateMeridianHouseLayout(rngA);
+            var roomsB = HotelLayoutTemplate.CreateMeridianHouseLayout(rngB);
+            var roomsSame = HotelLayoutTemplate.CreateMeridianHouseLayout(rngSame);
+
+            // Repeatability: Identical seed produces identical room dimensions and styling
+            Assert.AreEqual(roomsA.Count, roomsSame.Count);
+            for (int i = 0; i < roomsA.Count; i++)
+            {
+                Assert.AreEqual(roomsA[i].Bounds.center.x, roomsSame[i].Bounds.center.x, 0.001f);
+                Assert.AreEqual(roomsA[i].Bounds.size.x, roomsSame[i].Bounds.size.x, 0.001f);
+                Assert.AreEqual(roomsA[i].Styling.LightIntensity, roomsSame[i].Styling.LightIntensity, 0.001f);
+            }
+
+            // Meaningful Variation: Different seeds produce jittered dimensions and lighting
+            bool dimensionsDiffer = false;
+            bool lightingDiffers = false;
+
+            for (int i = 0; i < roomsA.Count; i++)
+            {
+                if (Mathf.Abs(roomsA[i].Bounds.size.x - roomsB[i].Bounds.size.x) > 0.05f ||
+                    Mathf.Abs(roomsA[i].Bounds.size.z - roomsB[i].Bounds.size.z) > 0.05f)
+                {
+                    dimensionsDiffer = true;
+                }
+
+                if (Mathf.Abs(roomsA[i].Styling.LightIntensity - roomsB[i].Styling.LightIntensity) > 0.05f)
+                {
+                    lightingDiffers = true;
+                }
+            }
+
+            Assert.IsTrue(dimensionsDiffer, "Different seeds must produce jittered spatial room dimensions.");
+            Assert.IsTrue(lightingDiffers, "Different seeds must produce varied lighting ambiance.");
+        }
+
+        [Test]
+        public void Layout_MultiFloorStaircaseConnectsAllFourFloors()
+        {
+            var testRoot = new GameObject("TestRoot_Stairs");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var stairsRoot = testRoot.transform.Find("MeridianHouse_Architecture/Staircase_CentralHub_4Floors");
+            Assert.IsNotNull(stairsRoot, "4-floor staircase central hub must exist.");
+
+            // Verify all 3 flights exist
+            var flight0 = stairsRoot.Find("Flight_Floor0_to_1");
+            var flight1 = stairsRoot.Find("Flight_Floor1_to_2");
+            var flight2 = stairsRoot.Find("Flight_Floor2_to_3");
+
+            Assert.IsNotNull(flight0, "Flight from Floor 0 to 1 must exist.");
+            Assert.IsNotNull(flight1, "Flight from Floor 1 to 2 must exist.");
+            Assert.IsNotNull(flight2, "Flight from Floor 2 to 3 must exist.");
+
+            // Verify all 3 landings exist
+            Assert.IsNotNull(stairsRoot.Find("Landing_Floor1"), "Landing at Floor 1 must exist.");
+            Assert.IsNotNull(stairsRoot.Find("Landing_Floor2"), "Landing at Floor 2 must exist.");
+            Assert.IsNotNull(stairsRoot.Find("Landing_Floor3"), "Landing at Floor 3 must exist.");
+
+            // Verify each flight has walk ramp collider
+            Assert.IsNotNull(flight0.Find("Flight_Floor0_to_1_WalkRamp_Collider"));
+            Assert.IsNotNull(flight1.Find("Flight_Floor1_to_2_WalkRamp_Collider"));
+            Assert.IsNotNull(flight2.Find("Flight_Floor2_to_3_WalkRamp_Collider"));
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Collision_HotelBuilderFourFloorsHasMassiveSolidCollisionIntegrity()
+        {
+            var testRoot = new GameObject("TestRoot_Hotel4Floors");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var audit = WorldCollisionAuditor.AuditEnvironment(testRoot);
+
+            Assert.IsTrue(audit.IsValid, $"4-Floor hotel environment collision must be valid: {audit}");
+            Assert.Greater(audit.SolidCollidersCount, 150, "4-Floor hotel must have over 150 solid non-trigger colliders across all 40 rooms, stairs, and doors.");
+            Assert.AreEqual(0, audit.Errors.Count, "4-Floor hotel must have 0 collision errors.");
+
+            Object.DestroyImmediate(testRoot);
+        }
     }
 }

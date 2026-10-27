@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Investigation;
@@ -56,6 +58,30 @@ namespace TomorrowsCrime.Procedural.Objects
                     "Master key opening the Manager's Staff Office and executive records.", "evidence_key_office")
                     .WithRooms(RoomType.Reception, RoomType.UtilityRoom, RoomType.Kitchen)
                     .WithAnchors(AnchorCategory.Desk, AnchorCategory.Counter, AnchorCategory.Shelf)
+                    .WithCollider(new Vector3(0.4f, 0.1f, 0.4f)),
+
+                new ObjectDefinition("obj_key_room_104", "Room 104 Key", ObjectCategory.Key, ObjectRole.Functional,
+                    "Assets/_Project/Art/Models/Prop_Keycard_Detailed.obj", "BrassGold",
+                    "Polished brass key stamped 'Room 104'.",
+                    "Key for Baroness Dupuis's guest suite.", "evidence_key_104")
+                    .WithRooms(RoomType.Reception, RoomType.Lobby, RoomType.GuestRoom102)
+                    .WithAnchors(AnchorCategory.KeyStation, AnchorCategory.Desk, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.4f, 0.1f, 0.4f)),
+
+                new ObjectDefinition("obj_key_penthouse", "Crown Penthouse Master Key", ObjectCategory.Key, ObjectRole.Functional,
+                    "Assets/_Project/Art/Models/Prop_Keycard_Detailed.obj", "BrassGold",
+                    "Gilded master key stamped 'CROWN PENTHOUSE'.",
+                    "Grants access to the top-floor Penthouse Grand Salon and Presidential Suite.", "evidence_key_penthouse")
+                    .WithRooms(RoomType.Reception, RoomType.StaffOffice, RoomType.Floor3SkyFoyer)
+                    .WithAnchors(AnchorCategory.KeyStation, AnchorCategory.Desk, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.4f, 0.1f, 0.4f)),
+
+                new ObjectDefinition("obj_key_observatory", "Observatory Brass Key", ObjectCategory.Key, ObjectRole.Functional,
+                    "Assets/_Project/Art/Models/Prop_Keycard_Detailed.obj", "BrassGold",
+                    "Ancient brass skeleton key stamped 'OBSERVATORY'.",
+                    "Unlocks the Clock Tower Observatory mechanism and telescope dome.", "evidence_key_observatory")
+                    .WithRooms(RoomType.StaffOffice, RoomType.Library, RoomType.Floor3SkyFoyer)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Shelf, AnchorCategory.Tabletop)
                     .WithCollider(new Vector3(0.4f, 0.1f, 0.4f)),
 
                 // Weapons & Potential Murder Tools
@@ -137,9 +163,49 @@ namespace TomorrowsCrime.Procedural.Objects
                     null, "BrassGold",
                     "Galvanized zinc wash bucket with scrubbing rags.",
                     "Standard cleaning bucket used by housekeeping staff.", null)
-                    .WithRooms(RoomType.HousekeepingStorage, RoomType.UtilityRoom, RoomType.GroundCorridor)
+                    .WithRooms(RoomType.HousekeepingStorage, RoomType.UtilityRoom, RoomType.GroundCorridor, RoomType.LinenStorage, RoomType.ServiceAnnexFloor2)
                     .WithAnchors(AnchorCategory.FloorCorner, AnchorCategory.ServiceRack)
-                    .WithCollider(new Vector3(0.6f, 0.5f, 0.6f))
+                    .WithCollider(new Vector3(0.6f, 0.5f, 0.6f)),
+
+                new ObjectDefinition("obj_chess_set", "Carved Ivory & Ebony Chessboard", ObjectCategory.Valuable, ObjectRole.Decorative,
+                    null, "WoodWalnut",
+                    "A folding walnut chessboard with hand-carved pieces set in mid-game.",
+                    "An ongoing game of chess. White's queen is pinning black's knight.", null)
+                    .WithRooms(RoomType.CardRoom, RoomType.PresidentialStudy, RoomType.CrownPenthouse)
+                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Desk)
+                    .WithCollider(new Vector3(0.5f, 0.15f, 0.5f)),
+
+                new ObjectDefinition("obj_sheet_music", "Handwritten Sonata Score", ObjectCategory.Document, ObjectRole.InvestigativeEvidence,
+                    null, "ShirtWhite",
+                    "Original manuscript sheet music stamped 'Conservatoire de Paris'.",
+                    "Vocal score with handwritten annotations in the margins.", "evidence_sheet_music")
+                    .WithRooms(RoomType.MusicSalon, RoomType.GuestRoom205)
+                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Desk, AnchorCategory.Shelf)
+                    .WithCollider(new Vector3(0.35f, 0.05f, 0.45f)),
+
+                new ObjectDefinition("obj_brass_telescope", "Pocket Brass Telescope", ObjectCategory.Tool, ObjectRole.Decorative,
+                    null, "BrassGold",
+                    "A collapsible brass astronomical telescope with quartz lenses.",
+                    "Precision nautical and celestial spotting glass.", null)
+                    .WithRooms(RoomType.Observatory, RoomType.RoofGarden, RoomType.GuestRoom204)
+                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Desk, AnchorCategory.FloorCorner)
+                    .WithCollider(new Vector3(0.2f, 0.45f, 0.2f)),
+
+                new ObjectDefinition("obj_cigar_box", "Cedar Cigar Humidor", ObjectCategory.Container, ObjectRole.Decorative,
+                    null, "WoodMahogany",
+                    "Inlaid Spanish cedar humidor filled with Havana cigars.",
+                    "Luxury cigar humidor smelling of cured tobacco and cedar.", null)
+                    .WithRooms(RoomType.CigarLounge, RoomType.CrownPenthouse, RoomType.BarLounge)
+                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Counter, AnchorCategory.Desk)
+                    .WithCollider(new Vector3(0.4f, 0.2f, 0.3f)),
+
+                new ObjectDefinition("obj_antique_globe", "Gilded Terrestrial Globe", ObjectCategory.Valuable, ObjectRole.Decorative,
+                    null, "BrassGold",
+                    "A 12-inch terrestrial globe mounted on a brass meridian gimbal.",
+                    "Detailed 19th-century cartographic globe.", null)
+                    .WithRooms(RoomType.Library, RoomType.PresidentialStudy, RoomType.Floor3SkyFoyer)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.4f, 0.6f, 0.4f))
             };
 
             return _catalog;
@@ -229,6 +295,7 @@ namespace TomorrowsCrime.Procedural.Objects
 
             // Visual mesh
             GameObject visual = null;
+#if UNITY_EDITOR
             if (!string.IsNullOrEmpty(def.ModelPrefabPath))
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(def.ModelPrefabPath);
@@ -240,6 +307,7 @@ namespace TomorrowsCrime.Procedural.Objects
                     visual.transform.localRotation = Quaternion.identity;
                 }
             }
+#endif
 
             if (visual == null)
             {
@@ -285,6 +353,7 @@ namespace TomorrowsCrime.Procedural.Objects
 
         private static EvidenceDefinition GetOrCreateEvidenceDefinition(ObjectDefinition def)
         {
+#if UNITY_EDITOR
             string folder = "Assets/_Project/Data/Evidence";
             string assetPath = $"{folder}/{def.LinkedEvidenceId}.asset";
 
@@ -304,6 +373,17 @@ namespace TomorrowsCrime.Procedural.Objects
             }
 
             return asset;
+#else
+            var asset = ScriptableObject.CreateInstance<EvidenceDefinition>();
+            asset.Initialize(
+                def.LinkedEvidenceId,
+                def.DisplayName,
+                def.ShortDescription ?? def.DisplayName,
+                def.DetailedDescription ?? def.ShortDescription ?? def.DisplayName,
+                def.Category.ToString()
+            );
+            return asset;
+#endif
         }
     }
 }

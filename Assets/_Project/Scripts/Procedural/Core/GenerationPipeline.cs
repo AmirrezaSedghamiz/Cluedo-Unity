@@ -43,8 +43,8 @@ namespace TomorrowsCrime.Procedural.Core
                 AttemptCount = 0
             };
 
-            // Step 1: Select Layout
-            result.Rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            // Step 1: Select Layout with Seeded Jitter & Styling Variations
+            result.Rooms = HotelLayoutTemplate.CreateMeridianHouseLayout(seed.LayoutStream);
 
             // Step 2 & 3: Generate and Validate Mystery Scenario with Retry Policy
             for (int attempt = 1; attempt <= MaxRetries; attempt++)

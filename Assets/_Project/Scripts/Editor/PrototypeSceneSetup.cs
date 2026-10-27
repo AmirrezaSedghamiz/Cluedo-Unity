@@ -488,6 +488,19 @@ namespace TomorrowsCrime.EditorTools
             }
         }
 
+        [MenuItem("Tomorrow's Crime/Bake 4-Floor Procedural Hotel", priority = 3)]
+        public static void BakeFourFloorProceduralHotel()
+        {
+            var mats = ArtAssetSetup.CreateOrUpdateMaterials();
+            var existing = GameObject.Find("MeridianHouse_Architecture");
+            if (existing != null) Object.DestroyImmediate(existing);
+
+            var rooms = Procedural.Hotel.HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var hotel = Procedural.Hotel.HotelBuilder.BuildHotelEnvironment(null, rooms, mats);
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Debug.Log($"[Tomorrow's Crime] Baked 4-Floor Hotel with {rooms.Count} rooms into the active scene.");
+        }
+
         private static GameObject SpawnProp(GameObject prefab, string name, Transform parent,
             Vector3 localPos, Vector3 localRot, Vector3 localScale, Dictionary<string, Material> mats)
         {

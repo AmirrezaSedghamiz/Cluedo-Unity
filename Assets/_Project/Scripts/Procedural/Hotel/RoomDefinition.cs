@@ -6,6 +6,7 @@ namespace TomorrowsCrime.Procedural.Hotel
 {
     public enum RoomType
     {
+        // Floor 0: Ground Floor (Lobby & Public Halls)
         Lobby,
         Reception,
         DiningRoom,
@@ -13,11 +14,60 @@ namespace TomorrowsCrime.Procedural.Hotel
         StaffOffice,
         UtilityRoom,
         GroundCorridor,
+        BarLounge,
+        Conservatory,
+        LuggageStorage,
+
+        // Floor 1: First Floor (Guest Suites & Library)
         UpperLanding,
+        Floor1Gallery,
+        Library,
+        CardRoom,
+        LinenStorage,
         GuestRoom101,
         GuestRoom102,
         GuestRoom103,
-        HousekeepingStorage
+        GuestRoom104,
+        GuestRoom105,
+        ReadingParlor,
+        HousekeepingStorage,
+
+        // Floor 2: Second Floor (Grand Salon & Deluxe Suites)
+        Floor2Promenade,
+        MusicSalon,
+        BilliardsRoom,
+        CigarLounge,
+        ServiceAnnexFloor2,
+        GuestRoom201,
+        GuestRoom202,
+        GuestRoom203,
+        GuestRoom204,
+        GuestRoom205,
+
+        // Floor 3: Third Floor (Penthouses, Observatory & Solarium)
+        Floor3SkyFoyer,
+        CrownPenthouse,
+        PresidentialBedroom,
+        PresidentialStudy,
+        Observatory,
+        Solarium,
+        VIPSuite301,
+        VIPSuite302,
+        MotorRoom,
+        RoofGarden
+    }
+
+    [Serializable]
+    public class RoomStyling
+    {
+        public string WallpaperMatKey = "WallpaperEmerald";
+        public string WainscotMatKey = "WoodMahogany";
+        public string FloorMatKey = "CarpetBurgundy";
+        public string TrimMatKey = "BrassGold";
+        public string CeilingMatKey = "WoodMahogany";
+        public Color LightColor = new Color(1.0f, 0.88f, 0.65f); // 2700K warm tungsten
+        public float LightIntensity = 2.4f;
+        public float LightRange = 16.0f;
     }
 
     public enum AnchorCategory
@@ -87,8 +137,9 @@ namespace TomorrowsCrime.Procedural.Hotel
         public string RoomId { get; }
         public string DisplayName { get; }
         public RoomType Type { get; }
-        public int FloorIndex { get; } // 0 = Ground, 1 = Upper
+        public int FloorIndex { get; } // 0 = Ground, 1 = Upper, 2 = Grand, 3 = Penthouse
         public Bounds Bounds { get; }
+        public RoomStyling Styling { get; set; } = new RoomStyling();
         public List<DoorwayConnection> Connections { get; } = new();
         public List<RoomAnchor> Anchors { get; } = new();
 

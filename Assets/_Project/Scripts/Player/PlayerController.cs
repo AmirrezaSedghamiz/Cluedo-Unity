@@ -240,25 +240,77 @@ namespace TomorrowsCrime.Player
         {
             Vector3 pos = transform.position;
 
-            // Simple robust spatial bounding classifier for Meridian House
-            if (pos.y > 3.0f)
+            // 1. Dynamic check against active procedural room bounds if present
+            var currentInv = Procedural.Core.GameSessionManager.Instance?.CurrentInvestigation;
+            if (currentInv != null && currentInv.Rooms != null)
             {
-                // Upper Floor
-                if (pos.x < -6f && pos.z > 2f) CurrentRoomName = "Meridian House • Room 101 Suite";
-                else if (pos.x > 8f && pos.z > 2f) CurrentRoomName = "Meridian House • Room 102 Suite";
-                else if (pos.x < -6f && pos.z < -2f) CurrentRoomName = "Meridian House • Room 103 Suite";
-                else if (pos.x > 8f && pos.z < -2f) CurrentRoomName = "Meridian House • Housekeeping Storage";
-                else CurrentRoomName = "Meridian House • Upper Mezzanine Gallery";
+                foreach (var room in currentInv.Rooms)
+                {
+                    // Check horizontal bounds with generous vertical margin
+                    var b = room.Bounds;
+                    if (pos.x >= b.min.x && pos.x <= b.max.x &&
+                        pos.z >= b.min.z && pos.z <= b.max.z &&
+                        pos.y >= (room.FloorIndex * 5.0f - 0.5f) && pos.y < ((room.FloorIndex + 1) * 5.0f - 0.5f))
+                    {
+                        CurrentRoomName = $"Meridian House • {room.DisplayName}";
+                        return;
+                    }
+                }
+            }
+
+            // 2. Spatial bounding classifier across 4 floors
+            if (pos.y >= 14.5f)
+            {
+                // Floor 3: Penthouses, Observatory & Solarium
+                if (pos.x < -10f && pos.z > 4f) CurrentRoomName = "Meridian House • Presidential Master Bedroom";
+                else if (pos.x < -10f && pos.z < -4f) CurrentRoomName = "Meridian House • Presidential Private Study";
+                else if (pos.x < -10f) CurrentRoomName = "Meridian House • Crown Penthouse Salon";
+                else if (pos.z > 5f && Mathf.Abs(pos.x) < 7f) CurrentRoomName = "Meridian House • Clock Tower Observatory";
+                else if (pos.z < -5f && pos.x < 0f) CurrentRoomName = "Meridian House • Rooftop Solarium & Terrace";
+                else if (pos.z < -5f && pos.x >= 0f) CurrentRoomName = "Meridian House • Roof Garden Lookout";
+                else if (pos.x > 10f && pos.z > 2f) CurrentRoomName = "Meridian House • Royal Penthouse Suite 301";
+                else if (pos.x > 10f && pos.z < -2f) CurrentRoomName = "Meridian House • Royal Penthouse Suite 302";
+                else CurrentRoomName = "Meridian House • Floor 3 Sky Foyer";
+            }
+            else if (pos.y >= 9.5f)
+            {
+                // Floor 2: Deluxe Suites, Music Salon & Billiards
+                if (pos.x < -10f && pos.z > 4f) CurrentRoomName = "Meridian House • Deluxe Suite 201 - Ambassador";
+                else if (pos.x < -10f && pos.z < -4f) CurrentRoomName = "Meridian House • Deluxe Suite 203 - Professor";
+                else if (pos.x < -10f) CurrentRoomName = "Meridian House • Billiards & Game Hall";
+                else if (pos.z > 5f && Mathf.Abs(pos.x) < 7f) CurrentRoomName = "Meridian House • Meridian Grand Music Salon";
+                else if (pos.z < -5f && pos.x < 0f) CurrentRoomName = "Meridian House • Velvet Cigar & Cognac Den";
+                else if (pos.z < -5f && pos.x >= 0f) CurrentRoomName = "Meridian House • Floor 2 Service Annex";
+                else if (pos.x > 10f && pos.z > 2f) CurrentRoomName = "Meridian House • Deluxe Suite 202 - Countess";
+                else if (pos.x > 10f && pos.z < -2f) CurrentRoomName = "Meridian House • Deluxe Suite 204 - Captain";
+                else CurrentRoomName = "Meridian House • Floor 2 Promenade";
+            }
+            else if (pos.y >= 4.5f)
+            {
+                // Floor 1: Guest Suites & Grand Library
+                if (pos.x < -10f && pos.z > 4f) CurrentRoomName = "Meridian House • Guest Suite 101 - Lord Harrington";
+                else if (pos.x < -10f && pos.z < -4f) CurrentRoomName = "Meridian House • Guest Suite 103 - Dr. Sterling";
+                else if (pos.x < -10f) CurrentRoomName = "Meridian House • Meridian Grand Library";
+                else if (pos.x > 10f && pos.z > 2f) CurrentRoomName = "Meridian House • VIP Suite 102 - Crime Scene";
+                else if (pos.x > 10f && pos.z < -2f) CurrentRoomName = "Meridian House • Housekeeping Central Storage";
+                else if (pos.z < -5f && pos.x < 0f) CurrentRoomName = "Meridian House • Gentleman's Card Room";
+                else if (pos.z < -5f && pos.x >= 0f) CurrentRoomName = "Meridian House • Floor 1 Linen Annex";
+                else if (pos.z > 5f && Mathf.Abs(pos.x) < 7f) CurrentRoomName = "Meridian House • North Reading Parlor";
+                else CurrentRoomName = "Meridian House • Floor 1 Mezzanine Gallery";
             }
             else
             {
-                // Ground Floor
+                // Floor 0: Ground Floor & Lobby
                 if (pos.z > 3.0f && pos.z < 8.0f && Mathf.Abs(pos.x) < 5.0f) CurrentRoomName = "Meridian House • Front Reception Desk";
-                else if (pos.z >= 8.0f) CurrentRoomName = "Meridian House • Room 102 Grand Entrance";
-                else if (pos.x < -7f && pos.z > 5f) CurrentRoomName = "Meridian House • Kitchen & Pantry";
-                else if (pos.x < -7f) CurrentRoomName = "Meridian House • Dining Hall";
-                else if (pos.x > 7f && pos.z > 5f) CurrentRoomName = "Meridian House • Executive Staff Office";
-                else if (pos.x > 7f) CurrentRoomName = "Meridian House • Maintenance Utility Room";
+                else if (pos.z >= 8.0f && Mathf.Abs(pos.x) < 5.0f) CurrentRoomName = "Meridian House • Room 102 Grand Entrance";
+                else if (pos.x < -7f && pos.z > 5f) CurrentRoomName = "Meridian House • Hotel Kitchen & Scullery";
+                else if (pos.x < -7f && pos.z < -5f) CurrentRoomName = "Meridian House • Winter Garden Conservatory";
+                else if (pos.x < -7f) CurrentRoomName = "Meridian House • Grand Dining Hall";
+                else if (pos.x > 7f && pos.z > 5f) CurrentRoomName = "Meridian House • Manager's Executive Office";
+                else if (pos.x > 7f && pos.z < -5f) CurrentRoomName = "Meridian House • Maintenance & Boiler Utility";
+                else if (pos.x > 7f) CurrentRoomName = "Meridian House • Central Grand Staircase Hub";
+                else if (pos.z < -5f && pos.x < 0f) CurrentRoomName = "Meridian House • The Golden Quill Bar & Lounge";
+                else if (pos.z < -5f && pos.x >= 0f) CurrentRoomName = "Meridian House • Luggage & Bellhop Storage";
                 else CurrentRoomName = "Meridian House • Central Marble Lobby";
             }
         }

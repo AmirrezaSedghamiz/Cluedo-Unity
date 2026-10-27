@@ -114,6 +114,42 @@ namespace TomorrowsCrime.EditorTools
             dict["CarpetBurgundy"] = GetOrCreateMaterial("M_CarpetBurgundy", shader,
                 new Color(0.35f, 0.09f, 0.14f), smoothness: 0.15f, metallic: 0.0f);
 
+            // 15b. CarpetSapphire (Midnight Sapphire Velvet)
+            dict["CarpetSapphire"] = GetOrCreateMaterial("M_CarpetSapphire", shader,
+                new Color(0.08f, 0.14f, 0.32f), smoothness: 0.15f, metallic: 0.0f);
+
+            // 15c. WallpaperNavy (Royal Prussian Blue Damask)
+            dict["WallpaperNavy"] = GetOrCreateMaterial("M_WallpaperNavy", shader,
+                new Color(0.09f, 0.15f, 0.25f), smoothness: 0.28f, metallic: 0.05f, mainTex: wallpaperTex);
+
+            // 15d. WallpaperBordeaux (Victorian Crimson Damask)
+            dict["WallpaperBordeaux"] = GetOrCreateMaterial("M_WallpaperBordeaux", shader,
+                new Color(0.28f, 0.08f, 0.12f), smoothness: 0.28f, metallic: 0.05f, mainTex: wallpaperTex);
+
+            // 15e. WallpaperArtDecoDamask (Gilded Black Damask)
+            dict["WallpaperArtDecoDamask"] = GetOrCreateMaterial("M_WallpaperArtDecoDamask", shader,
+                new Color(0.12f, 0.12f, 0.13f), smoothness: 0.32f, metallic: 0.15f, mainTex: wallpaperTex);
+
+            // 15f. FloorSlate (Charcoal Slate Tile)
+            dict["FloorSlate"] = GetOrCreateMaterial("M_FloorSlate", shader,
+                new Color(0.18f, 0.20f, 0.22f), smoothness: 0.40f, metallic: 0.02f);
+
+            // 15g. AgedParchment (Archive Study Parchment)
+            dict["AgedParchment"] = GetOrCreateMaterial("M_AgedParchment", shader,
+                new Color(0.85f, 0.80f, 0.70f), smoothness: 0.20f, metallic: 0.0f);
+
+            // 15h. VelvetEmerald (Plush Emerald Upholstery)
+            dict["VelvetEmerald"] = GetOrCreateMaterial("M_VelvetEmerald", shader,
+                new Color(0.08f, 0.30f, 0.15f), smoothness: 0.25f, metallic: 0.0f);
+
+            // 15i. VelvetGold (Gilded Gold Velvet)
+            dict["VelvetGold"] = GetOrCreateMaterial("M_VelvetGold", shader,
+                new Color(0.78f, 0.62f, 0.20f), smoothness: 0.30f, metallic: 0.05f);
+
+            // 15j. GreenFelt (Billiards and Card Table Felt)
+            dict["GreenFelt"] = GetOrCreateMaterial("M_GreenFelt", shader,
+                new Color(0.10f, 0.45f, 0.20f), smoothness: 0.10f, metallic: 0.0f);
+
             // 16. AmberGlow (Frosted Amber Lamp / Flame)
             var amberMat = GetOrCreateMaterial("M_AmberGlow", shader,
                 new Color(1.0f, 0.72f, 0.25f), smoothness: 0.50f, metallic: 0.0f);
