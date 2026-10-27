@@ -391,7 +391,7 @@ namespace TomorrowsCrime.EditorTools
             // 15. First-Person Player Rig (Collision Hardened)
             var playerGo = new GameObject("Player");
             playerGo.tag = "Player";
-            playerGo.transform.position = new Vector3(0f, 0f, -8f);
+            playerGo.transform.position = new Vector3(0f, 0.2f, -2.0f);
 
             var characterController = playerGo.AddComponent<CharacterController>();
             characterController.height = 2.0f;

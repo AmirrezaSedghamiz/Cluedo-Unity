@@ -135,6 +135,24 @@ namespace TomorrowsCrime.NPC
             Tick(clock.ElapsedSeconds);
         }
 
+        public void InitializeFromProfile(TomorrowsCrime.Procedural.NPCs.NPCProfile p)
+        {
+            profile = p;
+            _baselinePosition = transform.position;
+            _baselineRotation = transform.rotation;
+
+            definition = ScriptableObject.CreateInstance<NPCDefinition>();
+            definition.Initialize(p.NpcId, p.DisplayName, _baselinePosition, _baselineRotation);
+            _scheduleEvaluator = definition.CreateEvaluator();
+            _runtimeState = new NPCRuntimeState(p.NpcId);
+
+            if (_agent != null)
+            {
+                _agent.speed = definition.MovementSpeed;
+                _agent.stoppingDistance = definition.StoppingDistance;
+            }
+        }
+
         public void InitializeFromDefinition()
         {
             if (definition == null)

@@ -492,5 +492,183 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Object.DestroyImmediate(testRoot);
         }
+
+        [Test]
+        public void Elevator_ShaftAndCabinExistWithFourFloorButtons()
+        {
+            var testRoot = new GameObject("TestRoot_Elevator");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var elevatorRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_ArtDecoElevator");
+
+            Assert.IsNotNull(elevatorRoot, "Art Deco Elevator root must exist in hotel environment.");
+
+            // Check Elevator Cabin & Component
+            var cabin = elevatorRoot.Find("Elevator_Cabin");
+            Assert.IsNotNull(cabin, "Elevator moving cabin must exist.");
+
+            var elevatorComp = cabin.GetComponent<HotelElevator>();
+            Assert.IsNotNull(elevatorComp, "HotelElevator component must be attached to cabin.");
+            Assert.AreEqual(0, elevatorComp.CurrentFloor, "Initial floor must be Floor 0.");
+            Assert.IsFalse(elevatorComp.IsMoving, "Elevator should not be moving initially.");
+
+            // Check In-Cabin Control Panel & 4 Buttons
+            var panel = cabin.Find("Elevator_ControlPanel");
+            Assert.IsNotNull(panel, "Control panel must exist inside cabin.");
+            for (int f = 0; f < 4; f++)
+            {
+                var btn = panel.Find($"Button_Floor_{f}");
+                Assert.IsNotNull(btn, $"Floor {f} button must exist in control panel.");
+                var btnInteract = btn.GetComponent<InteractableElevatorButton>();
+                Assert.IsNotNull(btnInteract, $"Floor {f} button must have InteractableElevatorButton component.");
+                Assert.AreEqual(f, btnInteract.TargetFloor);
+                Assert.IsFalse(btnInteract.IsCallButton);
+            }
+
+            // Check Outside Floor Call Stations (Floors 0, 1, 2, 3)
+            for (int f = 0; f < 4; f++)
+            {
+                var callStation = elevatorRoot.Find($"Elevator_CallStation_Floor_{f}");
+                Assert.IsNotNull(callStation, $"Floor {f} outside call station must exist.");
+                var callInteract = callStation.GetComponent<InteractableElevatorButton>();
+                Assert.IsNotNull(callInteract, $"Floor {f} call station must have InteractableElevatorButton component.");
+                Assert.AreEqual(f, callInteract.TargetFloor);
+                Assert.IsTrue(callInteract.IsCallButton);
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Collision_FoundationPlinthsSpanEntireBuildingFootprint()
+        {
+            var testRoot = new GameObject("TestRoot_Plinths");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var plinthsRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_ContinuousFloorPlinths");
+
+            Assert.IsNotNull(plinthsRoot, "Continuous floor plinths root must exist.");
+
+            for (int f = 0; f < 4; f++)
+            {
+                var plinth = plinthsRoot.Find($"FoundationPlinth_Floor_{f}");
+                Assert.IsNotNull(plinth, $"Foundation plinth for Floor {f} must exist.");
+
+                var col = plinth.GetComponent<BoxCollider>();
+                Assert.IsNotNull(col, $"Foundation plinth for Floor {f} must have BoxCollider.");
+                Assert.IsFalse(col.isTrigger, $"Foundation plinth collider must be solid non-trigger.");
+
+                // Verify plinth covers the entire hotel footprint
+                Assert.GreaterOrEqual(plinth.localScale.x, 50.0f, "Foundation plinth must span at least 50m in width.");
+                Assert.GreaterOrEqual(plinth.localScale.z, 36.0f, "Foundation plinth must span at least 36m in depth.");
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Visibility_RoomWallsContainDoorwayCutoutsAndLintels()
+        {
+            var testRoot = new GameObject("TestRoot_Cutouts");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var lobbyRoom = testRoot.transform.Find("MeridianHouse_Architecture/Room_room_lobby_GrandMarbleLobby");
+
+            Assert.IsNotNull(lobbyRoom, "Lobby room must exist in architecture.");
+
+            // Lobby has doorway to reception on Wall_North. Check lintel and flank cutouts exist
+            var northWallLintel = lobbyRoom.Find("Wall_North_DoorLintel");
+            Assert.IsNotNull(northWallLintel, "Lobby North wall must have doorway lintel cutout rather than solid wall.");
+
+            // Lobby has doorway to dining on Wall_West. Check West lintel exists
+            var westWallLintel = lobbyRoom.Find("Wall_West_DoorLintel");
+            Assert.IsNotNull(westWallLintel, "Lobby West wall must have doorway lintel cutout rather than solid wall.");
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Archways_DoNotContainSolidDoorLeafBlockers()
+        {
+            var testRoot = new GameObject("TestRoot_Archways");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var doorsRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_Doors");
+
+            Assert.IsNotNull(doorsRoot, "Hotel_Doors root must exist.");
+
+            // Find Front Reception Archway
+            var archDoor = doorsRoot.Find("Door_conn_lobby_reception");
+            Assert.IsNotNull(archDoor, "Front reception archway must exist.");
+
+            // Archway should contain decorative arch casing, but NOT a blocking door leaf
+            Assert.IsNotNull(archDoor.Find("Archway_Casing"), "Archway should contain Archway_Casing.");
+            Assert.IsNull(archDoor.Find("Hinge/Door_Leaf"), "Archway must NOT contain a closed door leaf blocking navigation.");
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void NPCWorldSpawner_PopulatesLivingRosterAcrossAllFloors()
+        {
+            var testRoot = new GameObject("TestRoot_NPCWorld");
+            var seed = InvestigationSeed.FromCode("TC-TEST-SEEDA");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var mats = new Dictionary<string, Material>();
+
+            var rosterGo = NPCs.NPCWorldSpawner.SpawnRoster(testRoot.transform, investigation.Roster, mats);
+
+            Assert.IsNotNull(rosterGo, "Spawned roster root must exist.");
+            Assert.AreEqual(investigation.Roster.Count, rosterGo.transform.childCount, "Every NPC in the roster must be spawned.");
+
+            // Verify each spawned NPC has physical collider and NPCController
+            foreach (Transform child in rosterGo.transform)
+            {
+                var col = child.GetComponent<CapsuleCollider>();
+                Assert.IsNotNull(col, $"{child.name} must have a CapsuleCollider.");
+                Assert.IsFalse(col.isTrigger, $"{child.name} collider must be solid non-trigger.");
+
+                var controller = child.GetComponent<NPCController>();
+                Assert.IsNotNull(controller, $"{child.name} must have an NPCController.");
+                Assert.IsNotNull(controller.Profile, $"{child.name} NPCController must have Profile set.");
+                Assert.IsTrue(controller.CanInteract, $"{child.name} must be interactable.");
+                Assert.That(controller.InteractionPrompt, Does.Contain("Question"));
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void RoomObjectPlacer_PopulatesAllObjectsWithSolidCollidersWithoutException()
+        {
+            var testRoot = new GameObject("TestRoot_Objects");
+            var seed = InvestigationSeed.FromCode("TC-TEST-SEEDB");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var mats = new Dictionary<string, Material>();
+
+            Assert.DoesNotThrow(() =>
+            {
+                Objects.RoomObjectPlacer.PopulateRooms(
+                    testRoot.transform,
+                    investigation.Rooms,
+                    seed.ObjectStream,
+                    mats,
+                    investigation.GroundTruth.MandatoryObjectPlacements);
+            }, "PopulateRooms must execute without MissingComponentException or null reference.");
+
+            // Verify key objects and clues have BoxColliders
+            var colliders = testRoot.GetComponentsInChildren<BoxCollider>();
+            Assert.Greater(colliders.Length, 10, "Populated rooms must contain solid colliders on props.");
+
+            Object.DestroyImmediate(testRoot);
+        }
     }
 }

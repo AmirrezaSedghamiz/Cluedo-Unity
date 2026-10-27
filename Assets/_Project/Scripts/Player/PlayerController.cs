@@ -65,6 +65,13 @@ namespace TomorrowsCrime.Player
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
+
+            // Ensure safe spawn elevation inside Grand Lobby
+            if (transform.position.y < 0.1f || transform.position.z < -6.0f)
+            {
+                transform.position = new Vector3(0f, 0.15f, -2.0f);
+            }
+
             _spawnPosition = transform.position;
             _spawnRotation = transform.rotation;
             _lastPosition = transform.position;
@@ -107,6 +114,15 @@ namespace TomorrowsCrime.Player
 
         private void Update()
         {
+            // Void Fall Safety Guard: Prevent player from ever falling through the floor into the void
+            if (transform.position.y < -1.0f)
+            {
+                _characterController.enabled = false;
+                transform.position = new Vector3(_spawnPosition.x, 0.15f, _spawnPosition.z);
+                _verticalVelocity = 0f;
+                _characterController.enabled = true;
+            }
+
             if (IsInputBlocked) return;
 
             HandleMouseLook();
@@ -329,7 +345,7 @@ namespace TomorrowsCrime.Player
         public void OnLoopReset()
         {
             _characterController.enabled = false;
-            transform.position = _spawnPosition;
+            transform.position = _spawnPosition.y < 0.1f ? new Vector3(_spawnPosition.x, 0.15f, _spawnPosition.z) : _spawnPosition;
             transform.rotation = _spawnRotation;
             _lastPosition = _spawnPosition;
             _cameraPitch = 0f;

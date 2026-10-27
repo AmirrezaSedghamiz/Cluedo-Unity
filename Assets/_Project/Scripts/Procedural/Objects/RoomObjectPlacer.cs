@@ -327,7 +327,11 @@ namespace TomorrowsCrime.Procedural.Objects
             }
 
             // Collider Setup
-            var col = objGo.GetComponent<BoxCollider>() ?? objGo.AddComponent<BoxCollider>();
+            var col = objGo.GetComponent<BoxCollider>();
+            if (col == null)
+            {
+                col = objGo.AddComponent<BoxCollider>();
+            }
             col.size = def.ColliderSize;
             col.center = new Vector3(0f, def.ColliderSize.y * 0.5f, 0f);
             col.isTrigger = false;

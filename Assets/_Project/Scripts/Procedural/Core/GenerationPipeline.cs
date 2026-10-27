@@ -102,7 +102,10 @@ namespace TomorrowsCrime.Procedural.Core
             RoomObjectPlacer.PopulateRooms(worldRoot.transform, investigation.Rooms, investigation.Seed.ObjectStream,
                 mats, investigation.GroundTruth.MandatoryObjectPlacements);
 
-            // 3. Clear Case-Specific Knowledge on New Investigation
+            // 3. Populate Hotel with Living NPC Roster
+            NPCs.NPCWorldSpawner.SpawnRoster(worldRoot.transform, investigation.Roster, mats);
+
+            // 4. Clear Case-Specific Knowledge on New Investigation
             var knowledge = InvestigationKnowledgeService.Instance;
             if (knowledge != null)
             {

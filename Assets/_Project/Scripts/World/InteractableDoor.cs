@@ -72,6 +72,11 @@ namespace TomorrowsCrime.World
             }
             _closedRotation = doorHingeTransform.localRotation;
             _openRotation = _closedRotation * Quaternion.Euler(0f, 90f, 0f);
+
+            if (openState == DoorOpenState.Open)
+            {
+                doorHingeTransform.localRotation = _openRotation;
+            }
         }
 
         private void Start()
@@ -148,20 +153,34 @@ namespace TomorrowsCrime.World
 
         public void OnLoopReset()
         {
-            lockState = DoorLockState.Locked;
-            openState = DoorOpenState.Closed;
-
-            if (doorHingeTransform != null)
+            if (string.IsNullOrEmpty(requiredKeyId))
             {
-                doorHingeTransform.localRotation = _closedRotation;
+                // Naturally unlocked door restores to open
+                lockState = DoorLockState.Unlocked;
+                openState = DoorOpenState.Open;
+                if (doorHingeTransform != null) doorHingeTransform.localRotation = _openRotation;
+                if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
+                {
+                    WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Unlocked);
+                }
+            }
+            else
+            {
+                lockState = DoorLockState.Locked;
+                openState = DoorOpenState.Closed;
+
+                if (doorHingeTransform != null)
+                {
+                    doorHingeTransform.localRotation = _closedRotation;
+                }
+
+                if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
+                {
+                    WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Locked);
+                }
             }
 
-            if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
-            {
-                WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Locked);
-            }
-
-            Debug.Log($"[InteractableDoor] {doorDisplayName} restored to locked/closed baseline on loop reset.");
+            Debug.Log($"[InteractableDoor] {doorDisplayName} restored to baseline on loop reset.");
         }
 
         private void OnDestroy()
