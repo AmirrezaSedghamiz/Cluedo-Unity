@@ -117,7 +117,7 @@ namespace TomorrowsCrime.World
             UIManager.Instance?.ShowToast(
                 "ELEVATOR ARRIVED",
                 $"Now at: {_floorNames[currentFloor]}",
-                UI.Styling.UITheme.EmeraldLight);
+                UI.Styling.UITheme.StatusSuccess);
 
             OnElevatorArrived?.Invoke(currentFloor);
         }

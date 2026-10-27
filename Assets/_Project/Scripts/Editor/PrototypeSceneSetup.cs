@@ -29,6 +29,7 @@ namespace TomorrowsCrime.EditorTools
     [InitializeOnLoad]
     public static class PrototypeSceneSetup
     {
+        // Trigger compile refresh
         private const string ScenePath = "Assets/_Project/Scenes/Prototype.unity";
 
         static PrototypeSceneSetup()

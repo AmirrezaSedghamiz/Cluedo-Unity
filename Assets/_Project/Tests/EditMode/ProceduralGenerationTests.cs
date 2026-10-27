@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using TomorrowsCrime.Core;
 using TomorrowsCrime.Investigation;
+using TomorrowsCrime.NPC;
 using TomorrowsCrime.World;
 using TomorrowsCrime.Procedural.Core;
 using TomorrowsCrime.Procedural.Hotel;
@@ -624,7 +625,7 @@ namespace TomorrowsCrime.Tests.EditMode
             var investigation = GenerationPipeline.GenerateInvestigation(seed);
             var mats = new Dictionary<string, Material>();
 
-            var rosterGo = NPCs.NPCWorldSpawner.SpawnRoster(testRoot.transform, investigation.Roster, mats);
+            var rosterGo = NPCWorldSpawner.SpawnRoster(testRoot.transform, investigation.Roster, mats);
 
             Assert.IsNotNull(rosterGo, "Spawned roster root must exist.");
             Assert.AreEqual(investigation.Roster.Count, rosterGo.transform.childCount, "Every NPC in the roster must be spawned.");
@@ -656,7 +657,7 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Assert.DoesNotThrow(() =>
             {
-                Objects.RoomObjectPlacer.PopulateRooms(
+                RoomObjectPlacer.PopulateRooms(
                     testRoot.transform,
                     investigation.Rooms,
                     seed.ObjectStream,

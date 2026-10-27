@@ -566,8 +566,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 callPedestal.transform.SetParent(callStationGo.transform);
                 callPedestal.transform.localPosition = Vector3.zero;
                 callPedestal.transform.localScale = new Vector3(0.15f, 0.35f, 0.25f);
-                var cRend = callPedestal.GetComponent<Renderer>();
-                if (cRend != null && brassMat != null) cRend.sharedMaterial = brassMat;
+                var callRend = callPedestal.GetComponent<Renderer>();
+                if (callRend != null && brassMat != null) callRend.sharedMaterial = brassMat;
 
                 var callInteract = callStationGo.AddComponent<InteractableElevatorButton>();
                 callInteract.Elevator = elevatorComp;
