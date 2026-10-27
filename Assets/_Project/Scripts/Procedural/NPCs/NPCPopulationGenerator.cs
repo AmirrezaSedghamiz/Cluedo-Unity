@@ -51,7 +51,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             var maid = new NPCProfile("npc_maid_clara", "Clara Vance", NPCRole.HousekeepingMaid, 24, "room_housekeeping")
             {
-                BaselinePosition = new Vector3(12f, 5f, -4f),
+                BaselinePosition = new Vector3(11f, 5f, -7f),
                 BaselineRotation = new Vector3(0f, -90f, 0f),
                 MaterialKey = "ShirtWhite",
                 Personality = { Sociability = 0.5f, Caution = 0.8f, Curiosity = 0.8f, Honesty = 0.5f },
@@ -61,7 +61,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             var engineer = new NPCProfile("npc_engineer_otto", "Otto Krause", NPCRole.MaintenanceEngineer, 47, "room_utility")
             {
-                BaselinePosition = new Vector3(21f, 0f, -6f),
+                BaselinePosition = new Vector3(21f, 0f, -4f),
                 BaselineRotation = new Vector3(0f, 90f, 0f),
                 MaterialKey = "TrousersCharcoal",
                 Personality = { Sociability = 0.2f, Caution = 0.6f, Curiosity = 0.5f, Irritability = 0.6f, Honesty = 0.8f },
@@ -71,7 +71,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             var manager = new NPCProfile("npc_manager_adler", "Julian Adler", NPCRole.HotelManager, 55, "room_staff_office")
             {
-                BaselinePosition = new Vector3(21f, 0f, 7f),
+                BaselinePosition = new Vector3(21f, 0f, 4f),
                 BaselineRotation = new Vector3(0f, 180f, 0f),
                 MaterialKey = "WoodMahogany",
                 Personality = { Sociability = 0.5f, Caution = 0.9f, Curiosity = 0.4f, Honesty = 0.4f },
@@ -82,7 +82,7 @@ namespace TomorrowsCrime.Procedural.NPCs
             // 2. Hotel Guests
             var harrington = new NPCProfile("npc_lord_harrington", "Lord Harrington", NPCRole.WealthyGuest, 63, "room_guest_101")
             {
-                BaselinePosition = new Vector3(-12f, 5f, 4f),
+                BaselinePosition = new Vector3(1f, 5f, 7f),
                 BaselineRotation = new Vector3(0f, 90f, 0f),
                 MaterialKey = "WoodWalnut",
                 Personality = { Sociability = 0.6f, Caution = 0.4f, Curiosity = 0.4f, Irritability = 0.7f, Honesty = 0.5f },
@@ -92,7 +92,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             var valerie = new NPCProfile("npc_madame_valerie", "Madame Valerie", NPCRole.SocietyLady, 36, "room_guest_102")
             {
-                BaselinePosition = new Vector3(12f, 5f, 8f),
+                BaselinePosition = new Vector3(11f, 5f, 7f),
                 BaselineRotation = new Vector3(0f, -90f, 0f),
                 MaterialKey = "CarpetBurgundy",
                 Personality = { Sociability = 0.8f, Caution = 0.6f, Curiosity = 0.6f, Honesty = 0.4f },
@@ -102,7 +102,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             var sterling = new NPCProfile("npc_dr_sterling", "Dr. Sterling", NPCRole.DoctorGuest, 49, "room_guest_103")
             {
-                BaselinePosition = new Vector3(-12f, 5f, -4f),
+                BaselinePosition = new Vector3(1f, 5f, -7f),
                 BaselineRotation = new Vector3(0f, 90f, 0f),
                 MaterialKey = "MarbleBlack",
                 Personality = { Sociability = 0.4f, Caution = 0.8f, Curiosity = 0.7f, Honesty = 0.9f },
@@ -174,39 +174,39 @@ namespace TomorrowsCrime.Procedural.NPCs
                         break;
 
                     case NPCRole.HousekeepingMaid:
-                        plan.AddActivity("OrganizeLinens", "room_housekeeping", new Vector3(15f, 5f, -8f), 0f, 60f, null, "Folding clean towels on housekeeping service rack.");
-                        plan.AddActivity("TurnDown101", "room_guest_101", new Vector3(-9f, 5f, 6f), 60f, 140f, null, "Turn-down service in Room 101.");
+                        plan.AddActivity("OrganizeLinens", "room_housekeeping", new Vector3(11f, 5f, -8f), 0f, 60f, null, "Folding clean towels on housekeeping service rack.");
+                        plan.AddActivity("TurnDown101", "room_guest_101", new Vector3(1f, 5f, 7f), 60f, 140f, null, "Turn-down service in Room 101.");
                         plan.AddActivity("CorridorSweep", "room_upper_corridor", new Vector3(3f, 5f, 0f), 140f, 300f, null, "Sweeping carpet on the second-floor gallery.");
                         break;
 
                     case NPCRole.MaintenanceEngineer:
-                        plan.AddActivity("MonitorBoiler", "room_utility", new Vector3(21f, 0f, -6f), 0f, 80f, null, "Checking boiler pressure in utility room.");
-                        plan.AddActivity("CheckBreakers", "room_utility", new Vector3(24.5f, 1.5f, -6f), 80f, 160f, null, "Inspecting electrical breaker panel.");
+                        plan.AddActivity("MonitorBoiler", "room_utility", new Vector3(21f, 0f, -4f), 0f, 80f, null, "Checking boiler pressure in utility room.");
+                        plan.AddActivity("CheckBreakers", "room_utility", new Vector3(24.5f, 1.5f, -4f), 80f, 160f, null, "Inspecting electrical breaker panel.");
                         plan.AddActivity("PatrolGrounds", "room_corridor_ground", new Vector3(13f, 0f, 0f), 160f, 300f, null, "Walking service corridor checking radiator valves.");
                         break;
 
                     case NPCRole.HotelManager:
-                        plan.AddActivity("ReviewAccounts", "room_staff_office", new Vector3(21f, 0f, 7f), 0f, 150f, null, "Auditing financial safe and invoices.");
+                        plan.AddActivity("ReviewAccounts", "room_staff_office", new Vector3(21f, 0f, 4f), 0f, 150f, null, "Auditing financial safe and invoices.");
                         plan.AddActivity("InspectDining", "room_dining", new Vector3(-15f, 0f, 0f), 150f, 220f, null, "Inspecting dining hall presentation.");
                         plan.AddActivity("LobbyAppearance", "room_lobby", new Vector3(0f, 0f, 2f), 220f, 300f, null, "Observing midnight operations in the main lobby.");
                         break;
 
                     case NPCRole.WealthyGuest:
-                        plan.AddActivity("InRoomWriting", "room_guest_101", new Vector3(-12f, 5f, 4f), 0f, 90f, null, "Drafting business telegram at writing desk.");
+                        plan.AddActivity("InRoomWriting", "room_guest_101", new Vector3(1f, 5f, 7f), 0f, 90f, null, "Drafting business telegram at writing desk.");
                         plan.AddActivity("LateNightDrink", "room_dining", new Vector3(-15f, 0f, 3f), 90f, 200f, null, "Sipping brandy at dining table.");
-                        plan.AddActivity("RetireToRoom", "room_guest_101", new Vector3(-9f, 5f, 8f), 200f, 300f, null, "Resting in suite 101.");
+                        plan.AddActivity("RetireToRoom", "room_guest_101", new Vector3(2f, 5f, 8f), 200f, 300f, null, "Resting in suite 101.");
                         break;
 
                     case NPCRole.SocietyLady:
                         plan.AddActivity("LoungeCocktail", "room_dining", new Vector3(-15f, 0f, -3f), 0f, 80f, null, "Sitting in dining hall holding wine glass.");
-                        plan.AddActivity("PrivateRetreat", "room_guest_102", new Vector3(12f, 5f, 8f), 80f, 240f, null, "Retreating to VIP Suite 102.");
-                        plan.AddActivity("BalconyView", "room_guest_102", new Vector3(15f, 5f, 9.5f), 240f, 300f, null, "Looking out balcony window.");
+                        plan.AddActivity("PrivateRetreat", "room_guest_102", new Vector3(11f, 5f, 7f), 80f, 240f, null, "Retreating to VIP Suite 102.");
+                        plan.AddActivity("BalconyView", "room_guest_102", new Vector3(11f, 5f, 9.5f), 240f, 300f, null, "Looking out balcony window.");
                         break;
 
                     case NPCRole.DoctorGuest:
-                        plan.AddActivity("ReadingJournal", "room_guest_103", new Vector3(-12f, 5f, -4f), 0f, 100f, null, "Reading medical journal under bedside lamp.");
+                        plan.AddActivity("ReadingJournal", "room_guest_103", new Vector3(1f, 5f, -7f), 0f, 100f, null, "Reading medical journal under bedside lamp.");
                         plan.AddActivity("NightAirLobby", "room_lobby", new Vector3(4f, 0f, -2f), 100f, 210f, null, "Sitting in lobby armchair near the fireplace.");
-                        plan.AddActivity("ReturnToRoom", "room_guest_103", new Vector3(-9f, 5f, -6f), 210f, 300f, null, "Resting in Room 103.");
+                        plan.AddActivity("ReturnToRoom", "room_guest_103", new Vector3(2f, 5f, -7f), 210f, 300f, null, "Resting in Room 103.");
                         break;
 
                     case NPCRole.JournalistGuest:

@@ -20,6 +20,7 @@ namespace TomorrowsCrime.World
         [Header("State")]
         [SerializeField] private DoorLockState lockState = DoorLockState.Locked;
         [SerializeField] private DoorOpenState openState = DoorOpenState.Closed;
+        [SerializeField] private float openAngle = 90f;
 
         private Quaternion _closedRotation;
         private Quaternion _openRotation;
@@ -32,6 +33,11 @@ namespace TomorrowsCrime.World
         }
         public DoorLockState LockState => lockState;
         public DoorOpenState OpenState => openState;
+        public float OpenAngle
+        {
+            get => openAngle;
+            set => openAngle = value;
+        }
         public WorldStateRegistry WorldStateRegistryOverride { get; set; }
 
         public string InteractionPrompt
@@ -70,13 +76,10 @@ namespace TomorrowsCrime.World
             {
                 doorHingeTransform = transform;
             }
-            _closedRotation = doorHingeTransform.localRotation;
-            _openRotation = _closedRotation * Quaternion.Euler(0f, 90f, 0f);
+            _closedRotation = Quaternion.identity;
+            _openRotation = Quaternion.Euler(0f, openAngle, 0f);
 
-            if (openState == DoorOpenState.Open)
-            {
-                doorHingeTransform.localRotation = _openRotation;
-            }
+            doorHingeTransform.localRotation = (openState == DoorOpenState.Open) ? _openRotation : _closedRotation;
         }
 
         private void Start()
