@@ -671,5 +671,188 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Object.DestroyImmediate(testRoot);
         }
+
+        [Test]
+        public void DistinctNPCVisuals_EachRoleHasUniqueHeadwearAndHandheldSignatureProps()
+        {
+            var testRoot = new GameObject("TestRoot_DistinctNPCs");
+            var mats = new Dictionary<string, Material>();
+            var seed = InvestigationSeed.FromCode("TC-VISUAL-TEST");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+
+            foreach (var profile in investigation.Roster)
+            {
+                var charGo = NPCWorldSpawner.CreateDistinctStylizedCharacter(testRoot.transform, profile, mats);
+                Assert.IsNotNull(charGo, $"Stylized model must be generated for {profile.DisplayName}.");
+
+                // Check role-specific signature headwear / props
+                switch (profile.Role)
+                {
+                    case NPCRole.HeadChef:
+                        Assert.IsNotNull(charGo.transform.Find("Head/Toque_Band"), "Chef must wear a pleated Toque Blanche.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Cleaver_Blade"), "Chef must hold a kitchen cleaver.");
+                        break;
+
+                    case NPCRole.HousekeepingMaid:
+                        Assert.IsNotNull(charGo.transform.Find("Head/Maid_LaceCap"), "Maid must wear a lace cap.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Duster_Handle"), "Maid must hold a feather duster.");
+                        break;
+
+                    case NPCRole.MaintenanceEngineer:
+                        Assert.IsNotNull(charGo.transform.Find("Head/FlatCap_Crown"), "Engineer must wear a flat cap.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/PipeWrench_Shaft"), "Engineer must hold a pipe wrench.");
+                        break;
+
+                    case NPCRole.HotelManager:
+                        Assert.IsNotNull(charGo.transform.Find("Head/Glasses_Rim_L"), "Manager must wear spectacles.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Executive_Folio"), "Manager must hold an executive folio.");
+                        break;
+
+                    case NPCRole.WealthyGuest:
+                        Assert.IsNotNull(charGo.transform.Find("Head/Gold_Monocle"), "Harrington must wear a gold monocle.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/WalkingCane_Shaft"), "Harrington must hold a walking cane.");
+                        break;
+
+                    case NPCRole.SocietyLady:
+                        Assert.IsNotNull(charGo.transform.Find("Feather_Boa"), "Madame Valerie must wear a fur stole / feather boa.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Coupe_Stem"), "Madame Valerie must hold a champagne coupe glass.");
+                        break;
+
+                    case NPCRole.DoctorGuest:
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Doctor_Bag"), "Dr. Sterling must hold a physician's doctor bag.");
+                        break;
+
+                    case NPCRole.JournalistGuest:
+                        Assert.IsNotNull(charGo.transform.Find("Head/Fedora_Brim"), "Vivian Monroe must wear a 1930s fedora.");
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Reporter_Notebook"), "Vivian Monroe must hold a reporter's notebook.");
+                        break;
+
+                    case NPCRole.Receptionist:
+                        Assert.IsNotNull(charGo.transform.Find("Arm_R/Hand_R/Reservation_Clipboard"), "Receptionist must hold a reservation clipboard.");
+                        break;
+                }
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void GuestSuites_ContainLuxuryFourPosterBedsAndEnSuiteShowers()
+        {
+            var testRoot = new GameObject("TestRoot_Suites");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var furnitureRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_SolidFurniture");
+            Assert.IsNotNull(furnitureRoot, "Solid furniture root must exist.");
+
+            // Verify Suite 101 has a bed and an en-suite bathroom with walk-in shower
+            var suite101Bed = furnitureRoot.Find("Suite_room_guest_101_Furnishings/room_guest_101_Bed");
+            Assert.IsNotNull(suite101Bed, "Suite 101 must contain a luxury bed.");
+            Assert.IsNotNull(suite101Bed.Find("Headboard"), "Bed must have a headboard.");
+            Assert.IsNotNull(suite101Bed.Find("Nightstand_L"), "Bed must have a left nightstand.");
+            Assert.IsNotNull(suite101Bed.Find("Nightstand_R"), "Bed must have a right nightstand.");
+
+            var suite101Bath = furnitureRoot.Find("Suite_room_guest_101_Furnishings/room_guest_101_EnSuite_Bathroom");
+            Assert.IsNotNull(suite101Bath, "Suite 101 must contain an en-suite bathroom.");
+
+            var shower = suite101Bath.Find("room_guest_101_ShowerStall");
+            Assert.IsNotNull(shower, "En-suite bathroom must contain a shower stall.");
+            Assert.IsNotNull(shower.Find("Shower_TrayBase"), "Shower must contain a tiled shower tray base.");
+            Assert.IsNotNull(shower.Find("Shower_Drain"), "Shower must contain a metallic drain.");
+            Assert.IsNotNull(shower.Find("Rain_Showerhead"), "Shower must contain a rain showerhead.");
+
+            var vanity = suite101Bath.Find("room_guest_101_VanityUnit");
+            Assert.IsNotNull(vanity, "En-suite bathroom must contain a vanity unit.");
+            Assert.IsNotNull(vanity.Find("Vanity_Basin"), "Vanity must contain a basin.");
+            Assert.IsNotNull(vanity.Find("Vanity_FramedMirror"), "Vanity must contain a framed mirror.");
+
+            var toilet = suite101Bath.Find("room_guest_101_PorcelainToilet");
+            Assert.IsNotNull(toilet, "En-suite bathroom must contain a porcelain toilet.");
+
+            // Also verify VIP Suite 102 (compact suite) contains shower
+            var suite102Bath = furnitureRoot.Find("Suite_room_guest_102_Furnishings/room_guest_102_EnSuite_Bathroom");
+            Assert.IsNotNull(suite102Bath, "VIP Suite 102 must also contain an en-suite bathroom.");
+            Assert.IsNotNull(suite102Bath.Find("room_guest_102_ShowerStall"), "VIP Suite 102 must have a shower stall.");
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void HotelKitchen_ContainsCommercialStoveWithBurnersAndPrepIsland()
+        {
+            var testRoot = new GameObject("TestRoot_Kitchen");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var furnitureRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_SolidFurniture");
+
+            var stove = furnitureRoot.Find("Kitchen_Commercial_Compound/Kitchen_CommercialStove");
+            Assert.IsNotNull(stove, "Kitchen must contain a commercial cooking range.");
+            Assert.IsNotNull(stove.Find("Burner_0_0"), "Commercial range must feature circular burner grates.");
+            Assert.IsNotNull(stove.Find("Extractor_Hood"), "Commercial range must feature an overhead extraction hood.");
+
+            var island = furnitureRoot.Find("Kitchen_Commercial_Compound/Kitchen_ButcherBlock_Island");
+            Assert.IsNotNull(island, "Kitchen must contain a central butcher-block prep island.");
+            Assert.IsNotNull(island.Find("ButcherBlock_Top"), "Prep island must feature a butcher-block wood top.");
+
+            var sink = furnitureRoot.Find("Kitchen_Commercial_Compound/Kitchen_SculleryDoubleSink");
+            Assert.IsNotNull(sink, "Kitchen must contain a double-basin scullery wash sink.");
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void NPCRoutines_PopulateControllerScheduleActivitiesAndWaypoints()
+        {
+            var testRoot = new GameObject("TestRoot_Routines");
+            var seed = InvestigationSeed.FromCode("TC-ROUTINE-TEST");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var mats = new Dictionary<string, Material>();
+
+            var rosterGo = NPCWorldSpawner.SpawnRoster(testRoot.transform, investigation.Roster, investigation.Routines, mats);
+
+            // Verify each NPC has scheduled activities and waypoints
+            foreach (Transform npcChild in rosterGo.transform)
+            {
+                var controller = npcChild.GetComponent<NPCController>();
+                Assert.IsNotNull(controller, $"{npcChild.name} must have NPCController.");
+
+                Assert.IsNotNull(controller.Definition, $"{npcChild.name} must have NPCDefinition initialized.");
+                Assert.Greater(controller.Definition.ScheduleActivities.Count, 0, $"{npcChild.name} must have at least one scheduled activity.");
+
+                var waypointsChild = npcChild.Find("Waypoints");
+                Assert.IsNotNull(waypointsChild, $"{npcChild.name} must have a Waypoints container.");
+                Assert.Greater(waypointsChild.childCount, 0, $"{npcChild.name} must have instantiated waypoint transforms.");
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void NPCBaselines_AreCollisionFreeAndDoNotClipIntoFurniture()
+        {
+            var seed = InvestigationSeed.FromCode("TC-COLLISION-TEST");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+
+            // 1. Julian Adler (Manager) must be BEHIND desk (Z > 5.5m), not inside desk at Z=4.0m
+            var manager = investigation.Roster.Find(p => p.Role == NPCRole.HotelManager);
+            Assert.IsNotNull(manager);
+            Assert.Greater(manager.BaselinePosition.z, 5.5f, "Manager must be stationed behind his executive desk, not inside it.");
+
+            // 2. Vivian Monroe (Journalist) must be clear of center table
+            var journalist = investigation.Roster.Find(p => p.Role == NPCRole.JournalistGuest);
+            Assert.IsNotNull(journalist);
+            float distFromLobbyCenter = new Vector2(journalist.BaselinePosition.x, journalist.BaselinePosition.z).magnitude;
+            Assert.Greater(distFromLobbyCenter, 2.5f, "Journalist must not be inside the central lobby table.");
+
+            // 3. Pierre & Celeste must be behind the reception counter (Z > 11.2m)
+            var pierre = investigation.Roster.Find(p => p.Role == NPCRole.Concierge);
+            var celeste = investigation.Roster.Find(p => p.Role == NPCRole.Receptionist);
+            Assert.Greater(pierre.BaselinePosition.z, 11.2f, "Concierge must be behind front desk.");
+            Assert.Greater(celeste.BaselinePosition.z, 11.2f, "Receptionist must be behind front desk.");
+        }
     }
 }

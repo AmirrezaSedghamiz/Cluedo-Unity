@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26ccc26976028f741a1aab798f82a696, type: 3}
+  m_Name: evidence_poison
+  m_EditorClassIdentifier: TomorrowsCrime.Runtime::TomorrowsCrime.Investigation.EvidenceDefinition
+  evidenceId: evidence_poison
+  displayName: Amber Tincture Bottle
+  category: Container
+  shortDescription: A small dark amber apothecary bottle labeled 'Alkaloid Solution'.
+  detailedInspectionText: Apothecary bottle with an eye-dropper cap. Residue smells faintly of bitter almonds.
+  relatedEventId: 
+  relatedEvidenceIds: []

@@ -836,24 +836,13 @@ namespace TomorrowsCrime.Procedural.Hotel
             var furnitureRoot = new GameObject("Hotel_SolidFurniture");
             furnitureRoot.transform.SetParent(parent);
 
-            Material mahoganyMat = null;
-            Material walnutMat = null;
-            Material greenFeltMat = null;
-            Material velvetGoldMat = null;
-            Material marbleIvoryMat = null;
-            Material marbleBlackMat = null;
-            Material brassMat = null;
-
-            if (mats != null)
-            {
-                mats.TryGetValue("WoodMahogany", out mahoganyMat);
-                mats.TryGetValue("WoodWalnut", out walnutMat);
-                mats.TryGetValue("GreenFelt", out greenFeltMat);
-                mats.TryGetValue("VelvetGold", out velvetGoldMat);
-                mats.TryGetValue("MarbleIvory", out marbleIvoryMat);
-                mats.TryGetValue("MarbleBlack", out marbleBlackMat);
-                mats.TryGetValue("BrassGold", out brassMat);
-            }
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material greenFeltMat = GetMaterial(mats, "GreenFelt", new Color(0.12f, 0.45f, 0.22f));
+            Material velvetGoldMat = GetMaterial(mats, "VelvetGold", new Color(0.85f, 0.70f, 0.25f));
+            Material marbleIvoryMat = GetMaterial(mats, "MarbleIvory", new Color(0.92f, 0.90f, 0.85f));
+            Material marbleBlackMat = GetMaterial(mats, "MarbleBlack", new Color(0.15f, 0.15f, 0.18f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
 
 #if UNITY_EDITOR
             var deskObjPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
@@ -867,6 +856,10 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                 switch (room.Type)
                 {
+                    case RoomType.Lobby:
+                        BuildLobbyFurnishings(furnitureRoot.transform, new Vector3(0f, y, 0f), mats);
+                        break;
+
                     case RoomType.Reception:
                         // Front Reception Desk with solid counter & rear cubbies
                         var deskRoot = new GameObject("Reception_Desk_Compound");
@@ -893,7 +886,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                             }
                         }
 
-                        // Front Counter Solid Box Collider
+                        // Front Counter Solid Box Collider (Staff stands behind at Z=11.6m)
                         var counterCol = deskRoot.AddComponent<BoxCollider>();
                         counterCol.center = new Vector3(0f, 0.55f, 0f);
                         counterCol.size = new Vector3(5.4f, 1.1f, 1.4f);
@@ -912,19 +905,15 @@ namespace TomorrowsCrime.Procedural.Hotel
                         break;
 
                     case RoomType.DiningRoom:
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, 3f), new Vector3(2.2f, 0.9f, 6.0f), mahoganyMat, "Dining_BanquetTable_North");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, -3f), new Vector3(2.2f, 0.9f, 6.0f), mahoganyMat, "Dining_BanquetTable_South");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-21f, y, 0f), new Vector3(1.2f, 1.6f, 3.5f), walnutMat, "Dining_SideboardCabinet");
+                        BuildDiningFurnishings(furnitureRoot.transform, new Vector3(-15f, y, 0f), mats);
                         break;
 
                     case RoomType.Kitchen:
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-20f, y, 11.0f), new Vector3(2.4f, 1.2f, 1.4f), marbleBlackMat, "Kitchen_CommercialStove");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-12f, y, 12.0f), new Vector3(2.0f, 2.4f, 0.6f), mahoganyMat, "Kitchen_PantryShelves");
+                        BuildCommercialHotelKitchen(furnitureRoot.transform, new Vector3(-15f, y, 10f), mats);
                         break;
 
                     case RoomType.BarLounge:
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-6f, y, -14f), new Vector3(5.5f, 1.15f, 1.2f), mahoganyMat, "Bar_ServiceCounter");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-8f, y, -11f), new Vector3(1.8f, 0.75f, 1.8f), walnutMat, "Bar_LoungeTable");
+                        BuildBarFurnishings(furnitureRoot.transform, new Vector3(-3f, y, -10f), mats);
                         break;
 
                     case RoomType.Conservatory:
@@ -933,14 +922,11 @@ namespace TomorrowsCrime.Procedural.Hotel
                         break;
 
                     case RoomType.StaffOffice:
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(22f, y, 8f), new Vector3(2.4f, 0.85f, 1.4f), mahoganyMat, "Office_ExecutiveDesk");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(25f, y, 8f), new Vector3(1.4f, 2.2f, 0.6f), walnutMat, "Office_FilingCabinet");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(25f, y, 4f), new Vector3(1.0f, 1.4f, 0.8f), marbleBlackMat, "Office_FloorSafe");
+                        BuildStaffOfficeFurnishings(furnitureRoot.transform, new Vector3(21f, y, 4f), mats);
                         break;
 
                     case RoomType.UtilityRoom:
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(22f, y, -7f), new Vector3(2.4f, 0.95f, 1.2f), walnutMat, "Utility_Workbench");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(22f, y, -10.0f), new Vector3(1.8f, 2.2f, 0.6f), mahoganyMat, "Utility_MaintenanceRack");
+                        BuildUtilityRoomFurnishings(furnitureRoot.transform, new Vector3(21f, y, -4f), mats);
                         break;
 
                     case RoomType.LuggageStorage:
@@ -985,15 +971,6 @@ namespace TomorrowsCrime.Procedural.Hotel
                         break;
 
                     case RoomType.PresidentialBedroom:
-                        BuildSolidBed(furnitureRoot.transform, new Vector3(-16f, y, 11.5f), new Vector3(2.6f, 1.6f, 2.6f), mahoganyMat, velvetGoldMat, "Presidential_FourPosterBed");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-19f, y, 12f), new Vector3(1.8f, 2.4f, 0.7f), walnutMat, "Presidential_Armoire");
-                        break;
-
-                    case RoomType.PresidentialStudy:
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, -11f), new Vector3(2.6f, 0.85f, 1.4f), walnutMat, "Presidential_StudyDesk");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-19f, y, -11f), new Vector3(1.2f, 1.6f, 0.9f), marbleBlackMat, "Presidential_FloorSafe");
-                        break;
-
                     case RoomType.GuestRoom101:
                     case RoomType.GuestRoom102:
                     case RoomType.GuestRoom103:
@@ -1006,12 +983,13 @@ namespace TomorrowsCrime.Procedural.Hotel
                     case RoomType.GuestRoom205:
                     case RoomType.VIPSuite301:
                     case RoomType.VIPSuite302:
-                        // Each guest suite gets a solid four-poster/hotel bed and wardrobe
-                        Vector3 bedPos = room.Bounds.center + new Vector3(0f, -room.Bounds.size.y * 0.5f, room.Bounds.size.z * 0.25f);
-                        BuildSolidBed(furnitureRoot.transform, bedPos, new Vector3(2.2f, 1.4f, 2.4f), mahoganyMat, velvetGoldMat, $"{room.RoomId}_Bed");
+                        // Every guest suite features a luxury four-poster bed, nightstands with glowing lamps, AND a full en-suite walk-in shower bathroom!
+                        BuildLuxurySuiteWithEnSuiteShower(furnitureRoot.transform, room, mats);
+                        break;
 
-                        Vector3 wardrobePos = room.Bounds.center + new Vector3(room.Bounds.size.x * 0.3f, -room.Bounds.size.y * 0.5f, 0f);
-                        BuildSolidStorageUnit(furnitureRoot.transform, wardrobePos, new Vector3(1.6f, 2.3f, 0.65f), walnutMat, $"{room.RoomId}_Wardrobe");
+                    case RoomType.PresidentialStudy:
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, -11f), new Vector3(2.6f, 0.85f, 1.4f), walnutMat, "Presidential_StudyDesk");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-19f, y, -11f), new Vector3(1.2f, 1.6f, 0.9f), marbleBlackMat, "Presidential_FloorSafe");
                         break;
 
                     case RoomType.HousekeepingStorage:
@@ -1022,6 +1000,641 @@ namespace TomorrowsCrime.Procedural.Hotel
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Furnishes an authentic luxury guest suite featuring a 4-poster mahogany bed, twin nightstands with lamps,
+        /// wardrobe armoire, and an en-suite luxury bathroom with a tiled walk-in rain shower stall, vanity sink, and toilet.
+        /// </summary>
+        private static void BuildLuxurySuiteWithEnSuiteShower(Transform parent, RoomDefinition room, Dictionary<string, Material> mats)
+        {
+            var suiteRoot = new GameObject($"Suite_{room.RoomId}_Furnishings");
+            suiteRoot.transform.SetParent(parent);
+
+            float yFloor = room.FloorIndex * 5.0f;
+            Vector3 center = room.Bounds.center;
+            Vector3 size = room.Bounds.size;
+
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material velvetGoldMat = GetMaterial(mats, "VelvetGold", new Color(0.85f, 0.70f, 0.25f));
+            Material whiteMat = GetMaterial(mats, "ShirtWhite", Color.white);
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
+
+            if (size.x >= 12f)
+            {
+                // Wide Suite Layout (14m or 16m wide): Bedroom on East, En-Suite Bathroom on West
+                Vector3 bedCenter = new Vector3(center.x + 2.5f, yFloor, center.z + size.z * 0.22f);
+                BuildLuxuryFourPosterBed(suiteRoot.transform, bedCenter, yFloor, mahoganyMat, velvetGoldMat, whiteMat, brassMat, $"{room.RoomId}_Bed");
+
+                // Wardrobe Armoire
+                BuildSolidStorageUnit(suiteRoot.transform, new Vector3(center.x + 5.5f, yFloor, center.z + size.z * 0.22f),
+                    new Vector3(1.6f, 2.3f, 0.65f), walnutMat, $"{room.RoomId}_Armoire");
+
+                // En-Suite Luxury Bathroom Zone
+                Vector3 showerPos = new Vector3(center.x - size.x * 0.35f, yFloor, center.z + size.z * 0.22f);
+                Vector3 vanityPos = new Vector3(center.x - size.x * 0.18f, yFloor, center.z + size.z * 0.22f);
+                Vector3 toiletPos = new Vector3(center.x - size.x * 0.35f, yFloor, center.z - size.z * 0.22f);
+                Vector3 towelPos = new Vector3(center.x - size.x * 0.18f, yFloor, center.z - size.z * 0.22f);
+
+                BuildEnSuiteBathroom(suiteRoot.transform, showerPos, vanityPos, toiletPos, towelPos, yFloor, mats, room.RoomId);
+            }
+            else
+            {
+                // Compact Suite Layout (8m x 8m, e.g. Room 102 VIP Suite): Bed on East, En-Suite on West
+                Vector3 bedCenter = new Vector3(center.x + 1.8f, yFloor, center.z - 0.5f);
+                BuildLuxuryFourPosterBed(suiteRoot.transform, bedCenter, yFloor, mahoganyMat, velvetGoldMat, whiteMat, brassMat, $"{room.RoomId}_Bed");
+
+                // Wardrobe Armoire
+                BuildSolidStorageUnit(suiteRoot.transform, new Vector3(center.x + 2.6f, yFloor, center.z + 2.4f),
+                    new Vector3(1.4f, 2.3f, 0.65f), walnutMat, $"{room.RoomId}_Armoire");
+
+                // En-Suite Bathroom Zone
+                Vector3 showerPos = new Vector3(center.x - 2.2f, yFloor, center.z + 2.2f);
+                Vector3 vanityPos = new Vector3(center.x - 0.6f, yFloor, center.z + 2.6f);
+                Vector3 toiletPos = new Vector3(center.x - 2.2f, yFloor, center.z + 0.6f);
+                Vector3 towelPos = new Vector3(center.x - 0.6f, yFloor, center.z + 0.6f);
+
+                BuildEnSuiteBathroom(suiteRoot.transform, showerPos, vanityPos, toiletPos, towelPos, yFloor, mats, room.RoomId);
+            }
+        }
+
+        /// <summary>
+        /// Builds an authentic luxury en-suite hotel bathroom featuring:
+        /// 1. Tiled Walk-In Shower Stall with rain showerhead, brass riser pipe, and glass enclosure.
+        /// 2. Porcelain Vanity Console Sink with brass faucets and wall mirror.
+        /// 3. Porcelain Water Closet (Toilet).
+        /// 4. Brass Wall Towel Rail with plush white towels.
+        /// </summary>
+        private static void BuildEnSuiteBathroom(Transform parent, Vector3 showerPos, Vector3 vanityPos, Vector3 toiletPos, Vector3 towelPos,
+            float yFloor, Dictionary<string, Material> mats, string suiteName)
+        {
+            var bathRoot = new GameObject($"{suiteName}_EnSuite_Bathroom");
+            bathRoot.transform.SetParent(parent);
+
+            Material slateMat = GetMaterial(mats, "FloorSlate", new Color(0.18f, 0.20f, 0.22f));
+            Material whiteMat = GetMaterial(mats, "ShirtWhite", Color.white);
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
+            Material marbleIvoryMat = GetMaterial(mats, "MarbleIvory", new Color(0.92f, 0.90f, 0.85f));
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+
+            // 1. Walk-In Tiled Shower Stall
+            var showerRoot = new GameObject($"{suiteName}_ShowerStall");
+            showerRoot.transform.SetParent(bathRoot.transform);
+            showerRoot.transform.position = showerPos;
+
+            // Slate Shower Tray Base
+            var tray = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tray.name = "Shower_TrayBase";
+            tray.transform.SetParent(showerRoot.transform);
+            tray.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+            tray.transform.localScale = new Vector3(1.4f, 0.16f, 1.4f);
+            var trayRend = tray.GetComponent<Renderer>();
+            if (trayRend != null) trayRend.sharedMaterial = slateMat;
+
+            // Metallic Chrome Floor Drain
+            var drain = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            drain.name = "Shower_Drain";
+            drain.transform.SetParent(showerRoot.transform);
+            drain.transform.localPosition = new Vector3(0f, 0.17f, 0f);
+            drain.transform.localScale = new Vector3(0.18f, 0.01f, 0.18f);
+            var dRend = drain.GetComponent<Renderer>();
+            if (dRend != null) dRend.sharedMaterial = brassMat;
+
+            // Glass Shower Screen Enclosure
+            var glassScreen = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            glassScreen.name = "Shower_GlassScreen";
+            glassScreen.transform.SetParent(showerRoot.transform);
+            glassScreen.transform.localPosition = new Vector3(0f, 1.25f, -0.68f);
+            glassScreen.transform.localScale = new Vector3(1.35f, 2.2f, 0.04f);
+            var gRend = glassScreen.GetComponent<Renderer>();
+            if (gRend != null) gRend.sharedMaterial = marbleIvoryMat;
+
+            // Brass Shower Riser Pipe
+            var riser = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            riser.name = "Shower_RiserPipe";
+            riser.transform.SetParent(showerRoot.transform);
+            riser.transform.localPosition = new Vector3(-0.62f, 1.35f, 0f);
+            riser.transform.localScale = new Vector3(0.04f, 1.1f, 0.04f);
+            var rRend = riser.GetComponent<Renderer>();
+            if (rRend != null) rRend.sharedMaterial = brassMat;
+
+            // Sunflower Rain Showerhead
+            var head = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            head.name = "Rain_Showerhead";
+            head.transform.SetParent(showerRoot.transform);
+            head.transform.localPosition = new Vector3(-0.35f, 2.25f, 0f);
+            head.transform.localScale = new Vector3(0.32f, 0.03f, 0.32f);
+            var hRend = head.GetComponent<Renderer>();
+            if (hRend != null) hRend.sharedMaterial = brassMat;
+
+            // Solid Shower Box Collider
+            var sCol = showerRoot.AddComponent<BoxCollider>();
+            sCol.center = new Vector3(0f, 1.1f, 0f);
+            sCol.size = new Vector3(1.4f, 2.2f, 1.4f);
+            sCol.isTrigger = false;
+
+            // 2. Porcelain Vanity Console Sink & Wall Mirror
+            var vanityRoot = new GameObject($"{suiteName}_VanityUnit");
+            vanityRoot.transform.SetParent(bathRoot.transform);
+            vanityRoot.transform.position = vanityPos;
+
+            // Vanity Basin Console
+            var basin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            basin.name = "Vanity_Basin";
+            basin.transform.SetParent(vanityRoot.transform);
+            basin.transform.localPosition = new Vector3(0f, 0.42f, 0f);
+            basin.transform.localScale = new Vector3(0.85f, 0.85f, 0.55f);
+            var bRend = basin.GetComponent<Renderer>();
+            if (bRend != null) bRend.sharedMaterial = whiteMat;
+
+            // Brass Faucet Spout
+            var spout = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            spout.name = "Brass_Faucet";
+            spout.transform.SetParent(vanityRoot.transform);
+            spout.transform.localPosition = new Vector3(0f, 0.95f, 0.15f);
+            spout.transform.localScale = new Vector3(0.04f, 0.12f, 0.04f);
+            var spRend = spout.GetComponent<Renderer>();
+            if (spRend != null) spRend.sharedMaterial = brassMat;
+
+            // Framed Vanity Wall Mirror
+            var mirror = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mirror.name = "Vanity_FramedMirror";
+            mirror.transform.SetParent(vanityRoot.transform);
+            mirror.transform.localPosition = new Vector3(0f, 1.80f, 0.25f);
+            mirror.transform.localScale = new Vector3(0.75f, 1.05f, 0.04f);
+            var mRend = mirror.GetComponent<Renderer>();
+            if (mRend != null) mRend.sharedMaterial = marbleIvoryMat;
+
+            var vCol = vanityRoot.AddComponent<BoxCollider>();
+            vCol.center = new Vector3(0f, 0.45f, 0f);
+            vCol.size = new Vector3(0.85f, 0.9f, 0.55f);
+            vCol.isTrigger = false;
+
+            // 3. Porcelain Toilet (Water Closet)
+            var toiletRoot = new GameObject($"{suiteName}_PorcelainToilet");
+            toiletRoot.transform.SetParent(bathRoot.transform);
+            toiletRoot.transform.position = toiletPos;
+
+            var bowl = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bowl.name = "Toilet_Bowl";
+            bowl.transform.SetParent(toiletRoot.transform);
+            bowl.transform.localPosition = new Vector3(0f, 0.22f, 0f);
+            bowl.transform.localScale = new Vector3(0.44f, 0.45f, 0.60f);
+            var boRend = bowl.GetComponent<Renderer>();
+            if (boRend != null) boRend.sharedMaterial = whiteMat;
+
+            var tank = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tank.name = "Toilet_CisternTank";
+            tank.transform.SetParent(toiletRoot.transform);
+            tank.transform.localPosition = new Vector3(0f, 0.65f, 0.20f);
+            tank.transform.localScale = new Vector3(0.48f, 0.45f, 0.22f);
+            var tRend = tank.GetComponent<Renderer>();
+            if (tRend != null) tRend.sharedMaterial = whiteMat;
+
+            var tCol = toiletRoot.AddComponent<BoxCollider>();
+            tCol.center = new Vector3(0f, 0.45f, 0.05f);
+            tCol.size = new Vector3(0.48f, 0.9f, 0.65f);
+            tCol.isTrigger = false;
+
+            // 4. Brass Towel Rail with Folded White Towels
+            var towelRoot = new GameObject($"{suiteName}_TowelRail");
+            towelRoot.transform.SetParent(bathRoot.transform);
+            towelRoot.transform.position = towelPos;
+
+            var rail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            rail.name = "Brass_Rail";
+            rail.transform.SetParent(towelRoot.transform);
+            rail.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+            rail.transform.localScale = new Vector3(0.75f, 0.04f, 0.08f);
+            var rRend2 = rail.GetComponent<Renderer>();
+            if (rRend2 != null) rRend2.sharedMaterial = brassMat;
+
+            var towel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            towel.name = "Folded_PlushTowels";
+            towel.transform.SetParent(towelRoot.transform);
+            towel.transform.localPosition = new Vector3(0f, 0.98f, 0f);
+            towel.transform.localScale = new Vector3(0.60f, 0.24f, 0.12f);
+            var toRend = towel.GetComponent<Renderer>();
+            if (toRend != null) toRend.sharedMaterial = whiteMat;
+        }
+
+        /// <summary>
+        /// Builds a majestic 4-poster mahogany luxury bed with plush mattress, quilted velvet duvet,
+        /// twin bedside nightstands, and warm glowing Art Deco bedside lamps.
+        /// </summary>
+        private static void BuildLuxuryFourPosterBed(Transform parent, Vector3 bedCenter, float yFloor,
+            Material frameMat, Material duvetMat, Material sheetMat, Material brassMat, string name)
+        {
+            var bedRoot = new GameObject(name);
+            bedRoot.transform.SetParent(parent);
+            bedRoot.transform.position = bedCenter;
+
+            // Solid Bed Box Collider
+            var col = bedRoot.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.70f, 0f);
+            col.size = new Vector3(2.2f, 1.4f, 2.4f);
+            col.isTrigger = false;
+
+            // Mattress
+            var mattress = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mattress.name = "Mattress";
+            mattress.transform.SetParent(bedRoot.transform);
+            mattress.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+            mattress.transform.localScale = new Vector3(1.95f, 0.40f, 2.15f);
+            var mRend = mattress.GetComponent<Renderer>();
+            if (mRend != null) mRend.sharedMaterial = sheetMat;
+
+            // Quilted Duvet Runner
+            var duvet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            duvet.name = "Duvet_Runner";
+            duvet.transform.SetParent(bedRoot.transform);
+            duvet.transform.localPosition = new Vector3(0f, 0.50f, -0.45f);
+            duvet.transform.localScale = new Vector3(1.98f, 0.35f, 1.10f);
+            var dRend = duvet.GetComponent<Renderer>();
+            if (dRend != null) dRend.sharedMaterial = duvetMat;
+
+            // Carved Mahogany Headboard
+            var headboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            headboard.name = "Headboard";
+            headboard.transform.SetParent(bedRoot.transform);
+            headboard.transform.localPosition = new Vector3(0f, 0.85f, 1.05f);
+            headboard.transform.localScale = new Vector3(2.15f, 1.10f, 0.14f);
+            var hRend = headboard.GetComponent<Renderer>();
+            if (hRend != null) hRend.sharedMaterial = frameMat;
+
+            // 4 Turned Corner Bedposts
+            Vector3[] postPositions = {
+                new Vector3(-1.05f, 0.95f, 1.10f),
+                new Vector3(1.05f, 0.95f, 1.10f),
+                new Vector3(-1.05f, 0.95f, -1.10f),
+                new Vector3(1.05f, 0.95f, -1.10f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var post = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                post.name = $"Bedpost_{i}";
+                post.transform.SetParent(bedRoot.transform);
+                post.transform.localPosition = postPositions[i];
+                post.transform.localScale = new Vector3(0.08f, 0.95f, 0.08f);
+                var pRend = post.GetComponent<Renderer>();
+                if (pRend != null) pRend.sharedMaterial = frameMat;
+            }
+
+            // Twin Bedside Nightstands with Glowing Lamps
+            BuildNightstandWithLamp(bedRoot.transform, new Vector3(-1.55f, 0f, 0.70f), frameMat, brassMat, sheetMat, "Nightstand_L");
+            BuildNightstandWithLamp(bedRoot.transform, new Vector3(1.55f, 0f, 0.70f), frameMat, brassMat, sheetMat, "Nightstand_R");
+        }
+
+        private static void BuildNightstandWithLamp(Transform parent, Vector3 localPos, Material woodMat, Material brassMat, Material shadeMat, string name)
+        {
+            var standGo = new GameObject(name);
+            standGo.transform.SetParent(parent);
+            standGo.transform.localPosition = localPos;
+
+            var table = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            table.name = "Table";
+            table.transform.SetParent(standGo.transform);
+            table.transform.localPosition = new Vector3(0f, 0.32f, 0f);
+            table.transform.localScale = new Vector3(0.55f, 0.65f, 0.50f);
+            var tRend = table.GetComponent<Renderer>();
+            if (tRend != null) tRend.sharedMaterial = woodMat;
+
+            var col = standGo.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.32f, 0f);
+            col.size = new Vector3(0.55f, 0.65f, 0.50f);
+            col.isTrigger = false;
+
+            // Lamp Base
+            var baseGo = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            baseGo.name = "Lamp_Base";
+            baseGo.transform.SetParent(standGo.transform);
+            baseGo.transform.localPosition = new Vector3(0f, 0.70f, 0f);
+            baseGo.transform.localScale = new Vector3(0.14f, 0.08f, 0.14f);
+            var bRend = baseGo.GetComponent<Renderer>();
+            if (bRend != null) bRend.sharedMaterial = brassMat;
+
+            // Lamp Shade
+            var shade = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            shade.name = "Lamp_Shade";
+            shade.transform.SetParent(standGo.transform);
+            shade.transform.localPosition = new Vector3(0f, 0.88f, 0f);
+            shade.transform.localScale = new Vector3(0.25f, 0.18f, 0.25f);
+            var sRend = shade.GetComponent<Renderer>();
+            if (sRend != null) sRend.sharedMaterial = shadeMat;
+
+            // Warm Bedside Glow Light
+            var lightGo = new GameObject("Bedside_Light");
+            lightGo.transform.SetParent(standGo.transform);
+            lightGo.transform.localPosition = new Vector3(0f, 0.95f, 0f);
+            var l = lightGo.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.color = new Color(1.0f, 0.88f, 0.68f);
+            l.intensity = 1.3f;
+            l.range = 2.4f;
+        }
+
+        /// <summary>
+        /// Builds a full commercial hotel kitchen featuring:
+        /// 1. Heavy 6-burner commercial range & ovens with overhead extraction hood.
+        /// 2. Central butcher-block prep island with cutting boards and cutlery.
+        /// 3. Double-basin scullery wash sink with high-arch pre-rinse faucet.
+        /// 4. 4-tier industrial pantry storage shelving.
+        /// </summary>
+        private static void BuildCommercialHotelKitchen(Transform parent, Vector3 center, Dictionary<string, Material> mats)
+        {
+            var kitchenRoot = new GameObject("Kitchen_Commercial_Compound");
+            kitchenRoot.transform.SetParent(parent);
+            kitchenRoot.transform.position = center;
+
+            Material slateMat = GetMaterial(mats, "FloorSlate", new Color(0.18f, 0.20f, 0.22f));
+            Material marbleIvoryMat = GetMaterial(mats, "MarbleIvory", new Color(0.92f, 0.90f, 0.85f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
+            Material whiteMat = GetMaterial(mats, "ShirtWhite", Color.white);
+
+            // 1. Commercial 6-Burner Range against West wall (X = center.x - 5.5m = -20.5m)
+            var rangeRoot = new GameObject("Kitchen_CommercialStove");
+            rangeRoot.transform.SetParent(kitchenRoot.transform);
+            rangeRoot.transform.localPosition = new Vector3(-5.2f, 0f, 0f);
+
+            var rangeBody = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            rangeBody.name = "Stove_OvenBody";
+            rangeBody.transform.SetParent(rangeRoot.transform);
+            rangeBody.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+            rangeBody.transform.localScale = new Vector3(1.6f, 1.1f, 3.2f);
+            var rbRend = rangeBody.GetComponent<Renderer>();
+            if (rbRend != null) rbRend.sharedMaterial = slateMat;
+
+            // 6 Cast-Iron Burner Grates
+            for (int bz = -1; bz <= 1; bz++)
+            {
+                for (int bx = 0; bx <= 1; bx++)
+                {
+                    var burner = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                    burner.name = $"Burner_{bx}_{bz}";
+                    burner.transform.SetParent(rangeRoot.transform);
+                    burner.transform.localPosition = new Vector3(-0.35f + bx * 0.7f, 1.12f, bz * 0.9f);
+                    burner.transform.localScale = new Vector3(0.40f, 0.02f, 0.40f);
+                    var bRend = burner.GetComponent<Renderer>();
+                    if (bRend != null) bRend.sharedMaterial = slateMat;
+                }
+            }
+
+            // Overhead Commercial Extractor Hood Canopy
+            var hood = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            hood.name = "Extractor_Hood";
+            hood.transform.SetParent(rangeRoot.transform);
+            hood.transform.localPosition = new Vector3(0f, 2.7f, 0f);
+            hood.transform.localScale = new Vector3(1.8f, 0.6f, 3.4f);
+            var hRend = hood.GetComponent<Renderer>();
+            if (hRend != null) hRend.sharedMaterial = slateMat;
+
+            var rCol = rangeRoot.AddComponent<BoxCollider>();
+            rCol.center = new Vector3(0f, 0.55f, 0f);
+            rCol.size = new Vector3(1.6f, 1.1f, 3.2f);
+            rCol.isTrigger = false;
+
+            // 2. Central Butcher-Block Prep Island (center at X=0, Z=0)
+            var islandRoot = new GameObject("Kitchen_ButcherBlock_Island");
+            islandRoot.transform.SetParent(kitchenRoot.transform);
+            islandRoot.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+            var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            block.name = "ButcherBlock_Top";
+            block.transform.SetParent(islandRoot.transform);
+            block.transform.localPosition = new Vector3(0f, 0.88f, 0f);
+            block.transform.localScale = new Vector3(1.4f, 0.20f, 2.6f);
+            var blRend = block.GetComponent<Renderer>();
+            if (blRend != null) blRend.sharedMaterial = walnutMat;
+
+            // 4 Table Legs
+            for (int lx = -1; lx <= 1; lx += 2)
+            {
+                for (int lz = -1; lz <= 1; lz += 2)
+                {
+                    var leg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    leg.name = $"Island_Leg_{lx}_{lz}";
+                    leg.transform.SetParent(islandRoot.transform);
+                    leg.transform.localPosition = new Vector3(lx * 0.58f, 0.39f, lz * 1.15f);
+                    leg.transform.localScale = new Vector3(0.12f, 0.78f, 0.12f);
+                    var lRend = leg.GetComponent<Renderer>();
+                    if (lRend != null) lRend.sharedMaterial = slateMat;
+                }
+            }
+
+            var iCol = islandRoot.AddComponent<BoxCollider>();
+            iCol.center = new Vector3(0f, 0.48f, 0f);
+            iCol.size = new Vector3(1.4f, 0.95f, 2.6f);
+            iCol.isTrigger = false;
+
+            // 3. Scullery Double-Basin Wash Sink against North wall (Z = +2.8m)
+            var sinkRoot = new GameObject("Kitchen_SculleryDoubleSink");
+            sinkRoot.transform.SetParent(kitchenRoot.transform);
+            sinkRoot.transform.localPosition = new Vector3(3.5f, 0f, 2.6f);
+
+            var sinkBody = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            sinkBody.name = "Sink_Body";
+            sinkBody.transform.SetParent(sinkRoot.transform);
+            sinkBody.transform.localPosition = new Vector3(0f, 0.50f, 0f);
+            sinkBody.transform.localScale = new Vector3(2.4f, 1.0f, 0.85f);
+            var sRend = sinkBody.GetComponent<Renderer>();
+            if (sRend != null) sRend.sharedMaterial = marbleIvoryMat;
+
+            // Commercial Pre-Rinse Faucet
+            var faucet = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            faucet.name = "Sink_CommercialFaucet";
+            faucet.transform.SetParent(sinkRoot.transform);
+            faucet.transform.localPosition = new Vector3(0f, 1.25f, 0.25f);
+            faucet.transform.localScale = new Vector3(0.05f, 0.30f, 0.05f);
+            var fRend = faucet.GetComponent<Renderer>();
+            if (fRend != null) fRend.sharedMaterial = brassMat;
+
+            var skCol = sinkRoot.AddComponent<BoxCollider>();
+            skCol.center = new Vector3(0f, 0.50f, 0f);
+            skCol.size = new Vector3(2.4f, 1.0f, 0.85f);
+            skCol.isTrigger = false;
+
+            // 4. Walk-In Industrial Pantry Shelving against North-West corner
+            BuildSolidStorageUnit(kitchenRoot.transform, center + new Vector3(-1.5f, 0f, 2.8f),
+                new Vector3(2.6f, 2.4f, 0.70f), mahoganyMat, "Kitchen_PantryShelvingUnit");
+        }
+
+        private static void BuildStaffOfficeFurnishings(Transform parent, Vector3 center, Dictionary<string, Material> mats)
+        {
+            var officeRoot = new GameObject("StaffOffice_Furnishings");
+            officeRoot.transform.SetParent(parent);
+            officeRoot.transform.position = center;
+
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material marbleBlackMat = GetMaterial(mats, "MarbleBlack", new Color(0.15f, 0.15f, 0.18f));
+            Material greenFeltMat = GetMaterial(mats, "GreenFelt", new Color(0.12f, 0.45f, 0.22f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
+
+            // Executive Desk: Center at (0.5m, 0m, 1.0m) -> World (21.5m, 0m, 5.0m)
+            var desk = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            desk.name = "Office_ExecutiveDesk";
+            desk.transform.SetParent(officeRoot.transform);
+            desk.transform.localPosition = new Vector3(0.5f, 0.42f, 1.0f);
+            desk.transform.localScale = new Vector3(2.4f, 0.85f, 1.4f);
+            var dRend = desk.GetComponent<Renderer>();
+            if (dRend != null) dRend.sharedMaterial = mahoganyMat;
+
+            // Green Leather Blotter Inlay
+            var blotter = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blotter.name = "Desk_LeatherBlotter";
+            blotter.transform.SetParent(officeRoot.transform);
+            blotter.transform.localPosition = new Vector3(0.5f, 0.86f, 1.0f);
+            blotter.transform.localScale = new Vector3(1.2f, 0.02f, 0.8f);
+            var blRend = blotter.GetComponent<Renderer>();
+            if (blRend != null) blRend.sharedMaterial = greenFeltMat;
+
+            // Manager's Chair (Behind Desk at Z = 2.5m -> World Z = 6.5m)
+            var chair = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            chair.name = "Manager_ExecutiveChair";
+            chair.transform.SetParent(officeRoot.transform);
+            chair.transform.localPosition = new Vector3(0.5f, 0.55f, 2.5f);
+            chair.transform.localScale = new Vector3(0.70f, 1.10f, 0.65f);
+            var cRend = chair.GetComponent<Renderer>();
+            if (cRend != null) cRend.sharedMaterial = walnutMat;
+
+            // Solid Desk Collider
+            var dCol = desk.GetComponent<BoxCollider>();
+            if (dCol == null) dCol = desk.AddComponent<BoxCollider>();
+            dCol.isTrigger = false;
+
+            // Heavy Steel Bank Floor Safe in Corner
+            var safe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            safe.name = "Office_FloorSafe";
+            safe.transform.SetParent(officeRoot.transform);
+            safe.transform.localPosition = new Vector3(3.8f, 0.70f, -2.0f);
+            safe.transform.localScale = new Vector3(1.1f, 1.4f, 0.9f);
+            var sRend = safe.GetComponent<Renderer>();
+            if (sRend != null) sRend.sharedMaterial = marbleBlackMat;
+
+            var safeCol = safe.GetComponent<BoxCollider>();
+            if (safeCol == null) safeCol = safe.AddComponent<BoxCollider>();
+            safeCol.isTrigger = false;
+
+            // Tall Filing Cabinet against East Wall
+            BuildSolidStorageUnit(officeRoot.transform, center + new Vector3(3.8f, 0f, 2.0f),
+                new Vector3(1.2f, 2.2f, 0.65f), walnutMat, "Office_FilingCabinet");
+        }
+
+        private static void BuildUtilityRoomFurnishings(Transform parent, Vector3 center, Dictionary<string, Material> mats)
+        {
+            var utilRoot = new GameObject("UtilityRoom_Furnishings");
+            utilRoot.transform.SetParent(parent);
+            utilRoot.transform.position = center;
+
+            Material slateMat = GetMaterial(mats, "FloorSlate", new Color(0.18f, 0.20f, 0.22f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
+
+            // Industrial Steam Boiler at (3.0m, 0m, 0m) -> World (24.0m, 0m, -4.0m)
+            var boiler = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            boiler.name = "Utility_SteamBoiler";
+            boiler.transform.SetParent(utilRoot.transform);
+            boiler.transform.localPosition = new Vector3(3.0f, 1.25f, 0f);
+            boiler.transform.localScale = new Vector3(1.8f, 1.25f, 1.8f);
+            var bRend = boiler.GetComponent<Renderer>();
+            if (bRend != null) bRend.sharedMaterial = slateMat;
+
+            var bCol = boiler.GetComponent<BoxCollider>();
+            if (bCol == null) bCol = boiler.AddComponent<BoxCollider>();
+            bCol.center = Vector3.zero;
+            bCol.size = new Vector3(2.0f, 2.5f, 2.0f);
+            bCol.isTrigger = false;
+
+            // Electrical Breaker Distribution Panel on Wall
+            var panel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            panel.name = "Utility_BreakerPanel";
+            panel.transform.SetParent(utilRoot.transform);
+            panel.transform.localPosition = new Vector3(-1.0f, 1.6f, 3.6f);
+            panel.transform.localScale = new Vector3(1.2f, 1.4f, 0.25f);
+            var pRend = panel.GetComponent<Renderer>();
+            if (pRend != null) pRend.sharedMaterial = slateMat;
+
+            // Maintenance Workbench with Tool Rack
+            BuildSolidTable(utilRoot.transform, center + new Vector3(-1.0f, 0f, -2.8f),
+                new Vector3(2.4f, 0.95f, 1.2f), walnutMat, "Utility_Workbench");
+        }
+
+        private static void BuildLobbyFurnishings(Transform parent, Vector3 center, Dictionary<string, Material> mats)
+        {
+            var lobbyRoot = new GameObject("Lobby_Furnishings");
+            lobbyRoot.transform.SetParent(parent);
+            lobbyRoot.transform.position = center;
+
+            Material blackMarble = GetMaterial(mats, "MarbleBlack", new Color(0.15f, 0.15f, 0.18f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material velvetEmerald = GetMaterial(mats, "VelvetEmerald", new Color(0.12f, 0.40f, 0.22f));
+            Material carpetBurgundy = GetMaterial(mats, "CarpetBurgundy", new Color(0.55f, 0.12f, 0.18f));
+
+            // Grand Art Deco Center Table (World 0, 0, 0)
+            BuildSolidTable(lobbyRoot.transform, center, new Vector3(2.2f, 0.85f, 2.2f), blackMarble, "Lobby_CenterMarbleTable");
+
+            // West Lounge: Velvet Sofas & Coffee Table at World (-4.8m, 0m, -2.5m)
+            BuildSolidTable(lobbyRoot.transform, center + new Vector3(-4.8f, 0f, -2.5f),
+                new Vector3(1.6f, 0.50f, 0.9f), walnutMat, "Lobby_WestLounge_CoffeeTable");
+            BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(-4.8f, 0f, -3.8f),
+                new Vector3(2.4f, 0.85f, 0.85f), velvetEmerald, "Lobby_WestLounge_SofaSouth");
+            BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(-4.8f, 0f, -1.2f),
+                new Vector3(2.4f, 0.85f, 0.85f), velvetEmerald, "Lobby_WestLounge_SofaNorth");
+
+            // East Lounge: Fireplace & Wingback Chairs at World (4.8m, 0m, -2.5m)
+            BuildSolidFireplace(lobbyRoot.transform, center + new Vector3(6.5f, 0f, -2.5f), mats, "Lobby_GrandFireplace");
+            BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -3.4f),
+                new Vector3(1.0f, 1.10f, 0.9f), carpetBurgundy, "Lobby_WingbackChair_South");
+            BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -1.6f),
+                new Vector3(1.0f, 1.10f, 0.9f), carpetBurgundy, "Lobby_WingbackChair_North");
+        }
+
+        private static void BuildDiningFurnishings(Transform parent, Vector3 center, Dictionary<string, Material> mats)
+        {
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+
+            // North Banquet Table (-16m, y, 3m)
+            BuildSolidTable(parent, center + new Vector3(-1.0f, 0f, 3.0f), new Vector3(2.2f, 0.85f, 5.8f), mahoganyMat, "Dining_BanquetTable_North");
+
+            // South Banquet Table (-16m, y, -3m)
+            BuildSolidTable(parent, center + new Vector3(-1.0f, 0f, -3.0f), new Vector3(2.2f, 0.85f, 5.8f), mahoganyMat, "Dining_BanquetTable_South");
+
+            // Sideboard Cabinet against West Wall
+            BuildSolidStorageUnit(parent, center + new Vector3(-6.0f, 0f, 0f), new Vector3(1.2f, 1.6f, 3.5f), walnutMat, "Dining_SideboardCabinet");
+        }
+
+        private static void BuildBarFurnishings(Transform parent, Vector3 center, Dictionary<string, Material> mats)
+        {
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+
+            // Main Bar Counter
+            BuildSolidStorageUnit(parent, center + new Vector3(-1.5f, 0f, -3.5f), new Vector3(5.2f, 1.15f, 1.2f), mahoganyMat, "Bar_ServiceCounter");
+
+            // Back-Bar Liquor Shelf Unit
+            BuildSolidStorageUnit(parent, center + new Vector3(-1.5f, 0f, -5.5f), new Vector3(5.0f, 2.4f, 0.6f), walnutMat, "Bar_BackShelves");
+
+            // Cocktail Tables
+            BuildSolidTable(parent, center + new Vector3(-3.0f, 0f, 0f), new Vector3(1.4f, 0.75f, 1.4f), walnutMat, "Bar_LoungeTable_A");
+            BuildSolidTable(parent, center + new Vector3(1.0f, 0f, 0f), new Vector3(1.4f, 0.75f, 1.4f), walnutMat, "Bar_LoungeTable_B");
+        }
+
+        private static Material GetMaterial(Dictionary<string, Material> mats, string key, Color fallbackColor)
+        {
+            if (mats != null && mats.TryGetValue(key, out var mat) && mat != null)
+            {
+                return mat;
+            }
+            var fallback = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"))
+            {
+                name = $"Mat_Fallback_{key}",
+                color = fallbackColor
+            };
+            return fallback;
         }
 
         private static void BuildSolidBed(Transform parent, Vector3 position, Vector3 size, Material frameMat, Material sheetMat, string name)

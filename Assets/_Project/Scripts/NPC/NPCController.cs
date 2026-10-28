@@ -135,7 +135,7 @@ namespace TomorrowsCrime.NPC
             Tick(clock.ElapsedSeconds);
         }
 
-        public void InitializeFromProfile(TomorrowsCrime.Procedural.NPCs.NPCProfile p)
+        public void InitializeFromProfile(TomorrowsCrime.Procedural.NPCs.NPCProfile p, TomorrowsCrime.Procedural.NPCs.NPCRoutinePlan plan = null)
         {
             profile = p;
             _baselinePosition = transform.position;
@@ -143,6 +143,22 @@ namespace TomorrowsCrime.NPC
 
             definition = ScriptableObject.CreateInstance<NPCDefinition>();
             definition.Initialize(p.NpcId, p.DisplayName, _baselinePosition, _baselineRotation);
+
+            // Populate procedural activities from 5-minute routine plan
+            if (plan != null && plan.Activities != null && plan.Activities.Count > 0)
+            {
+                foreach (var act in plan.Activities)
+                {
+                    ActivityType type = ActivityType.Patrol;
+                    if (act.ActivityName.Contains("RetrieveKey")) type = ActivityType.RetrieveKey;
+                    else if (act.ActivityName.Contains("Unlock")) type = ActivityType.UnlockDoor;
+                    else if (act.ActivityName.Contains("Wait") || act.ActivityName.Contains("Duty") || act.ActivityName.Contains("Station")) type = ActivityType.WaitAtPost;
+                    else if (act.ActivityName.Contains("Inspect") || act.ActivityName.Contains("Check")) type = ActivityType.Investigate;
+
+                    definition.AddActivity(new ScheduleActivity(type, act.StartSimTime, act.EndSimTime, act.ActivityName, null, act.Description));
+                }
+            }
+
             _scheduleEvaluator = definition.CreateEvaluator();
             _runtimeState = new NPCRuntimeState(p.NpcId);
 
@@ -253,6 +269,7 @@ namespace TomorrowsCrime.NPC
                 case ActivityType.RetrieveKey:
                 case ActivityType.UnlockDoor:
                 case ActivityType.Patrol:
+                case ActivityType.Investigate:
                     if (destinationTransform != null)
                     {
                         RequestNavigation(destinationTransform.position, activity.DestinationKey, simTime);
@@ -276,7 +293,7 @@ namespace TomorrowsCrime.NPC
         {
             if (_runtimeState.BehaviorState == NPCBehaviorState.Moving)
             {
-                // Monitor path progression
+                // 1. NavMesh locomotion if agent is active on a NavMesh
                 if (_agent != null && _agent.isOnNavMesh)
                 {
                     // Check for blocked/unreachable path
@@ -298,6 +315,47 @@ namespace TomorrowsCrime.NPC
                     else
                     {
                         _runtimeState.SetNavigationStatus(NPCNavigationStatus.Traversing);
+                    }
+                }
+                else
+                {
+                    // 2. Smooth direct locomotion fallback when off-mesh
+                    Transform destTrans = null;
+                    if (!string.IsNullOrEmpty(activity.DestinationKey))
+                    {
+                        _waypoints.TryGetValue(activity.DestinationKey, out destTrans);
+                    }
+
+                    if (destTrans != null)
+                    {
+                        Vector3 destPos = destTrans.position;
+                        Vector3 toDest = destPos - transform.position;
+                        float dist = toDest.magnitude;
+
+                        if (dist <= 0.8f)
+                        {
+                            _runtimeState.SetNavigationStatus(NPCNavigationStatus.Arrived, $"Arrived at {activity.DestinationKey}.");
+                            _runtimeState.TransitionBehavior(NPCBehaviorState.PerformingAction, $"Executing action at {activity.DestinationKey}.");
+                            PerformScheduledDestinationAction(activity, simTime);
+                        }
+                        else
+                        {
+                            float speed = definition != null ? definition.MovementSpeed : 3.0f;
+                            transform.position = Vector3.MoveTowards(transform.position, destPos, speed * Time.deltaTime);
+
+                            Vector3 flatDir = toDest;
+                            flatDir.y = 0f;
+                            if (flatDir.sqrMagnitude > 0.001f)
+                            {
+                                Quaternion targetRot = Quaternion.LookRotation(flatDir);
+                                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, 360f * Time.deltaTime);
+                            }
+                            _runtimeState.SetNavigationStatus(NPCNavigationStatus.Traversing);
+                        }
+                    }
+                    else
+                    {
+                        _runtimeState.TransitionBehavior(NPCBehaviorState.Idle, "No target waypoint.");
                     }
                 }
             }
@@ -362,28 +420,24 @@ namespace TomorrowsCrime.NPC
 
         private void RequestNavigation(Vector3 targetPosition, string destinationKey, float simTime)
         {
-            if (_agent == null || !_agent.isOnNavMesh)
+            if (_agent != null && _agent.isOnNavMesh)
             {
-                _runtimeState.TransitionBehavior(NPCBehaviorState.Moving, $"Simulating movement to {destinationKey}.");
-                return;
+                // Prevent spamming path requests every frame
+                if (simTime - _lastPathAttemptTime < 0.5f) return;
+                _lastPathAttemptTime = simTime;
+
+                _agent.isStopped = false;
+                bool pathSet = _agent.SetDestination(targetPosition);
+
+                if (!pathSet)
+                {
+                    HandleBlockedRoute(destinationKey);
+                    return;
+                }
             }
 
-            // Prevent spamming path requests every frame
-            if (simTime - _lastPathAttemptTime < 0.5f) return;
-            _lastPathAttemptTime = simTime;
-
-            _agent.isStopped = false;
-            bool pathSet = _agent.SetDestination(targetPosition);
-
-            if (!pathSet)
-            {
-                HandleBlockedRoute(destinationKey);
-            }
-            else
-            {
-                _runtimeState.SetNavigationStatus(NPCNavigationStatus.PathPending);
-                _runtimeState.TransitionBehavior(NPCBehaviorState.Moving, $"Moving: -> {destinationKey}");
-            }
+            _runtimeState.SetNavigationStatus(NPCNavigationStatus.Traversing);
+            _runtimeState.TransitionBehavior(NPCBehaviorState.Moving, $"Moving: -> {destinationKey}");
         }
 
         private void StopAgent()

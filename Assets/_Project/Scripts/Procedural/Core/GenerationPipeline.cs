@@ -103,7 +103,7 @@ namespace TomorrowsCrime.Procedural.Core
                 mats, investigation.GroundTruth.MandatoryObjectPlacements);
 
             // 3. Populate Hotel with Living NPC Roster
-            NPCs.NPCWorldSpawner.SpawnRoster(worldRoot.transform, investigation.Roster, mats);
+            NPCs.NPCWorldSpawner.SpawnRoster(worldRoot.transform, investigation.Roster, investigation.Routines, mats);
 
             // 4. Clear Case-Specific Knowledge on New Investigation
             var knowledge = InvestigationKnowledgeService.Instance;
