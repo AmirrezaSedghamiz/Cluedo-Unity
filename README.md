@@ -1,4 +1,4 @@
-# Tomorrow's Crime
+# Cluedo-Unity: Tomorrow's Crime
 
 A first-person 3D time-loop detective mystery built in **Unity 6 (LTS)** using the **Universal Render Pipeline (URP)** and C#.
 
@@ -241,9 +241,3 @@ The project includes an EditMode test suite with 100% pass rate:
   - `WorldStateAndScenarioTests` (10 tests)
   - `SimulationClockTests` (6 tests)
 - **Suites:**
-  - `InvestigationSystem2Tests` (14 tests)
-  - `InvestigationSystemTests` (14 tests)
-  - `CausalEventEngineTests` (15 tests)
-  - `NPCSimulationTests` (12 tests)
-  - `WorldStateAndScenarioTests` (10 tests)
-  - `SimulationClockTests` (6 tests)
