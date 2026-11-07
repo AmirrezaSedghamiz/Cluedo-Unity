@@ -456,4 +456,64 @@ Transformed *Tomorrow's Crime* into a replayable detective simulation where ever
 - **Total Test Suite**:
   - **87 / 87 tests passed (100% pass rate, 0 failed)** across all 7 test suites. Zero gameplay regressions.
 
+---
+
+## [2026-11-08] Milestone 10: UI Decluttering, Investigation Workspace 2.0 & Meaningful Murder Scenarios
+
+### Architectural Decisions & Implementation
+
+#### 1. First-Person HUD Decluttering (`GameHUDView.cs`)
+- **Senior Game Designer & Gamer POV Overhaul**:
+  - Replaced the large stacked 62px pocket watch chronometer card and 24px floating room banner (which obstructed ~110px of the upper center screen) with a unified, minimalist 34px Art Deco top status bar.
+  - Formatted cleanly: `LOOP 01 • 04:32 • GRAND LOBBY (FLOOR 1)`, with an integrated 2px loop progress hairline and smooth urgency color transitions (<60s warning, <15s danger).
+  - Streamlined notification toasts from bulky 380x64 cards down to sleek 280x36 single-line alerts (`+ CLUE: Stolen Room Key`) with subtle left accent stripes and smooth alpha fades.
+  - Reduced the bottom-right dossier pill from 270x40 down to a clean, understated 175x28 pill (`[TAB] Dossier • N Clues`).
+  - Screen center is kept completely clear and immersive during first-person exploration.
+
+#### 2. Investigation Workspace 2.0 (`InvestigationWorkspaceView.cs`)
+- **Layout Architecture**:
+  - Slimmed the left navigation bar from 240px to 180px with badge counters directly on tab buttons (`Clues (N)`, `Timeline (N)`, `Deductions (N)`, `Theories (N)`, `Notes`, `★ SOLVE CASE`).
+  - Eliminated walls of explanatory tutorial text and duplicate buttons across cards.
+  - Implemented dynamic workspace sizing:
+    - *Evidence Archive*: Expansive clue list paired with docked 280px Clue Dossier inspector on the right.
+    - *Deduction Board & Accusation Board*: Utilize the full available canvas width without cramped 3-column squeezing.
+- **Deduction Board 2.0**:
+  - Resolved the critical layout overflow where endless horizontal buttons were rendered for every discovered clue.
+  - Implemented an intuitive 3-step Deductive Linker: Clue A selector + Relationship toggle (`Supports`, `Contradicts`, `Precedes`) + Clue B selector + concise deduction note.
+  - Rendered active deductions as clear connection cards (`[Clue A] --[SUPPORTS]--> [Clue B]`).
+- **Accusation Board 2.0**:
+  - Transformed the accusation view into a grand 2x2 Cluedo Case Board covering the 4 core investigative pillars:
+    1. `ACCUSED PERPETRATOR` (Who?)
+    2. `MURDER WEAPON` (With what?)
+    3. `CRIME SCENE LOCATION` (Where?)
+    4. `UNDERLYING MOTIVE` (Why?)
+  - Culminates in a prominent `CONFRONT PERPETRATOR & BREAK TIME LOOP` climax button.
+
+#### 3. Modal Polish (`NPCDialogueModalView.cs`, `EvidenceInspectionModalView.cs`)
+- Refactored suspect profile and dialogue choices with clear intent badges: `[ALIBI]`, `[DUTIES]`, `[WITNESS]`, `[CONFRONT]`.
+- Cleaned up evidence inspection cards for high readability without overlapping text.
+
+#### 4. Meaningful Murder Mystery Scenarios (`CrimeScenarioGenerator.cs`)
+- Expanded procedural generation with 6 rich, narrative-driven scenario archetypes:
+  1. **The Cyanide Draught of Madame Valerie** (Victim: Madame Valerie, Culprit: Concierge Pierre, Method: Poison Tincture, Scene: Suite 102, Motive: Blackmail Silence over stolen guest safe keys).
+  2. **The Scullery Cleaver Vendetta** (Victim: Julian Adler, Culprit: Chef Marcel, Method: Sharp Cleaver, Scene: Executive Staff Office, Motive: Financial Embezzlement of kitchen supplier trust).
+  3. **The Bloodline Candlestick Tragedy** (Victim: Lord Harrington, Culprit: Dr. Sterling, Method: Brass Candlestick, Scene: Suite 101, Motive: Family Inheritance disinheritance over gambling debts).
+  4. **The Boiler Room Sabotage** (Victim: Julian Adler, Culprit: Otto Krause, Method: Pipe Wrench, Scene: Utility Room, Motive: Stolen Industrial Patents for pneumatic elevator).
+  5. **The Stolen Contraband Jewels** (Victim: Madame Valerie, Culprit: Clara Vance, Method: Poison Tincture, Scene: Suite 102, Motive: Uncut emerald brooch theft).
+  6. **The Tabloid Blackmail Exposé** (Victim: Lord Harrington, Culprit: Vivian Monroe, Method: Brass Candlestick, Scene: Suite 101, Motive: Suppressing forged journalistic credentials).
+- Generated complete, verifiable alibis for all innocent suspects across every scenario to ensure sound deductive elimination.
+
+#### 5. Decoupled Pure Evaluation for Case Accusation (`CaseAccusationService.cs`)
+- Added pure `EvaluateAccusation` method decoupled from `MonoBehaviour`, supporting full unit-testing outside the Unity runtime.
+- Enhanced accusation matching to handle all 9 suspect personas, 4 murder methods, 6 crime scenes, and 5 motive categories.
+
+### Validation & Test Results
+- **Automated Batch Verification**:
+  - 100/100 multi-seed stress test passed through generation and solvability solver (100% pass rate, avg 0.23 ms/seed).
+  - 50/50 randomized scenario case accusation tests verified with 100% accuracy (correct deductions awarded victory, false accusations properly rebutted with documented suspect alibis).
+- **Compilation**:
+  - `TomorrowsCrime.Runtime.csproj`: 0 Errors.
+  - `TomorrowsCrime.Tests.EditMode.csproj`: 0 Errors.
+
+
 

@@ -108,7 +108,8 @@ namespace TomorrowsCrime.UI.Modals
             var nameStyle = new GUIStyle(UITheme.SubHeaderStyle)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize = 15,
+                fontSize = 14,
+                fontStyle = FontStyle.Bold,
                 normal = { textColor = UITheme.BrassHighlight }
             };
             GUILayout.Label(_activeNpc.CharacterDisplayName.ToUpper(), nameStyle);
@@ -119,27 +120,24 @@ namespace TomorrowsCrime.UI.Modals
                 fontSize = 11,
                 normal = { textColor = UITheme.PeacockTeal }
             };
-            GUILayout.Label($"ROLE: {_activeNpc.CharacterRole.ToUpper()}", roleStyle);
+            GUILayout.Label(_activeNpc.CharacterRole.ToString().ToUpper(), roleStyle);
 
-            GUILayout.Space(12f);
-            UITheme.DrawSolidRect(new Rect(0, 126f, rect.width - 28f, 1f), UITheme.PolishedBrass);
-            GUILayout.Space(12f);
+            GUILayout.Space(8f);
 
             // Profile Attributes
             var bodyStyle = new GUIStyle(UITheme.BodyStyle) { fontSize = 11 };
             if (_activeNpc.Profile != null)
             {
                 var p = _activeNpc.Profile;
-                GUILayout.Label($"<b>Age:</b> {p.Age} years", bodyStyle);
-                GUILayout.Label($"<b>Base Quarters:</b> {p.AssignedRoomId ?? "Reception Desk"}", bodyStyle);
-                GUILayout.Label($"<b>Temperament:</b> {(p.Personality.Honesty < 0.4f ? "Secretive & Guarded" : "Composed & Helpful")}", bodyStyle);
-                GUILayout.Label($"<b>Vigilance:</b> {(p.Personality.Caution > 0.6f ? "Alert & Watchful" : "Routine-bound")}", bodyStyle);
+                GUILayout.Label($"<b>Age:</b> {p.Age}", bodyStyle);
+                GUILayout.Label($"<b>Quarters:</b> {p.AssignedRoomId ?? "Reception"}", bodyStyle);
+                GUILayout.Label($"<b>Demeanor:</b> {(p.Personality.Honesty < 0.4f ? "Guarded" : "Composed")}", bodyStyle);
+                GUILayout.Label($"<b>Vigilance:</b> {(p.Personality.Caution > 0.6f ? "Alert" : "Routine")}", bodyStyle);
             }
             else
             {
-                GUILayout.Label("<b>Title:</b> Head Concierge", bodyStyle);
-                GUILayout.Label("<b>Duty Post:</b> Lobby Front Desk", bodyStyle);
-                GUILayout.Label("<b>Demeanor:</b> Formal, disciplined, meticulous.", bodyStyle);
+                GUILayout.Label("<b>Post:</b> Front Desk", bodyStyle);
+                GUILayout.Label("<b>Demeanor:</b> Formal, disciplined.", bodyStyle);
             }
 
             GUILayout.FlexibleSpace();
@@ -210,32 +208,32 @@ namespace TomorrowsCrime.UI.Modals
 
         private void DrawInquiryOptions()
         {
-            GUILayout.Label("QUESTIONING OPTIONS:", UITheme.SubHeaderStyle);
+            GUILayout.Label("INTERROGATION TOPICS:", UITheme.SubHeaderStyle);
             GUILayout.Space(6f);
 
             // 1. Alibi Inquiry
-            if (GUILayout.Button("1. \"Where were you stationed at midnight?\" (Alibi Inquiry)", UITheme.ButtonStyle, GUILayout.Height(34f)))
+            if (GUILayout.Button("[ALIBI]  \"Where were you stationed at midnight?\"", UITheme.ButtonStyle, GUILayout.Height(32f)))
             {
                 AskAlibi();
             }
             GUILayout.Space(4f);
 
             // 2. Responsibilities / Motive Inquiry
-            if (GUILayout.Button("2. \"What are your specific responsibilities here tonight?\"", UITheme.ButtonStyle, GUILayout.Height(34f)))
+            if (GUILayout.Button("[DUTIES]  \"What are your specific duties here tonight?\"", UITheme.ButtonStyle, GUILayout.Height(32f)))
             {
                 AskResponsibilities();
             }
             GUILayout.Space(4f);
 
             // 3. Witness Observations
-            if (GUILayout.Button("3. \"Did you notice anything unusual or suspicious prior to the crime?\"", UITheme.ButtonStyle, GUILayout.Height(34f)))
+            if (GUILayout.Button("[WITNESS]  \"Did you observe any suspicious activity prior to midnight?\"", UITheme.ButtonStyle, GUILayout.Height(32f)))
             {
                 AskObservations();
             }
             GUILayout.Space(4f);
 
             // 4. Confront with Evidence
-            if (GUILayout.Button("4. \"I have physical evidence to discuss with you...\" (Present Clues)", UITheme.ButtonStyle, GUILayout.Height(34f)))
+            if (GUILayout.Button("[CONFRONT]  \"I have physical evidence to discuss with you...\"", UITheme.PrimaryButtonStyle, GUILayout.Height(32f)))
             {
                 _isConfrontingEvidence = true;
                 AudioManager.Instance?.PlayPaperRustle();

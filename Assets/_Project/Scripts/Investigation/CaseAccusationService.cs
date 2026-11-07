@@ -29,6 +29,7 @@ namespace TomorrowsCrime.Investigation
     /// Master evaluation service for testing detective deductions against scenario ground truth.
     /// Handles the dramatic climax of the murder mystery, awarding case resolution on correct deductions
     /// or triggering alibi rebuttals and time-loop turnover on failures.
+    /// Updated with full support for all 6 procedural scenario archetypes and 9 suspects.
     /// </summary>
     public class CaseAccusationService : MonoBehaviour
     {
@@ -60,16 +61,16 @@ namespace TomorrowsCrime.Investigation
         {
             _currentGroundTruth = new MysteryGroundTruth
             {
-                CaseTitle = "The Midnight Key Incident",
-                VictimId = "npc_guest_102",
+                CaseTitle = "The Cyanide Draught of Madame Valerie",
+                VictimId = "npc_madame_valerie",
                 VictimName = "Madame Valerie",
-                CulpritId = "npc_concierge",
+                CulpritId = "npc_concierge_pierre",
                 CulpritName = "Concierge Pierre",
                 Motive = "Blackmail Silence",
-                Method = MurderMethod.SharpCleaver,
-                MurderWeaponObjectId = "evidence_room102_keycard", // Access key instrumental in breach
-                CrimeSceneRoomId = "Room 102 Suite",
-                MurderTimestamp = 210f
+                Method = MurderMethod.PoisonTincture,
+                MurderWeaponObjectId = "obj_poison_vial",
+                CrimeSceneRoomId = "room_guest_102",
+                MurderTimestamp = 180f
             };
         }
 
@@ -87,12 +88,14 @@ namespace TomorrowsCrime.Investigation
             return new List<string>
             {
                 "Concierge Pierre",
-                "Celeste Moreau (Receptionist)",
-                "Chef Marcel Laurent",
+                "Chef Marcel",
+                "Dr. Sterling",
                 "Lord Harrington",
-                "Dr. Alistair Sterling",
-                "Beatrice Vane (Maid)",
-                "Arthur Pendelton (Engineer)"
+                "Madame Valerie",
+                "Julian Adler (Manager)",
+                "Clara Vance (Housekeeping)",
+                "Otto Krause (Engineer)",
+                "Vivian Monroe (Journalist)"
             };
         }
 
@@ -103,8 +106,7 @@ namespace TomorrowsCrime.Investigation
                 "Heavy Meat Cleaver",
                 "Heavy Brass Candlestick",
                 "Amber Alkaloid Poison Vial",
-                "Steel Pipe Wrench",
-                "Stolen Room 102 Master Key"
+                "Steel Pipe Wrench"
             };
         }
 
@@ -112,14 +114,12 @@ namespace TomorrowsCrime.Investigation
         {
             return new List<string>
             {
-                "Room 102 Suite",
-                "Room 101 Suite",
-                "Room 103 Suite",
-                "Front Reception Desk",
-                "Kitchen & Pantry",
+                "Room 102 VIP Suite",
+                "Room 101 Guest Suite",
                 "Executive Staff Office",
-                "Dining Hall",
-                "Maintenance Utility Room"
+                "Maintenance Utility Room",
+                "Grand Dining Hall",
+                "Hotel Kitchen & Scullery"
             };
         }
 
@@ -129,9 +129,9 @@ namespace TomorrowsCrime.Investigation
             {
                 "Blackmail Silence",
                 "Financial Embezzlement",
-                "Revenge & Spite",
                 "Family Inheritance",
-                "Stolen Industrial Patents"
+                "Stolen Industrial Patents",
+                "Contraband Jewels"
             };
         }
 
@@ -149,6 +149,37 @@ namespace TomorrowsCrime.Investigation
                 ? InvestigationKnowledgeService.Instance.EvidenceCount
                 : 0;
 
+            var result = EvaluateAccusation(_currentGroundTruth, accusedSuspect, chosenWeapon, chosenRoom, chosenMotive, loops, elapsed, clues);
+
+            if (result.IsCorrect)
+            {
+                CasesSolvedCount++;
+                AudioManager.Instance?.PlayVictory();
+            }
+            else
+            {
+                AudioManager.Instance?.PlayDefeat();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Pure evaluation function testing deductions against ground truth.
+        /// Fully decoupled from MonoBehaviour for 100% testability.
+        /// </summary>
+        public static AccusationResult EvaluateAccusation(
+            MysteryGroundTruth groundTruth,
+            string accusedSuspect,
+            string chosenWeapon,
+            string chosenRoom,
+            string chosenMotive,
+            int loops = 1,
+            float elapsed = 0f,
+            int clues = 0)
+        {
+            if (groundTruth == null) throw new ArgumentNullException(nameof(groundTruth));
+
             var result = new AccusationResult
             {
                 LoopsElapsed = loops,
@@ -156,83 +187,123 @@ namespace TomorrowsCrime.Investigation
                 EvidenceDiscoveredCount = clues
             };
 
-            // Evaluate Culprit
-            bool culpritMatch = !string.IsNullOrEmpty(accusedSuspect) && (
-                accusedSuspect.ToLower().Contains(_currentGroundTruth.CulpritName.ToLower()) ||
-                _currentGroundTruth.CulpritName.ToLower().Contains(accusedSuspect.ToLower()) ||
-                accusedSuspect.ToLower().Contains("pierre") && _currentGroundTruth.CulpritId.Contains("concierge") ||
-                accusedSuspect.ToLower().Contains("marcel") && _currentGroundTruth.CulpritId.Contains("chef") ||
-                accusedSuspect.ToLower().Contains("celeste") && _currentGroundTruth.CulpritId.Contains("receptionist") ||
-                accusedSuspect.ToLower().Contains("harrington") && _currentGroundTruth.CulpritId.Contains("harrington") ||
-                accusedSuspect.ToLower().Contains("sterling") && _currentGroundTruth.CulpritId.Contains("sterling"));
+            string accusedLower = accusedSuspect != null ? accusedSuspect.ToLower() : "";
+            string weaponLower = chosenWeapon != null ? chosenWeapon.ToLower() : "";
+            string roomLower = chosenRoom != null ? chosenRoom.ToLower() : "";
+            string motiveLower = chosenMotive != null ? chosenMotive.ToLower() : "";
+
+            // 1. Evaluate Culprit
+            bool culpritMatch = false;
+            if (!string.IsNullOrEmpty(accusedLower))
+            {
+                string targetNameLower = (groundTruth.CulpritName ?? "").ToLower();
+                string targetIdLower = (groundTruth.CulpritId ?? "").ToLower();
+
+                culpritMatch = accusedLower.Contains(targetNameLower) || targetNameLower.Contains(accusedLower) ||
+                    (accusedLower.Contains("pierre") && targetIdLower.Contains("pierre")) ||
+                    (accusedLower.Contains("marcel") && targetIdLower.Contains("marcel")) ||
+                    (accusedLower.Contains("sterling") && targetIdLower.Contains("sterling")) ||
+                    (accusedLower.Contains("harrington") && targetIdLower.Contains("harrington")) ||
+                    (accusedLower.Contains("adler") && targetIdLower.Contains("adler")) ||
+                    (accusedLower.Contains("clara") && targetIdLower.Contains("clara")) ||
+                    (accusedLower.Contains("otto") && targetIdLower.Contains("otto")) ||
+                    (accusedLower.Contains("monroe") && targetIdLower.Contains("monroe")) ||
+                    (accusedLower.Contains("valerie") && targetIdLower.Contains("valerie"));
+            }
             result.IsCulpritCorrect = culpritMatch;
 
-            // Evaluate Weapon
-            bool weaponMatch = !string.IsNullOrEmpty(chosenWeapon) && (
-                chosenWeapon.ToLower().Contains("cleaver") && _currentGroundTruth.Method == MurderMethod.SharpCleaver ||
-                chosenWeapon.ToLower().Contains("candlestick") && _currentGroundTruth.Method == MurderMethod.BluntForceCandlestick ||
-                chosenWeapon.ToLower().Contains("poison") && _currentGroundTruth.Method == MurderMethod.PoisonTincture ||
-                chosenWeapon.ToLower().Contains("wrench") && _currentGroundTruth.Method == MurderMethod.BluntForceWrench ||
-                chosenWeapon.ToLower().Contains("key") && _currentGroundTruth.Method == MurderMethod.SharpCleaver);
+            // 2. Evaluate Weapon
+            bool weaponMatch = false;
+            if (!string.IsNullOrEmpty(weaponLower))
+            {
+                weaponMatch =
+                    (weaponLower.Contains("cleaver") && groundTruth.Method == MurderMethod.SharpCleaver) ||
+                    (weaponLower.Contains("candlestick") && groundTruth.Method == MurderMethod.BluntForceCandlestick) ||
+                    (weaponLower.Contains("poison") && groundTruth.Method == MurderMethod.PoisonTincture) ||
+                    (weaponLower.Contains("wrench") && groundTruth.Method == MurderMethod.BluntForceWrench);
+            }
             result.IsWeaponCorrect = weaponMatch;
 
-            // Evaluate Crime Scene Room
-            bool roomMatch = !string.IsNullOrEmpty(chosenRoom) && (
-                chosenRoom.ToLower().Contains("102") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("102") ||
-                chosenRoom.ToLower().Contains("101") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("101") ||
-                chosenRoom.ToLower().Contains("103") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("103") ||
-                chosenRoom.ToLower().Contains("kitchen") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("kitchen") ||
-                chosenRoom.ToLower().Contains("office") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("office") ||
-                chosenRoom.ToLower().Contains("reception") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("reception") ||
-                chosenRoom.ToLower().Contains("dining") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("dining") ||
-                chosenRoom.ToLower().Contains("utility") && _currentGroundTruth.CrimeSceneRoomId.ToLower().Contains("utility"));
+            // 3. Evaluate Crime Scene Room
+            bool roomMatch = false;
+            if (!string.IsNullOrEmpty(roomLower))
+            {
+                string sceneTarget = (groundTruth.CrimeSceneRoomId ?? "").ToLower();
+                roomMatch =
+                    (roomLower.Contains("102") && sceneTarget.Contains("102")) ||
+                    (roomLower.Contains("101") && sceneTarget.Contains("101")) ||
+                    (roomLower.Contains("office") && sceneTarget.Contains("office")) ||
+                    (roomLower.Contains("utility") && sceneTarget.Contains("utility")) ||
+                    (roomLower.Contains("kitchen") && sceneTarget.Contains("kitchen")) ||
+                    (roomLower.Contains("dining") && sceneTarget.Contains("dining"));
+            }
             result.IsRoomCorrect = roomMatch;
 
-            // Evaluate Motive
-            bool motiveMatch = !string.IsNullOrEmpty(chosenMotive) && (
-                chosenMotive.ToLower().Contains("blackmail") ||
-                chosenMotive.ToLower().Contains("embezzle") ||
-                chosenMotive.ToLower().Contains("revenge") ||
-                chosenMotive.ToLower().Contains(_currentGroundTruth.Motive.ToLower().Substring(0, Mathf.Min(4, _currentGroundTruth.Motive.Length))));
+            // 4. Evaluate Motive
+            bool motiveMatch = false;
+            if (!string.IsNullOrEmpty(motiveLower))
+            {
+                string trueMotiveLower = (groundTruth.Motive ?? "").ToLower();
+                motiveMatch =
+                    (motiveLower.Contains("blackmail") && trueMotiveLower.Contains("blackmail")) ||
+                    (motiveLower.Contains("embezzle") && trueMotiveLower.Contains("embezzle")) ||
+                    (motiveLower.Contains("inherit") && trueMotiveLower.Contains("inherit")) ||
+                    (motiveLower.Contains("patent") && trueMotiveLower.Contains("patent")) ||
+                    (motiveLower.Contains("jewel") && (trueMotiveLower.Contains("jewel") || trueMotiveLower.Contains("contraband"))) ||
+                    (motiveLower.Contains("contraband") && (trueMotiveLower.Contains("jewel") || trueMotiveLower.Contains("contraband")));
+            }
             result.IsMotiveCorrect = motiveMatch;
 
-            // Overall Victory Check (Culprit + Weapon + Room must be strictly correct; Motive gives bonus rank)
+            // Overall Victory Check (Culprit + Weapon + Room strictly required; Motive grants S-Rank)
             result.IsCorrect = result.IsCulpritCorrect && result.IsWeaponCorrect && result.IsRoomCorrect;
 
             if (result.IsCorrect)
             {
-                CasesSolvedCount++;
                 result.Title = "CASE SOLVED — THE MYSTERY OF MERIDIAN HOUSE RESOLVED";
                 result.DetailedResolution =
                     $"Brilliant deduction, Detective!\n\n" +
-                    $"You correctly unmasked {_currentGroundTruth.CulpritName} as the perpetrator! " +
-                    $"Using the {_currentGroundTruth.Method} inside the {_currentGroundTruth.CrimeSceneRoomId}, " +
-                    $"{_currentGroundTruth.CulpritName} attempted to permanently conceal their involvement driven by {_currentGroundTruth.Motive}.\n\n" +
-                    $"By reconstructing the time loop timeline and cross-referencing discovered physical clues, " +
-                    $"you trapped the culprit before they could escape into the foggy London midnight.\n\n" +
-                    $"The time loop breaks — dawn breaks over Meridian House at last!";
+                    $"You correctly unmasked {groundTruth.CulpritName} as the perpetrator! " +
+                    $"Using the {groundTruth.Method} inside {groundTruth.CrimeSceneRoomId}, " +
+                    $"{groundTruth.CulpritName} acted driven by {groundTruth.Motive}.\n\n" +
+                    $"Through methodical clue collection and cross-loop timelines, you solved the crime before midnight concluded.\n\n" +
+                    $"The time loop shatters — dawn finally breaks over London!";
 
-                result.SleuthRank = loops <= 2 ? "Master Detective (S-Rank)" : (loops <= 4 ? "Astute Sleuth (A-Rank)" : "Persistent Inquirer (B-Rank)");
-
-                AudioManager.Instance?.PlayVictory();
+                result.SleuthRank = (loops <= 2 && result.IsMotiveCorrect) ? "Master Detective (S-Rank)" : (loops <= 4 ? "Astute Sleuth (A-Rank)" : "Persistent Inquirer (B-Rank)");
             }
             else
             {
                 result.Title = "ACCUSATION FAILED — FLAW IN THE DEDUCTION";
                 List<string> flaws = new();
-                if (!result.IsCulpritCorrect) flaws.Add($"{accusedSuspect} produces an airtight alibi witnessed by other guests");
-                if (!result.IsWeaponCorrect) flaws.Add($"the forensic markings contradict the use of {chosenWeapon}");
-                if (!result.IsRoomCorrect) flaws.Add($"the crime scene indicators do not match {chosenRoom}");
+
+                if (!result.IsCulpritCorrect)
+                {
+                    if (groundTruth.SuspectAlibis != null && groundTruth.SuspectAlibis.TryGetValue(accusedSuspect, out string alibi))
+                    {
+                        flaws.Add(alibi);
+                    }
+                    else
+                    {
+                        flaws.Add($"{accusedSuspect} presents an airtight alibi verified by other witnesses");
+                    }
+                }
+
+                if (!result.IsWeaponCorrect)
+                {
+                    flaws.Add($"the forensic markings contradict the use of {chosenWeapon}");
+                }
+
+                if (!result.IsRoomCorrect)
+                {
+                    flaws.Add($"the physical evidence indicates the crime occurred elsewhere, not in {chosenRoom}");
+                }
 
                 result.DetailedResolution =
                     $"Your accusation collapses under scrutiny!\n\n" +
                     $"{string.Join(", and ", flaws)}.\n\n" +
-                    $"The true culprit remains at large in Meridian House. " +
-                    $"As your deduction falls apart, the heavy grandfather clock in the lobby tolls midnight...\n\n" +
-                    $"TIME FRACTURES. THE FIVE-MINUTE LOOP RESETS NOW!";
+                    $"The real killer remains at large. The heavy grandfather clock in the foyer tolls midnight...\n\n" +
+                    $"THE TIMELINE COLLAPSES. THE FIVE-MINUTE LOOP RESETS NOW!";
 
                 result.RebuttalReason = string.Join("; ", flaws);
-                AudioManager.Instance?.PlayDefeat();
             }
 
             return result;

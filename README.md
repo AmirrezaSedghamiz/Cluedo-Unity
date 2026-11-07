@@ -198,7 +198,38 @@ Milestone 8 transforms *Tomorrow's Crime* into a replayable detective simulation
 
 ---
 
-## 9. Controls
+## 9. Streamlined Modern UI & Meaningful Murder Scenarios (Milestone 10)
+
+Milestone 10 resolves visual clutter, declutters screen real estate, and introduces deep, narrative-driven procedural murder mystery scenarios with verifiable alibis.
+
+### Key Enhancements:
+1. **First-Person HUD Streamlining (GameHUDView.cs)**:
+   - Replaced the large stacked pocket watch chronometer card and floating room banner with a unified, minimalist 34px Art Deco top status bar (LOOP 01 • 04:32 • GRAND LOBBY).
+   - Integrated a 2px loop progress hairline and smooth urgency color shifts (<60s warning, <15s critical).
+   - Streamlined notification toasts into compact single-line alerts (+ CLUE: Stolen Keycard) with subtle left accent stripes.
+   - Reduced the case dossier indicator to a sleek, understated pill ([TAB] Dossier • N Clues).
+   - Completely clears the central viewport for immersive 3D world navigation.
+2. **Investigation Workspace 2.0 (InvestigationWorkspaceView.cs)**:
+   - Slimmed the left navigation sidebar to 180px with badge counters directly on tab buttons.
+   - Eliminated verbose tutorial text walls, repetitive descriptions, and duplicate action buttons.
+   - Dynamic canvas sizing: Clue archive docks with a 280px forensic detail inspector, while the Deduction Board and Accusation Board expand across the full available canvas.
+   - **Deduction Board 2.0:** Fixed horizontal button overflow with an intuitive 3-step Deductive Linker: Source Clue selector, Relationship toggle (Supports, Contradicts, Precedes), Target Clue selector, and concise deduction note.
+   - **Accusation Board 2.0:** 2x2 Cluedo Case Board covering the 4 core pillars: Suspect, Murder Weapon, Crime Scene, and Motive.
+3. **6 Handcrafted Meaningful Murder Scenarios (CrimeScenarioGenerator.cs)**:
+   - Distinct, narrative-rich scenario archetypes with physical clues and interconnected motives:
+     - **The Cyanide Draught of Madame Valerie:** VIP Suite 102, Concierge Pierre, Poison Tincture, Blackmail Extortion.
+     - **The Scullery Cleaver Vendetta:** Staff Office, Chef Marcel, Heavy Meat Cleaver, Embezzled Kitchen Funds.
+     - **The Bloodline Candlestick Tragedy:** Suite 101, Dr. Sterling, Brass Candlestick, Disinherited Last Will.
+     - **The Boiler Room Sabotage:** Utility Room, Otto Krause, Steel Pipe Wrench, Stolen Pneumatic Patents.
+     - **The Stolen Contraband Jewels:** Suite 102, Clara Vance, Poison Tincture, Emerald Brooch Theft.
+     - **The Tabloid Blackmail Exposé:** Suite 101, Vivian Monroe, Brass Candlestick, Suppressed Journalistic Exposé.
+   - Generates verified, documented alibis for all innocent suspects to allow genuine deductive elimination.
+4. **Decoupled Pure Case Accusation Evaluation (CaseAccusationService.cs)**:
+   - Decoupled pure EvaluateAccusation method for 100% testability across all 9 suspects, weapons, crime scenes, and motives.
+
+---
+
+## 10. Controls
 
 - **Move:** `W`, `A`, `S`, `D`
 - **Look:** Mouse (Sensitivity configurable in Settings)
@@ -213,7 +244,7 @@ Milestone 8 transforms *Tomorrow's Crime* into a replayable detective simulation
 
 ---
 
-## 10. Getting Started & Running in Unity
+## 11. Getting Started & Running in Unity
 
 1. Open **Unity Hub**.
 2. Click **Add** -> **Add project from disk**.
@@ -226,7 +257,7 @@ Milestone 8 transforms *Tomorrow's Crime* into a replayable detective simulation
 
 ---
 
-## 11. Automated Test Suite
+## 12. Automated Test Suite
 
 The project includes an EditMode test suite with 100% pass rate:
 - **Total Tests:** 87

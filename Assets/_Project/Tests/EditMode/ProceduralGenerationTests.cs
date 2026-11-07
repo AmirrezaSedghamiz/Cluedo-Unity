@@ -259,6 +259,23 @@ namespace TomorrowsCrime.Tests.EditMode
         }
 
         [Test]
+        public void Mystery_BatchSeeds_AllGeneratedScenariosPassSolvabilityValidation()
+        {
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            for (int seed = 1; seed <= 50; seed++)
+            {
+                var rng = new SeededRandom(seed * 777);
+                var truth = CrimeScenarioGenerator.GenerateScenario(rng);
+                var validation = MysterySolvabilityValidator.ValidateScenario(truth, rooms);
+                Assert.IsTrue(validation.IsValid, $"Seed {seed} generated unsolvable mystery scenario: {validation}");
+                Assert.AreEqual(0, validation.FailureReasons.Count);
+                Assert.GreaterOrEqual(truth.CrimeTimeline.Count, 4);
+                Assert.GreaterOrEqual(truth.RequiredEvidenceLinks.Count, 3);
+                Assert.GreaterOrEqual(truth.ExoneratedSuspectIds.Count, 6);
+            }
+        }
+
+        [Test]
         public void Collision_WorldAuditorDetectsSolidColliders()
         {
             var testRoot = new GameObject("TestRoot");
