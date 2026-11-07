@@ -199,11 +199,40 @@ namespace TomorrowsCrime.UI.Modals
 
         private string GetDefaultGreeting()
         {
-            if (_activeNpc.Profile != null)
+            string id = _activeNpc != null ? _activeNpc.CharacterId : "npc_concierge";
+            string name = _activeNpc != null ? _activeNpc.CharacterDisplayName : "Concierge Pierre";
+            var role = _activeNpc != null && _activeNpc.Profile != null ? _activeNpc.Profile.Role : TomorrowsCrime.Procedural.NPCs.NPCRole.Concierge;
+
+            return GetCharacterGreeting(id, name, role);
+        }
+
+        private static string GetCharacterGreeting(string id, string name, TomorrowsCrime.Procedural.NPCs.NPCRole role)
+        {
+            switch (id)
             {
-                return $"\"Good evening, Detective. Meridian House is at your disposal, though I assure you I have done nothing improper tonight.\"";
+                case "npc_concierge_pierre":
+                    return "Ah, Detective. Good evening. I trust Meridian House meets your standards. The front desk remains entirely at your service, though I assure you protocol has been strictly maintained.";
+                case "npc_receptionist_celeste":
+                    return "Bonsoir, Detective! Please keep your voice down—the walls have ears tonight. What can I check in the registration ledger for you?";
+                case "npc_chef_marcel":
+                    return "Sacré bleu, Detective! Unless you are here to compliment my midnight consommé, make it fast! I have prep work for tomorrow and my kitchen is not a police precinct!";
+                case "npc_maid_clara":
+                    return "O-oh! Good evening, Detective... Please excuse the mess, I was just finishing turn-down service. Has... has something terrible happened in the hotel?";
+                case "npc_engineer_otto":
+                    return "Guten Abend. If you're here to complain about hot water on the upper floors, go speak to the manager. Otherwise, speak up—these boilers are deafening.";
+                case "npc_manager_adler":
+                    return "Ah, Detective. I trust you are conducting your inquiries with utmost discretion? Meridian House caters to an elite clientele and we cannot afford sensationalized scandal.";
+                case "npc_lord_harrington":
+                    return "Hmph. Who gave you permission to interrupt me, officer? If this is about the commotion in the east corridor, your staff has already failed my expectations.";
+                case "npc_madame_valerie":
+                    return "Oh, darling! You have the intense look of an inquisitor. Tell me, is this dreary hotel finally producing some excitement, or are you just admiring my pearls?";
+                case "npc_dr_sterling":
+                    return "Good evening, Inspector. If someone requires immediate resuscitation or medical attention, take me to them at once. Otherwise, I am attempting to finish my toxicology papers.";
+                case "npc_journalist_monroe":
+                    return "Well, well. If it isn't the law. Look, Detective, you give me the scoop on what's going down, and I'll give you the real dirt on this gilded snake pit. Deal?";
+                default:
+                    return $"Good evening, Inspector. I am {name}. How may I assist your investigation tonight?";
             }
-            return $"\"Good evening, Inspector. Midnight duties require my full attention. What is the nature of your inquiry?\"";
         }
 
         private void DrawInquiryOptions()
@@ -288,31 +317,97 @@ namespace TomorrowsCrime.UI.Modals
                 ? SimulationManager.Instance.Clock.ElapsedSeconds
                 : 0f;
 
-            string statement;
-            if (_activeNpc.Profile != null)
+            string id = _activeNpc != null ? _activeNpc.CharacterId : "npc_concierge";
+            string name = _activeNpc != null ? _activeNpc.CharacterDisplayName : "Concierge Pierre";
+            var role = _activeNpc != null && _activeNpc.Profile != null ? _activeNpc.Profile.Role : TomorrowsCrime.Procedural.NPCs.NPCRole.Concierge;
+
+            bool isCulprit = false;
+            string groundTruthAlibi = null;
+            if (CaseAccusationService.Instance != null && CaseAccusationService.Instance.CurrentGroundTruth != null)
             {
-                statement = $"I was stationed in {_activeNpc.Profile.AssignedRoomId ?? "my designated quarters"} during midnight. You may verify the hotel registry. I have no reason to harm anyone.";
+                var gt = CaseAccusationService.Instance.CurrentGroundTruth;
+                if (gt.CulpritId == id) isCulprit = true;
+                if (gt.SuspectAlibis != null) gt.SuspectAlibis.TryGetValue(id, out groundTruthAlibi);
             }
-            else
+            if (_activeNpc != null && _activeNpc.Profile != null && _activeNpc.Profile.IsCulprit)
             {
-                statement = "From 00:00 to 00:30 I remained stationed behind the reception desk. At 00:30 I retrieved the Room 102 keycard from the lobby table and unlocked the suite door at 00:35. My duty memo on the desk confirms this schedule.";
+                isCulprit = true;
             }
 
+            string statement = GetCharacterAlibi(id, name, role, isCulprit, groundTruthAlibi);
             _currentDialogueText = statement;
 
             // Record as formal observation testimony in Notebook
             InvestigationKnowledgeService.Instance?.RecordObservation(
-                $"obs_alibi_{_activeNpc.CharacterDisplayName}_{loop}_{simTime:F0}",
-                $"TESTIMONY: {_activeNpc.CharacterDisplayName} stated: \"{statement}\"",
+                $"obs_alibi_{name.Replace(" ", "_")}_{loop}_{simTime:F0}",
+                $"TESTIMONY: {name} stated: \"{statement}\"",
                 loop,
                 simTime,
                 null,
                 null,
                 ObservationMethod.WitnessedEvent,
-                _activeNpc.CharacterDisplayName,
+                name,
                 "Alibi Inquiry");
 
-            UIManager.Instance?.ShowToast("TESTIMONY RECORDED", $"{_activeNpc.CharacterDisplayName}'s alibi logged in Case Dossier.", UITheme.BrassHighlight);
+            UIManager.Instance?.ShowToast("TESTIMONY RECORDED", $"{name}'s alibi logged in Case Dossier.", UITheme.BrassHighlight);
+        }
+
+        private static string GetCharacterAlibi(string id, string name, TomorrowsCrime.Procedural.NPCs.NPCRole role, bool isCulprit, string groundTruthAlibi)
+        {
+            if (isCulprit)
+            {
+                switch (id)
+                {
+                    case "npc_concierge_pierre":
+                        return "I remained stationed behind the reception desk all evening, Detective! If anyone claims they saw me upstairs near the suites with an apothecary vial, they are lying to ruin my reputation!";
+                    case "npc_chef_marcel":
+                        return "I was at my cooking range all night, sweat dripping off my brow! If someone took my French cleaver into the executive office, they stole it while I was in the pantry! I am an artist, not a murderer!";
+                    case "npc_maid_clara":
+                        return "I was folding towels in housekeeping all night, Detective! Please believe me, I would never harm a guest! I... I only entered the guest rooms to drop off clean linens!";
+                    case "npc_engineer_otto":
+                        return "I was bleeding the valves on Boiler #2 down in the utility basement! The wrench missing from my chest? Anyone could have forced the lock while the blowoff was venting!";
+                    case "npc_manager_adler":
+                        return "I was locked inside my private executive office balancing the confidential hotel accounts! I had no knowledge of any violence until the alarm was raised! My door was bolted from the inside!";
+                    case "npc_lord_harrington":
+                        return "I was in my private suite resting, as befits a gentleman of my years and standing! I have no need to account for my movements to inquisitive detectives!";
+                    case "npc_madame_valerie":
+                        return "I was sitting at my vanity arranging my pearls! A lady does not account for her every minute to strangers, Detective, especially when tragedy strikes!";
+                    case "npc_dr_sterling":
+                        return "I was in Suite 103 reviewing clinical toxicology case studies! I had no reason to harm anyone with blunt force or poison! I took an oath to preserve human life!";
+                    case "npc_journalist_monroe":
+                        return "I was sitting right there in the lobby lounge typing notes for my society column! If I slipped into the corridors, it was strictly for journalistic background, not murder!";
+                    default:
+                        return "I was in my quarters all night, Detective. I know nothing about any crime and I assure you I am completely innocent.";
+                }
+            }
+
+            switch (id)
+            {
+                case "npc_concierge_pierre":
+                    return "From 00:00 to 01:10 I stood behind the reception desk checking keys. Between 01:10 and 02:20 I inspected the central lobby and east transport hallway. Mademoiselle Celeste saw me at the front desk when she brought the ledger.";
+                case "npc_receptionist_celeste":
+                    return "I was stationed at the reception counter until 01:30 logging guest telegrams. Between 01:30 and 02:45 I took billing invoices to Mr. Adler's office, then stopped by the lounge for water before returning.";
+                case "npc_chef_marcel":
+                    return "At midnight I was prepping beef consommé at the cooking range. At 01:20 I was in the dry pantry checking spices, and by 02:30 I carried fresh rolls into the dining room. My apron was covered in broth and flour.";
+                case "npc_maid_clara":
+                    return "From midnight to 01:15 I was in the linen room sorting fresh towels. Then I did turn-down service in Room 101, dusted the reading tables in the library, and swept the gallery runner. I didn't leave the second floor all night.";
+                case "npc_engineer_otto":
+                    return "From midnight to 01:15 I was bleeding the valves on Boiler #2. Then I checked the electrical breakers at 01:30 and walked the ground service corridor inspecting steam traps. You can still smell the machine grease on my hands.";
+                case "npc_manager_adler":
+                    return "I was sequestered in my executive office until 01:40 reviewing accounts. Afterward, I made a brief inspection of the dining hall and lobby before returning to lock the safe at 03:55.";
+                case "npc_lord_harrington":
+                    return "At midnight I was drafting correspondence in Suite 101. At 01:25 I walked to the library to consult an atlas, glanced into the chess room, and returned to my suite. My valet can confirm my routine.";
+                case "npc_madame_valerie":
+                    return "Midnight found me at my vanity in Suite 102 fixing my jewelry. Around 01:20 I stepped into the library archive for a volume of poetry, then took the midnight air on the balcony before returning to my desk.";
+                case "npc_dr_sterling":
+                    return "From midnight to 01:30 I was reading medical treatises in Suite 103. At 01:30 I took a brief stroll to the library to check a pharmacological text, then paced the gallery before turning in.";
+                case "npc_journalist_monroe":
+                    return "I was in the lobby lounge until 01:20 keeping my eyes peeled. Then I checked the ground corridor and had a drink at the Golden Quill bar. Several patrons saw me taking notes.";
+                default:
+                    return !string.IsNullOrEmpty(groundTruthAlibi)
+                        ? groundTruthAlibi
+                        : $"I remained at my designated post throughout the midnight window. You may consult the staff records.";
+            }
         }
 
         private void AskResponsibilities()
@@ -320,13 +415,39 @@ namespace TomorrowsCrime.UI.Modals
             _currentTopicTitle = "DUTIES & BACKGROUND";
             AudioManager.Instance?.PlayPaperRustle();
 
-            if (_activeNpc.Profile != null)
+            string id = _activeNpc != null ? _activeNpc.CharacterId : "npc_concierge";
+            string name = _activeNpc != null ? _activeNpc.CharacterDisplayName : "Concierge Pierre";
+            var role = _activeNpc != null && _activeNpc.Profile != null ? _activeNpc.Profile.Role : TomorrowsCrime.Procedural.NPCs.NPCRole.Concierge;
+
+            _currentDialogueText = GetCharacterDuties(id, name, role);
+        }
+
+        private static string GetCharacterDuties(string id, string name, TomorrowsCrime.Procedural.NPCs.NPCRole role)
+        {
+            switch (id)
             {
-                _currentDialogueText = $"My role as {_activeNpc.Profile.Role} requires managing hotel operations and catering to our distinguished guests. We pride ourselves on absolute discretion.";
-            }
-            else
-            {
-                _currentDialogueText = "As Head Concierge, I oversee guest arrivals, security of the master keys, and executive suite inspections. No guest enters Room 102 without authorization.";
+                case "npc_concierge_pierre":
+                    return "I have served as Head Concierge at Meridian House for twelve years. I manage guest arrivals, supervise the luggage staff, and hold sole custody of the brass key cabinet. Discretion is my highest creed.";
+                case "npc_receptionist_celeste":
+                    return "I manage guest check-ins, telephone switchboard dispatches, and registration records. People assume receptionists just stamp receipts, but we see who arrives in the dead of night and who pays in unmarked banknotes.";
+                case "npc_chef_marcel":
+                    return "I am the culinary director of Meridian House! I command the kitchen, prepare the banquet courses, and protect my pantry from cheap bureaucrats like Julian Adler who try to slash my cream and truffle budget!";
+                case "npc_maid_clara":
+                    return "I am the second-floor chambermaid, sir. I change the linens, air out the suites, turn down beds, and polish the brass fixtures. I try to stay invisible—distinguished guests prefer not to notice servants.";
+                case "npc_engineer_otto":
+                    return "I keep this grand palace from falling apart. Steam boilers, electrical dynamos, elevator counterweights, plumbing valves. Without me, these wealthy aristocrats would be freezing in the dark.";
+                case "npc_manager_adler":
+                    return "I am the General Manager. I oversee all operations, balance the books, and ensure our distinguished clientele experiences luxury without vulgar disturbances. The hotel's reputation is in my hands.";
+                case "npc_lord_harrington":
+                    return "I am Lord Harrington, 7th Earl of Westlake. I do not have 'duties'; I have ancestral estates, investments to safeguard, and family members who seem incapable of living within their means.";
+                case "npc_madame_valerie":
+                    return "Duties? Mon cher, my duty is to look glamorous, entertain European society, and survive the suffocating boredom of provincial nobility. I am a patron of high art and fine champagne.";
+                case "npc_dr_sterling":
+                    return "I am a fellow of the Royal College of Surgeons, specializing in toxicology and internal pathology. I am staying at Meridian House while completing my treatise on poisonous alkaloid counter-agents.";
+                case "npc_journalist_monroe":
+                    return "Senior investigative correspondent for the Daily Chronicle. I uncover corporate blackmail, political payoffs, and high-society scandals. And believe me, Meridian House is crawling with secrets.";
+                default:
+                    return $"As {role}, I perform my assigned responsibilities diligently to maintain order in Meridian House.";
             }
         }
 
@@ -342,21 +463,54 @@ namespace TomorrowsCrime.UI.Modals
                 ? SimulationManager.Instance.Clock.ElapsedSeconds
                 : 0f;
 
-            string observation = "I noticed heavy footsteps near the upper corridor right before midnight, and the pantry door in the kitchen was unlocked. Someone was moving quietly in the shadows.";
+            string id = _activeNpc != null ? _activeNpc.CharacterId : "npc_concierge";
+            string name = _activeNpc != null ? _activeNpc.CharacterDisplayName : "Concierge Pierre";
+            var role = _activeNpc != null && _activeNpc.Profile != null ? _activeNpc.Profile.Role : TomorrowsCrime.Procedural.NPCs.NPCRole.Concierge;
+
+            string observation = GetCharacterObservation(id, name, role);
             _currentDialogueText = observation;
 
             InvestigationKnowledgeService.Instance?.RecordObservation(
-                $"obs_lead_{_activeNpc.CharacterDisplayName}_{loop}_{simTime:F0}",
-                $"LEAD: {_activeNpc.CharacterDisplayName} observed: \"{observation}\"",
+                $"obs_lead_{name.Replace(" ", "_")}_{loop}_{simTime:F0}",
+                $"LEAD: {name} observed: \"{observation}\"",
                 loop,
                 simTime,
                 null,
                 null,
                 ObservationMethod.WitnessedEvent,
-                _activeNpc.CharacterDisplayName,
+                name,
                 "Witness Interrogation");
 
-            UIManager.Instance?.ShowToast("LEAD ACQUIRED", "Suspicious movement report logged in Timeline.", UITheme.PeacockTeal);
+            UIManager.Instance?.ShowToast("LEAD ACQUIRED", $"Suspicious activity lead logged by {name}.", UITheme.PeacockTeal);
+        }
+
+        private static string GetCharacterObservation(string id, string name, TomorrowsCrime.Procedural.NPCs.NPCRole role)
+        {
+            switch (id)
+            {
+                case "npc_concierge_pierre":
+                    return "Around 02:00, Manager Adler left his executive office in high agitation, clutching a leather ledger. And earlier, I noticed the brass tag for Suite 102 was missing from the key cabinet.";
+                case "npc_receptionist_celeste":
+                    return "Keep this between us, Detective: Vivian Monroe was lurking near the elevator shaft taking notes. And Dr. Sterling looked terribly pale when he crossed the lobby—his hands were trembling as he asked for the time.";
+                case "npc_chef_marcel":
+                    return "Otto, that greasy wrench-turner, was snooping near my kitchen service entrance smelling of coal smoke! And Madame Valerie complained that her champagne tasted 'bitter and metallic'—my cellar is spotless!";
+                case "npc_maid_clara":
+                    return "While dusting outside Suite 102, I smelled a strange scent—sweet French perfume mixed with something bitter, like crushed almonds. And the interconnecting door to Suite 104 had been unlocked from inside!";
+                case "npc_engineer_otto":
+                    return "The freight lift was called to Floor 1 at 02:40 without my authorization. I heard the cable drum whine from the boiler room. Someone was moving between floors without using the grand staircase.";
+                case "npc_manager_adler":
+                    return "Lord Harrington was in a foul temper earlier—I overheard him in the card room shouting that he would disinherit Dr. Sterling. And Miss Monroe has been attempting to bribe staff for guest files.";
+                case "npc_lord_harrington":
+                    return "My nephew Alistair—Dr. Sterling—came to my suite demanding an advance on his inheritance to satisfy reckless debts. When I refused, he stormed out looking murderous. The man has lost all restraint.";
+                case "npc_madame_valerie":
+                    return "Between us, chéri, Julian Adler has been sweating through his collars all week. I saw him stuffing thick envelopes into his coat. And Pierre has been having whispered meetings by the rear door.";
+                case "npc_dr_sterling":
+                    return "From a clinical perspective, several guests exhibited acute sympathetic nervous arousal tonight. Manager Adler's pupils were dilated and his carotid pulse was visibly elevated. Furthermore, I detected a faint odor of cyanide near the east corridor.";
+                case "npc_journalist_monroe":
+                    return "Get your pencil out, Detective: Chef Marcel was in a shouting match with Adler near the scullery about withheld salaries. And at 02:15, someone slipped through the service door without turning on lights!";
+                default:
+                    return "I observed hurried footsteps in the corridors shortly before midnight, and someone lingered in the shadows near the service stairs.";
+            }
         }
 
         private void ConfrontWithClue(EvidenceDefinition clue)
@@ -364,8 +518,98 @@ namespace TomorrowsCrime.UI.Modals
             _currentTopicTitle = $"CONFRONTATION: {clue.DisplayName.ToUpper()}";
             AudioManager.Instance?.PlayEvidenceDiscovery();
 
-            _currentDialogueText = $"Where did you uncover {clue.DisplayName}?! I... I assure you that has a completely innocent explanation, Detective. Do not jump to baseless conclusions!";
-            UIManager.Instance?.ShowToast("SUSPECT REACTION", $"{_activeNpc.CharacterDisplayName} became defensive when shown {clue.DisplayName}.", UITheme.StatusAmber);
+            string id = _activeNpc != null ? _activeNpc.CharacterId : "npc_concierge";
+            string name = _activeNpc != null ? _activeNpc.CharacterDisplayName : "Concierge Pierre";
+            var role = _activeNpc != null && _activeNpc.Profile != null ? _activeNpc.Profile.Role : TomorrowsCrime.Procedural.NPCs.NPCRole.Concierge;
+
+            bool isCulprit = false;
+            if (CaseAccusationService.Instance != null && CaseAccusationService.Instance.CurrentGroundTruth != null)
+            {
+                if (CaseAccusationService.Instance.CurrentGroundTruth.CulpritId == id) isCulprit = true;
+            }
+            if (_activeNpc != null && _activeNpc.Profile != null && _activeNpc.Profile.IsCulprit)
+            {
+                isCulprit = true;
+            }
+
+            string reaction = GetCharacterConfrontation(id, name, role, isCulprit, clue);
+            _currentDialogueText = reaction;
+
+            UIManager.Instance?.ShowToast("SUSPECT REACTION", $"{name} confronted with {clue.DisplayName}.", UITheme.StatusAmber);
+        }
+
+        private static string GetCharacterConfrontation(string id, string name, TomorrowsCrime.Procedural.NPCs.NPCRole role, bool isCulprit, EvidenceDefinition clue)
+        {
+            string clueName = clue != null ? (clue.DisplayName ?? "").ToLower() : "";
+            string clueId = clue != null ? (clue.EvidenceId ?? "").ToLower() : "";
+
+            if (clueName.Contains("poison") || clueName.Contains("vial") || clueId.Contains("poison") || clueName.Contains("cyanide"))
+            {
+                if (id == "npc_dr_sterling")
+                    return "Let me examine that vial... Highly concentrated potassium cyanide in an almond vehicle. That is a lethal dose for three adult men. Such compounds require a licensed chemist's signature—or theft from a dispensary!";
+                if (id == "npc_madame_valerie")
+                    return "A vial smelling of bitter almonds?! Heavens, get it away from me! My champagne tasted strange earlier—thank God I poured most of it into the fern on the terrace!";
+                if (id == "npc_chef_marcel")
+                    return "Poison?! If anyone suggests that bitter almond filth came from my spice pantry, I will duel them! Bitter almond extract is kept under lock and key!";
+                if (id == "npc_concierge_pierre")
+                    return "Cyanide in an apothecary vial?! That did not come from my desk! Though... Madame Valerie did mention feeling unwell after her evening aperitif...";
+                return $"A vial of lethal poison?! That is horrifying, Detective. Who would bring such deadly compounds into Meridian House?";
+            }
+
+            if (clueName.Contains("cleaver") || clueId.Contains("cleaver"))
+            {
+                if (id == "npc_chef_marcel")
+                    return "Mon dieu! My 12-inch French meat cleaver! It vanished from my magnetic kitchen rack right after 10 o'clock! Tell me who touched my steel and I will skin them!";
+                if (id == "npc_concierge_pierre")
+                    return "A culinary meat cleaver belongs in Chef Marcel's scullery, not among guests. Marcel is notoriously possessive of his cutlery.";
+                return "A heavy kitchen cleaver with dark stains?! That clearly came from the hotel kitchen. Chef Marcel must know who touched it!";
+            }
+
+            if (clueName.Contains("candlestick") || clueId.Contains("candlestick"))
+            {
+                if (id == "npc_lord_harrington")
+                    return "A Georgian brass candlestick? Good God, is that one of the heavy pieces from the dining table? It looks dented... Do not wave that near me!";
+                if (id == "npc_maid_clara")
+                    return "Oh saints preserve us! That candlestick was on the dining sideboard earlier! Is... is that blood on the base?!";
+                return "A heavy brass candlestick... The blunt impact from such an object would be devastating.";
+            }
+
+            if (clueName.Contains("wrench") || clueId.Contains("wrench"))
+            {
+                if (id == "npc_engineer_otto")
+                    return "Ja, that's a 14-inch Stilsen wrench from my tool chest. What's it doing stained? Someone forced the padlock on my locker while I was at the boilers!";
+                return "A heavy mechanic's pipe wrench... That clearly originated from the basement utility workshop.";
+            }
+
+            if (clueName.Contains("key") || clueId.Contains("key"))
+            {
+                if (id == "npc_concierge_pierre")
+                    return "That is the master brass key! The tag was taken from my cubby board while I was inspecting the lobby! Whoever held this could enter any suite unhindered.";
+                if (id == "npc_receptionist_celeste")
+                    return "That key! I saw it hanging on the board before dinner, but by midnight the hook was empty!";
+                return "A room keycard... That proves the killer did not need to force the lock to enter the crime scene.";
+            }
+
+            if (clueName.Contains("letter") || clueName.Contains("note") || clueName.Contains("blackmail") ||
+                clueName.Contains("register") || clueName.Contains("will") || clueId.Contains("letter") || clueId.Contains("register"))
+            {
+                if (id == "npc_manager_adler")
+                    return "Where did you get those documents?! That is private hotel business! You have no legal authorization to examine confidential accounting records!";
+                if (id == "npc_madame_valerie")
+                    return "Mon dieu... That note! Someone was demanding five hundred pounds or threatened to ruin my reputation before Paris society!";
+                if (id == "npc_lord_harrington")
+                    return "My confidential testamentary draft! Yes, I intended to strike Alistair from my estate! That is my sovereign right as head of the family!";
+                if (id == "npc_journalist_monroe")
+                    return "Bingo! That's the smoking gun! That typing matches the ribbon ink on the manager's office typewriter—I'd bet my front-page byline on it!";
+                return "This document proves premeditation and a clear motive. The paper trail doesn't lie, Detective.";
+            }
+
+            if (isCulprit)
+            {
+                return $"Where did you uncover that?! I... I assure you that has a completely innocent explanation, Detective! Do not jump to baseless accusations!";
+            }
+
+            return $"Where did you find {clue.DisplayName}? That certainly looks like evidence of foul play, Detective. You should examine who had access to it.";
         }
 
         private void TriggerAccusationScreen()

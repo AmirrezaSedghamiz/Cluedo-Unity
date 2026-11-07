@@ -52,6 +52,8 @@ namespace TomorrowsCrime.NPC
 
         public string CharacterDisplayName => profile != null ? profile.DisplayName : (definition != null ? definition.DisplayName : "Concierge Pierre");
         public string CharacterRole => profile != null ? profile.Role.ToString() : "Concierge";
+        public string CharacterId => profile != null ? profile.NpcId : (definition != null ? definition.CharacterId : "npc_concierge");
+        public TomorrowsCrime.Procedural.NPCs.NPCRole? Role => profile != null ? profile.Role : (TomorrowsCrime.Procedural.NPCs.NPCRole?)null;
 
         // IInteractable Implementation
         public string InteractionPrompt => $"Question {CharacterDisplayName} [E]";
@@ -147,15 +149,17 @@ namespace TomorrowsCrime.NPC
             // Populate procedural activities from 5-minute routine plan
             if (plan != null && plan.Activities != null && plan.Activities.Count > 0)
             {
-                foreach (var act in plan.Activities)
+                for (int i = 0; i < plan.Activities.Count; i++)
                 {
+                    var act = plan.Activities[i];
+                    string wpKey = $"{act.ActivityName}_{i}";
                     ActivityType type = ActivityType.Patrol;
                     if (act.ActivityName.Contains("RetrieveKey")) type = ActivityType.RetrieveKey;
                     else if (act.ActivityName.Contains("Unlock")) type = ActivityType.UnlockDoor;
                     else if (act.ActivityName.Contains("Wait") || act.ActivityName.Contains("Duty") || act.ActivityName.Contains("Station")) type = ActivityType.WaitAtPost;
                     else if (act.ActivityName.Contains("Inspect") || act.ActivityName.Contains("Check")) type = ActivityType.Investigate;
 
-                    definition.AddActivity(new ScheduleActivity(type, act.StartSimTime, act.EndSimTime, act.ActivityName, null, act.Description));
+                    definition.AddActivity(new ScheduleActivity(type, act.StartSimTime, act.EndSimTime, wpKey, null, act.Description));
                 }
             }
 
@@ -201,10 +205,10 @@ namespace TomorrowsCrime.NPC
 
         public void RegisterWaypoints()
         {
-            _waypoints.Clear();
-            if (waypointLobbyDesk != null) _waypoints["LobbyDesk"] = waypointLobbyDesk;
-            if (waypointLobbyTable != null) _waypoints["LobbyTable"] = waypointLobbyTable;
-            if (waypointRoom102Door != null) _waypoints["Room102Door"] = waypointRoom102Door;
+            // Preserve procedural waypoints; only assign serialized inspectables if unset
+            if (waypointLobbyDesk != null && !_waypoints.ContainsKey("LobbyDesk")) _waypoints["LobbyDesk"] = waypointLobbyDesk;
+            if (waypointLobbyTable != null && !_waypoints.ContainsKey("LobbyTable")) _waypoints["LobbyTable"] = waypointLobbyTable;
+            if (waypointRoom102Door != null && !_waypoints.ContainsKey("Room102Door")) _waypoints["Room102Door"] = waypointRoom102Door;
         }
 
         public void SetWaypoint(string key, Transform target)
@@ -261,9 +265,17 @@ namespace TomorrowsCrime.NPC
             switch (activity.ActivityType)
             {
                 case ActivityType.WaitAtPost:
-                    StopAgent();
-                    _runtimeState.SetCurrentActivity(activity, activity.DestinationKey, destPos, "Waiting at station.");
-                    _runtimeState.TransitionBehavior(NPCBehaviorState.Idle, "Idle at post.");
+                    if (destinationTransform != null && Vector3.Distance(transform.position, destinationTransform.position) > 0.8f)
+                    {
+                        RequestNavigation(destinationTransform.position, activity.DestinationKey, simTime);
+                        _runtimeState.SetCurrentActivity(activity, activity.DestinationKey, destPos, $"Navigating to post at {activity.DestinationKey}.");
+                    }
+                    else
+                    {
+                        StopAgent();
+                        _runtimeState.SetCurrentActivity(activity, activity.DestinationKey, destPos, "Waiting at station.");
+                        _runtimeState.TransitionBehavior(NPCBehaviorState.Idle, "Idle at post.");
+                    }
                     break;
 
                 case ActivityType.RetrieveKey:
@@ -365,6 +377,15 @@ namespace TomorrowsCrime.NPC
         {
             if (_isActionHandledForCurrentActivity) return;
             _isActionHandledForCurrentActivity = true;
+
+            if (activity.ActivityType == ActivityType.WaitAtPost ||
+                activity.ActivityType == ActivityType.Patrol ||
+                activity.ActivityType == ActivityType.Investigate)
+            {
+                StopAgent();
+                _runtimeState.TransitionBehavior(NPCBehaviorState.Idle, $"Stationed at {activity.DestinationKey}.");
+                return;
+            }
 
             var worldState = WorldStateManager.Instance != null ? WorldStateManager.Instance.Registry : null;
 

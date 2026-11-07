@@ -151,68 +151,73 @@ namespace TomorrowsCrime.Procedural.NPCs
                 switch (npc.Role)
                 {
                     case NPCRole.Concierge:
-                        // 00:00 - 00:30: Wait at post behind reception desk
-                        plan.AddActivity("WaitAtPost", "room_reception", new Vector3(-1.2f, 0f, 11.6f), 0f, 30f, null, "Guarding reception counter and key cubbies.");
-                        // 00:30 - 00:50: Patrol to lobby center floor to inspect key stations
-                        plan.AddActivity("RetrieveKey", "room_lobby", new Vector3(0f, 0f, 2.0f), 30f, 50f, "obj_key_room_102", "Inspecting central lobby for spare Room 102 keycard.");
-                        // 00:50 - 01:20: Ascend to upper gallery and inspect VIP suite 102
-                        plan.AddActivity("InspectSuite", "room_guest_102", new Vector3(9.5f, 5f, 8.5f), 50f, 80f, "obj_key_room_102", "Inspecting Room 102 exterior deadbolt lock.");
-                        // 01:20 - 05:00: Return to Reception Station
-                        plan.AddActivity("StationAtLobby", "room_reception", new Vector3(-1.2f, 0f, 11.6f), 80f, 300f, null, "Stationed behind reception desk overseeing front hall.");
+                        plan.AddActivity("WaitAtPost", "room_reception", new Vector3(-1.2f, 0f, 11.6f), 0f, 70f, null, "Guarding reception counter and key cubbies.");
+                        plan.AddActivity("PatrolLobby", "room_lobby", new Vector3(0f, 0f, 2.0f), 70f, 140f, null, "Inspecting central lobby and coat rack.");
+                        plan.AddActivity("CheckTransport", "room_corridor_ground", new Vector3(10.0f, 0f, 0f), 140f, 210f, null, "Inspecting east transport hub and elevator station.");
+                        plan.AddActivity("StationAtLobby", "room_reception", new Vector3(-1.2f, 0f, 11.6f), 210f, 300f, null, "Stationed behind reception desk overseeing front hall.");
                         break;
 
                     case NPCRole.Receptionist:
-                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.2f, 0f, 11.6f), 0f, 120f, null, "Managing guest ledger at reception desk.");
-                        plan.AddActivity("ConsultManager", "room_staff_office", new Vector3(21.5f, 0f, 3.2f), 120f, 180f, null, "Delivering registration records to the manager's office.");
-                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.2f, 0f, 11.6f), 180f, 300f, null, "Stationed behind front counter.");
+                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.2f, 0f, 11.6f), 0f, 90f, null, "Managing guest ledger at reception desk.");
+                        plan.AddActivity("ConsultManager", "room_staff_office", new Vector3(19.0f, 0f, 3.5f), 90f, 170f, null, "Delivering registration records to the manager's office.");
+                        plan.AddActivity("VisitBar", "room_bar_lounge", new Vector3(-3.0f, 0f, -9.0f), 170f, 230f, null, "Fetching water and checking on bar patrons.");
+                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.2f, 0f, 11.6f), 230f, 300f, null, "Stationed behind front counter sorting mail.");
                         break;
 
                     case NPCRole.HeadChef:
-                        plan.AddActivity("PrepKitchen", "room_kitchen", new Vector3(-17.5f, 0f, 10.0f), 0f, 90f, null, "Prepping midnight broth at commercial cooking range.");
-                        plan.AddActivity("CheckPantry", "room_kitchen", new Vector3(-14.0f, 0f, 12.5f), 90f, 160f, null, "Inventorying spice shelf and pantry stores.");
-                        plan.AddActivity("ServeDining", "room_dining", new Vector3(-11.5f, 0f, 0f), 160f, 300f, null, "Checking dining tables and clearing service ware.");
+                        plan.AddActivity("PrepKitchen", "room_kitchen", new Vector3(-16.0f, 0f, 10.0f), 0f, 80f, null, "Prepping midnight broth at commercial cooking range.");
+                        plan.AddActivity("CheckPantry", "room_kitchen", new Vector3(-12.0f, 0f, 11.5f), 80f, 160f, null, "Inventorying spice shelf and pantry stores.");
+                        plan.AddActivity("ServeDining", "room_dining", new Vector3(-14.0f, 0f, 1.5f), 160f, 230f, null, "Checking dining banquet tables and clearing service ware.");
+                        plan.AddActivity("PrepKitchen", "room_kitchen", new Vector3(-16.0f, 0f, 10.0f), 230f, 300f, null, "Sharpening knives and prepping morning breakfast menu.");
                         break;
 
                     case NPCRole.HousekeepingMaid:
-                        plan.AddActivity("OrganizeLinens", "room_housekeeping", new Vector3(10.0f, 5f, -8.5f), 0f, 60f, null, "Folding clean towels on housekeeping service rack.");
-                        plan.AddActivity("TurnDown101", "room_guest_101", new Vector3(2.5f, 5f, 8.5f), 60f, 140f, null, "Turn-down service in Room 101.");
-                        plan.AddActivity("CorridorSweep", "room_upper_corridor", new Vector3(3.0f, 5f, 0f), 140f, 300f, null, "Sweeping carpet on the second-floor gallery.");
+                        plan.AddActivity("OrganizeLinens", "room_housekeeping", new Vector3(10.0f, 5f, -7.0f), 0f, 75f, null, "Folding clean towels on housekeeping service rack.");
+                        plan.AddActivity("TurnDown101", "room_guest_101", new Vector3(2.0f, 5f, 7.0f), 75f, 150f, null, "Turn-down service and fluffing pillows in Suite 101.");
+                        plan.AddActivity("DustLibrary", "room_library", new Vector3(-8.0f, 5f, 2.0f), 150f, 225f, null, "Dusting reading tables in the Grand Library archive.");
+                        plan.AddActivity("CorridorSweep", "room_upper_corridor", new Vector3(4.0f, 5f, 0f), 225f, 300f, null, "Sweeping carpet on the second-floor gallery.");
                         break;
 
                     case NPCRole.MaintenanceEngineer:
-                        plan.AddActivity("MonitorBoiler", "room_utility", new Vector3(21.5f, 0f, -4.0f), 0f, 80f, null, "Checking boiler pressure in utility room.");
-                        plan.AddActivity("CheckBreakers", "room_utility", new Vector3(20.0f, 0f, -1.5f), 80f, 160f, null, "Inspecting electrical breaker panel.");
-                        plan.AddActivity("PatrolGrounds", "room_corridor_ground", new Vector3(12.0f, 0f, 0f), 160f, 300f, null, "Walking service corridor checking radiator valves.");
+                        plan.AddActivity("MonitorBoiler", "room_utility", new Vector3(21.0f, 0f, -5.0f), 0f, 75f, null, "Checking boiler pressure in utility room.");
+                        plan.AddActivity("CheckBreakers", "room_utility", new Vector3(23.5f, 0f, -3.0f), 75f, 150f, null, "Inspecting electrical breaker panel.");
+                        plan.AddActivity("InspectLiftGears", "room_corridor_ground", new Vector3(11.0f, 0f, 1.0f), 150f, 225f, null, "Checking freight lift gears and elevator pulleys.");
+                        plan.AddActivity("WorkbenchWork", "room_utility", new Vector3(21.0f, 0f, -2.5f), 225f, 300f, null, "Filing replacement brass fittings at utility workbench.");
                         break;
 
                     case NPCRole.HotelManager:
-                        plan.AddActivity("ReviewAccounts", "room_staff_office", new Vector3(21.5f, 0f, 6.5f), 0f, 150f, null, "Auditing financial safe and invoices behind executive desk.");
-                        plan.AddActivity("InspectDining", "room_dining", new Vector3(-13.5f, 0f, 0f), 150f, 220f, null, "Inspecting dining hall presentation.");
-                        plan.AddActivity("LobbyAppearance", "room_lobby", new Vector3(0f, 0f, 2.5f), 220f, 300f, null, "Observing midnight operations in the main lobby.");
+                        plan.AddActivity("ReviewAccounts", "room_staff_office", new Vector3(21.5f, 0f, 4.5f), 0f, 100f, null, "Auditing secret financial safe and invoices behind executive desk.");
+                        plan.AddActivity("InspectDining", "room_dining", new Vector3(-13.5f, 0f, -2.0f), 100f, 170f, null, "Inspecting dining hall presentation and wine inventory.");
+                        plan.AddActivity("LobbyAppearance", "room_lobby", new Vector3(2.0f, 0f, 1.5f), 170f, 235f, null, "Observing midnight operations in the main lobby by the fireplace.");
+                        plan.AddActivity("LockOfficeSafe", "room_staff_office", new Vector3(23.5f, 0f, 2.0f), 235f, 300f, null, "Locking office safe and filing confidential papers.");
                         break;
 
                     case NPCRole.WealthyGuest:
-                        plan.AddActivity("InRoomWriting", "room_guest_101", new Vector3(2.5f, 5f, 8.5f), 0f, 90f, null, "Drafting business telegram at writing desk in Suite 101.");
-                        plan.AddActivity("LateNightDrink", "room_dining", new Vector3(-13.5f, 0f, 2.5f), 90f, 200f, null, "Sipping brandy at dining banquet table.");
-                        plan.AddActivity("RetireToRoom", "room_guest_101", new Vector3(2.5f, 5f, 8.5f), 200f, 300f, null, "Resting in Suite 101.");
+                        plan.AddActivity("InRoomWriting", "room_guest_101", new Vector3(1.5f, 5f, 8.5f), 0f, 85f, null, "Drafting will and business telegram at writing desk in Suite 101.");
+                        plan.AddActivity("LibraryReading", "room_library", new Vector3(-10.0f, 5f, 0f), 85f, 160f, null, "Studying historical genealogies in Grand Library armchair.");
+                        plan.AddActivity("ChessContemplation", "room_card_room", new Vector3(-10.0f, 5f, 9.5f), 160f, 230f, null, "Contemplating a chess problem in the card room.");
+                        plan.AddActivity("RetireToRoom", "room_guest_101", new Vector3(1.5f, 5f, 8.5f), 230f, 300f, null, "Resting in Suite 101 and checking pocket watch.");
                         break;
 
                     case NPCRole.SocietyLady:
-                        plan.AddActivity("LoungeCocktail", "room_dining", new Vector3(-13.5f, 0f, -2.5f), 0f, 80f, null, "Sitting in dining hall holding champagne glass.");
-                        plan.AddActivity("PrivateRetreat", "room_guest_102", new Vector3(9.5f, 5f, 8.5f), 80f, 240f, null, "Retreating to VIP Suite 102 vanity.");
-                        plan.AddActivity("BalconyView", "room_guest_102", new Vector3(10.0f, 5f, 11.5f), 240f, 300f, null, "Looking out balcony window.");
+                        plan.AddActivity("VanityPreparation", "room_guest_102", new Vector3(12.0f, 5f, 7.5f), 0f, 80f, null, "Fixing jewelry and applying French perfume at Suite 102 vanity.");
+                        plan.AddActivity("PoetryBrowsing", "room_library", new Vector3(-6.0f, 5f, 1.0f), 80f, 155f, null, "Browsing rare poetry volumes in the Grand Library archway.");
+                        plan.AddActivity("BalconyView", "room_guest_102", new Vector3(11.0f, 5f, 9.5f), 155f, 225f, null, "Looking out into the foggy midnight air on Suite 102 balcony.");
+                        plan.AddActivity("SuiteRelaxation", "room_guest_102", new Vector3(10.0f, 5f, 6.5f), 225f, 300f, null, "Sipping champagne at Suite 102 salon table.");
                         break;
 
                     case NPCRole.DoctorGuest:
-                        plan.AddActivity("ReadingJournal", "room_guest_103", new Vector3(2.5f, 5f, -8.5f), 0f, 100f, null, "Reading medical journal under bedside lamp.");
-                        plan.AddActivity("NightAirLobby", "room_lobby", new Vector3(3.2f, 0f, -2.5f), 100f, 210f, null, "Sitting in East lounge area near the fireplace.");
-                        plan.AddActivity("ReturnToRoom", "room_guest_103", new Vector3(2.5f, 5f, -8.5f), 210f, 300f, null, "Resting in Suite 103.");
+                        plan.AddActivity("ReadingJournal", "room_guest_103", new Vector3(2.0f, 5f, -7.5f), 0f, 90f, null, "Reading medical toxicology treatise under Suite 103 bedside lamp.");
+                        plan.AddActivity("ResearchArchive", "room_library", new Vector3(-12.0f, 5f, -3.0f), 90f, 165f, null, "Consulting botanical pharmacology records in the library archive.");
+                        plan.AddActivity("GalleryWalk", "room_upper_corridor", new Vector3(5.0f, 5f, 0f), 165f, 230f, null, "Pacing the upper gallery corridor for midnight exercise.");
+                        plan.AddActivity("ReturnToRoom", "room_guest_103", new Vector3(2.0f, 5f, -7.5f), 230f, 300f, null, "Packing apothecary vials into physician's Gladstone bag.");
                         break;
 
                     case NPCRole.JournalistGuest:
-                        plan.AddActivity("LobbyEavesdrop", "room_lobby", new Vector3(-3.2f, 0f, -2.5f), 0f, 110f, null, "Sitting in lounge observing concierge and guests.");
-                        plan.AddActivity("CorridorStalk", "room_corridor_ground", new Vector3(16.5f, 0f, 2.0f), 110f, 200f, null, "Loitering near manager's office taking notes.");
-                        plan.AddActivity("UpperGalleryPatrol", "room_upper_corridor", new Vector3(3.0f, 5f, 0f), 200f, 300f, null, "Pacing second-floor gallery overlooking suites.");
+                        plan.AddActivity("LobbyEavesdrop", "room_lobby", new Vector3(-4.0f, 0f, -2.5f), 0f, 80f, null, "Sitting in lobby lounge pretending to read newspaper while eavesdropping.");
+                        plan.AddActivity("CorridorStalk", "room_corridor_ground", new Vector3(10.0f, 0f, 2.0f), 80f, 150f, null, "Loitering near manager's office taking shorthand notes.");
+                        plan.AddActivity("BarInquiries", "room_bar_lounge", new Vector3(-5.5f, 0f, -9.5f), 150f, 220f, null, "Sipping gin at the Golden Quill bar and questioning patrons.");
+                        plan.AddActivity("LobbyWatch", "room_lobby", new Vector3(3.0f, 0f, -2.0f), 220f, 300f, null, "Watching reception desk from fireplace armchair for suspicious exchanges.");
                         break;
                 }
 

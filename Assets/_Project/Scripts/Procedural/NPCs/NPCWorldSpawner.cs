@@ -85,15 +85,18 @@ namespace TomorrowsCrime.Procedural.NPCs
                 NPCRoutinePlan routinePlan = null;
                 if (routines != null && routines.TryGetValue(profile.NpcId, out routinePlan) && routinePlan.Activities.Count > 0)
                 {
-                    var waypointsRoot = new GameObject("Waypoints");
-                    waypointsRoot.transform.SetParent(npcGo.transform);
-                    waypointsRoot.transform.localPosition = Vector3.zero;
+                    var waypointsRoot = new GameObject($"Waypoints_{profile.DisplayName.Replace(" ", "")}");
+                    waypointsRoot.transform.SetParent(rosterRoot.transform);
+                    waypointsRoot.transform.position = Vector3.zero;
 
-                    foreach (var act in routinePlan.Activities)
+                    for (int i = 0; i < routinePlan.Activities.Count; i++)
                     {
-                        var wpGo = new GameObject($"WP_{act.ActivityName}");
+                        var act = routinePlan.Activities[i];
+                        string wpKey = $"{act.ActivityName}_{i}";
+                        var wpGo = new GameObject($"WP_{wpKey}");
                         wpGo.transform.SetParent(waypointsRoot.transform);
                         wpGo.transform.position = act.Destination;
+                        controller.SetWaypoint(wpKey, wpGo.transform);
                         controller.SetWaypoint(act.ActivityName, wpGo.transform);
                     }
                 }
@@ -276,9 +279,29 @@ namespace TomorrowsCrime.Procedural.NPCs
             Material tieBurgundy = GetMat(mats, "TieBurgundy", new Color(0.55f, 0.12f, 0.16f));
             Material velvetGold = GetMat(mats, "VelvetGold", new Color(0.85f, 0.70f, 0.25f));
             Material woodWalnut = GetMat(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material suitNavy = GetMat(mats, "UniformNavy", new Color(0.12f, 0.16f, 0.28f));
 
             switch (role)
             {
+                case NPCRole.Concierge:
+                    // Distinct Art Deco Concierge Pillbox / Kepi Hat with Gold Braiding
+                    var kepi = CreatePart(head.transform, PrimitiveType.Cylinder, "Concierge_Kepi",
+                        new Vector3(0f, 0.44f, 0f), new Vector3(0.95f, 0.22f, 0.95f), suitNavy);
+                    CreatePart(kepi.transform, PrimitiveType.Cylinder, "Kepi_GoldBraid",
+                        new Vector3(0f, 0.15f, 0f), new Vector3(1.02f, 0.06f, 1.02f), brassGold);
+                    CreatePart(kepi.transform, PrimitiveType.Cube, "Kepi_Visor",
+                        new Vector3(0f, -0.1f, 0.52f), new Vector3(0.70f, 0.04f, 0.32f), slateBlack);
+
+                    // Handheld Signature: Master Brass Keyring with skeleton keys
+                    var keyring = CreatePart(rightHand.transform, PrimitiveType.Cylinder, "Keyring_Loop",
+                        new Vector3(0.08f, -0.05f, 0.12f), new Vector3(0.14f, 0.03f, 0.14f), brassGold);
+                    keyring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                    CreatePart(keyring.transform, PrimitiveType.Cube, "Key_Stem1",
+                        new Vector3(0f, 0.14f, 0f), new Vector3(0.03f, 0.20f, 0.03f), brassGold);
+                    CreatePart(keyring.transform, PrimitiveType.Cube, "Key_Stem2",
+                        new Vector3(0.08f, 0.12f, 0f), new Vector3(0.03f, 0.18f, 0.03f), brassGold);
+                    break;
+
                 case NPCRole.HeadChef:
                     // Tall Pleated Chef's Toque Blanche
                     var toqueBase = CreatePart(head.transform, PrimitiveType.Cylinder, "Toque_Band",
