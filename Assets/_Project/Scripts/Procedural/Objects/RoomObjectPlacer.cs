@@ -205,7 +205,88 @@ namespace TomorrowsCrime.Procedural.Objects
                     "Detailed 19th-century cartographic globe.", null)
                     .WithRooms(RoomType.Library, RoomType.PresidentialStudy, RoomType.Floor3SkyFoyer)
                     .WithAnchors(AnchorCategory.Desk, AnchorCategory.Tabletop)
-                    .WithCollider(new Vector3(0.4f, 0.6f, 0.4f))
+                    .WithCollider(new Vector3(0.4f, 0.6f, 0.4f)),
+
+                // Rich Meaningful Hotel Props & Detective Clutter
+                new ObjectDefinition("obj_vintage_typewriter", "Underwood Standard Typewriter", ObjectCategory.Tool, ObjectRole.Decorative,
+                    null, "MarbleBlack",
+                    "A 1920s Underwood No. 5 typewriter with a two-color ink ribbon.",
+                    "Heavy mechanical typewriter loaded with clean cream bond paper.", null)
+                    .WithRooms(RoomType.StaffOffice, RoomType.Reception, RoomType.Library, RoomType.GuestRoom101, RoomType.GuestRoom105, RoomType.PresidentialStudy)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.45f, 0.25f, 0.40f)),
+
+                new ObjectDefinition("obj_rotary_telephone", "Heavy Bakelite Rotary Telephone", ObjectCategory.Tool, ObjectRole.Decorative,
+                    null, "MarbleBlack",
+                    "A black bakelite pyramid telephone with a chrome rotary dial.",
+                    "Hotel internal extension phone connected to the lobby switchboard.", null)
+                    .WithRooms(RoomType.Reception, RoomType.StaffOffice, RoomType.GuestRoom101, RoomType.GuestRoom102, RoomType.GuestRoom103, RoomType.GuestRoom104, RoomType.GuestRoom105, RoomType.GuestRoom201, RoomType.GuestRoom202, RoomType.GuestRoom204, RoomType.CrownPenthouse)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Nightstand, AnchorCategory.Tabletop, AnchorCategory.Counter)
+                    .WithCollider(new Vector3(0.35f, 0.25f, 0.35f)),
+
+                new ObjectDefinition("obj_bedside_alarm_clock", "Wind-Up Brass Alarm Clock", ObjectCategory.Valuable, ObjectRole.Decorative,
+                    null, "BrassGold",
+                    "A twin-bell mechanical brass clock ticking softly.",
+                    "Mechanical bedside clock stopped at 12:14 AM.", null)
+                    .WithRooms(RoomType.GuestRoom101, RoomType.GuestRoom102, RoomType.GuestRoom103, RoomType.GuestRoom104, RoomType.GuestRoom105, RoomType.GuestRoom201, RoomType.GuestRoom202, RoomType.GuestRoom203, RoomType.GuestRoom204, RoomType.GuestRoom205, RoomType.VIPSuite301, RoomType.VIPSuite302, RoomType.PresidentialBedroom)
+                    .WithAnchors(AnchorCategory.Nightstand, AnchorCategory.Desk)
+                    .WithCollider(new Vector3(0.25f, 0.25f, 0.20f)),
+
+                new ObjectDefinition("obj_perfume_atomizer", "Cut Crystal Perfume Atomizer", ObjectCategory.Valuable, ObjectRole.Decorative,
+                    null, "ShirtWhite",
+                    "An ornate crystal perfume flask with a braided silk pump bulb.",
+                    "French Bulgarian rosewater perfume, highly favored by society ladies.", null)
+                    .WithRooms(RoomType.GuestRoom102, RoomType.GuestRoom104, RoomType.GuestRoom202, RoomType.VIPSuite301, RoomType.Solarium)
+                    .WithAnchors(AnchorCategory.Nightstand, AnchorCategory.Desk, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.20f, 0.30f, 0.20f)),
+
+                new ObjectDefinition("obj_jewelry_casket", "Velvet-Lined Inlaid Jewelry Casket", ObjectCategory.Valuable, ObjectRole.InvestigativeEvidence,
+                    null, "WoodMahogany",
+                    "A rosewood jewelry box inlaid with mother-of-pearl.",
+                    "Lined in burgundy silk. An empty velvet indentation reveals a missing diamond necklace.", "evidence_missing_jewels")
+                    .WithRooms(RoomType.GuestRoom102, RoomType.GuestRoom104, RoomType.GuestRoom202, RoomType.VIPSuite301, RoomType.PresidentialBedroom)
+                    .WithAnchors(AnchorCategory.Nightstand, AnchorCategory.Desk, AnchorCategory.Shelf)
+                    .WithCollider(new Vector3(0.35f, 0.20f, 0.25f)),
+
+                new ObjectDefinition("obj_silver_cloche", "Silver Room Service Food Cloche", ObjectCategory.Utensil, ObjectRole.Decorative,
+                    null, "BrassGold",
+                    "A domed polished silver dish cover with an ornate handle ring.",
+                    "Room service platter cover covering cold oysters and roasted duck remnants.", null)
+                    .WithRooms(RoomType.DiningRoom, RoomType.Kitchen, RoomType.GuestRoom102, RoomType.CrownPenthouse, RoomType.VIPSuite301)
+                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Counter)
+                    .WithCollider(new Vector3(0.40f, 0.25f, 0.40f)),
+
+                new ObjectDefinition("obj_cocktail_shaker", "Art Deco Brass Cocktail Shaker", ObjectCategory.Utensil, ObjectRole.Decorative,
+                    null, "BrassGold",
+                    "A sleek three-piece geometric cocktail shaker with built-in strainer.",
+                    "Professional bar shaker smelling of gin, vermouth, and bitters.", null)
+                    .WithRooms(RoomType.BarLounge, RoomType.DiningRoom, RoomType.CrownPenthouse, RoomType.CardRoom)
+                    .WithAnchors(AnchorCategory.Counter, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.22f, 0.35f, 0.22f)),
+
+                new ObjectDefinition("obj_steamer_trunk", "Monogrammed Leather Steamer Trunk", ObjectCategory.Container, ObjectRole.Decorative,
+                    null, "WoodWalnut",
+                    "A brass-cornered vulcanized fiber travel trunk covered in ocean liner decals.",
+                    "Heavy trunk labeled 'Cunard White Star Line - Southampton to Cherbourg'.", null)
+                    .WithRooms(RoomType.LuggageStorage, RoomType.HousekeepingStorage, RoomType.GuestRoom101, RoomType.GuestRoom104, RoomType.GuestRoom201, RoomType.GuestRoom204, RoomType.VIPSuite302)
+                    .WithAnchors(AnchorCategory.FloorCorner, AnchorCategory.ServiceRack)
+                    .WithCollider(new Vector3(0.85f, 0.50f, 0.55f)),
+
+                new ObjectDefinition("obj_banker_lamp", "Emerald Banker's Desk Lamp", ObjectCategory.Valuable, ObjectRole.Decorative,
+                    null, "GreenFelt",
+                    "A heavy brass desk lamp with an oblong emerald-green glass shade.",
+                    "Classic banker's lamp casting a warm emerald hue over the blotter.", null)
+                    .WithRooms(RoomType.StaffOffice, RoomType.Reception, RoomType.Library, RoomType.PresidentialStudy, RoomType.GuestRoom101, RoomType.GuestRoom103, RoomType.GuestRoom105)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.30f, 0.38f, 0.25f)),
+
+                new ObjectDefinition("obj_physician_bag", "Black Leather Doctor's Valise", ObjectCategory.Container, ObjectRole.InvestigativeEvidence,
+                    null, "WoodWalnut",
+                    "A Gladstone physician's bag with brass latch and initials 'S.S.'.",
+                    "Doctor Sterling's medical satchel containing glass vials, morphine ampoules, and a nickel stethoscope.", "evidence_doctor_bag")
+                    .WithRooms(RoomType.GuestRoom103, RoomType.Reception, RoomType.StaffOffice)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Nightstand, AnchorCategory.Tabletop)
+                    .WithCollider(new Vector3(0.45f, 0.30f, 0.30f))
             };
 
             return _catalog;
@@ -266,8 +347,8 @@ namespace TomorrowsCrime.Procedural.Objects
                 {
                     if (anchor.IsOccupied) continue;
 
-                    // 40% chance of empty search for believable detective environment
-                    if (rng.NextFloat() < 0.40f) continue;
+                    // 15% chance of empty anchor so surfaces feel richly populated while retaining natural breathing room
+                    if (rng.NextFloat() < 0.15f) continue;
 
                     // Find matching candidate objects from catalog
                     var candidates = catalog.FindAll(o =>

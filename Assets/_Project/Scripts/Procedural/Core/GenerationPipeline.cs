@@ -96,7 +96,7 @@ namespace TomorrowsCrime.Procedural.Core
             if (parent != null) worldRoot.transform.SetParent(parent);
 
             // 1. Build Physical Hotel Architecture & Colliders
-            var hotelArch = HotelBuilder.BuildHotelEnvironment(worldRoot.transform, investigation.Rooms, mats);
+            var hotelArch = HotelBuilder.BuildHotelEnvironment(worldRoot.transform, investigation.Rooms, mats, investigation.Seed.LayoutStream);
 
             // 2. Populate Rooms with Objects & Scenario Evidence
             RoomObjectPlacer.PopulateRooms(worldRoot.transform, investigation.Rooms, investigation.Seed.ObjectStream,

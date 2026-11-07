@@ -205,6 +205,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(21f, 7.25f, 7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetBurgundy", "VelvetGold", "WoodMahogany", new Color(1.0f, 0.82f, 0.50f), 2.2f, 10f);
             room104.AddAnchor("anchor_room104_vanity", AnchorCategory.Desk, new Vector3(21f, 5f, 8f));
+            room104.AddAnchor("anchor_room104_nightstand", AnchorCategory.Nightstand, new Vector3(23.5f, 5f, 7f));
+            room104.AddAnchor("anchor_room104_luggage", AnchorCategory.FloorCorner, new Vector3(19f, 5f, 5.5f));
             rooms.Add(room104);
 
             // 18. Guest Room 103 (Dr. Sterling)
@@ -234,6 +236,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(21f, 7.25f, -7f), new Vector3(10f, 4.5f, 8f),
                 "WoodWalnut", "WallpaperNavy", "WoodMahogany", new Color(0.90f, 0.90f, 0.95f), 2.0f, 10f);
             room105.AddAnchor("anchor_room105_desk", AnchorCategory.Desk, new Vector3(21f, 5f, -7f));
+            room105.AddAnchor("anchor_room105_nightstand", AnchorCategory.Nightstand, new Vector3(23.5f, 5f, -7f));
+            room105.AddAnchor("anchor_room105_shelf", AnchorCategory.Shelf, new Vector3(19f, 5f, -9f));
             rooms.Add(room105);
 
             // ==========================================
@@ -288,6 +292,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(1f, 12.25f, 7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetBurgundy", "WallpaperEmerald", "WoodMahogany", new Color(1.0f, 0.82f, 0.60f), 2.2f, 12f);
             suite201.AddAnchor("anchor_suite201_bed", AnchorCategory.FloorCorner, new Vector3(1f, 10f, 9f));
+            suite201.AddAnchor("anchor_suite201_desk", AnchorCategory.Desk, new Vector3(3.5f, 10f, 9f));
+            suite201.AddAnchor("anchor_suite201_nightstand", AnchorCategory.Nightstand, new Vector3(1f, 10f, 7f));
             rooms.Add(suite201);
 
             // 26. Deluxe Suite 202 (Lady Vivienne)
@@ -296,6 +302,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(11f, 12.25f, 7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetSapphire", "VelvetGold", "WoodMahogany", new Color(1.0f, 0.85f, 0.65f), 2.4f, 12f);
             suite202.AddAnchor("anchor_suite202_desk", AnchorCategory.Desk, new Vector3(11f, 10f, 9f));
+            suite202.AddAnchor("anchor_suite202_nightstand", AnchorCategory.Nightstand, new Vector3(14f, 10f, 7f));
+            suite202.AddAnchor("anchor_suite202_vanity", AnchorCategory.Tabletop, new Vector3(8.5f, 10f, 9f));
             suite202.AddConnection(new DoorwayConnection("conn_suite202_suite204", "room_guest_202", "room_guest_204", new Vector3(16f, 10f, 7f), new Vector3(0f, 90f, 0f), true, "key_room_204", "Connecting Door to 204"));
             rooms.Add(suite202);
 
@@ -305,6 +313,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(21f, 12.25f, 7f), new Vector3(10f, 4.5f, 8f),
                 "WoodWalnut", "WallpaperNavy", "WoodMahogany", new Color(1.0f, 0.85f, 0.60f), 2.0f, 10f);
             suite204.AddAnchor("anchor_suite204_chart_table", AnchorCategory.Desk, new Vector3(21f, 10f, 8f));
+            suite204.AddAnchor("anchor_suite204_nightstand", AnchorCategory.Nightstand, new Vector3(23.5f, 10f, 7f));
+            suite204.AddAnchor("anchor_suite204_luggage", AnchorCategory.FloorCorner, new Vector3(19f, 10f, 5.5f));
             rooms.Add(suite204);
 
             // 28. Deluxe Suite 203 (Professor Aldous)
@@ -313,6 +323,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(1f, 12.25f, -7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetBurgundy", "AgedParchment", "WoodMahogany", new Color(0.95f, 0.88f, 0.70f), 2.0f, 12f);
             suite203.AddAnchor("anchor_suite203_cabinet", AnchorCategory.Shelf, new Vector3(1f, 10f, -9f));
+            suite203.AddAnchor("anchor_suite203_desk", AnchorCategory.Desk, new Vector3(3.5f, 10f, -9f));
+            suite203.AddAnchor("anchor_suite203_nightstand", AnchorCategory.Nightstand, new Vector3(1f, 10f, -7f));
             rooms.Add(suite203);
 
             // 29. Floor 2 Service Annex
@@ -330,6 +342,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(21f, 12.25f, -7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetSapphire", "WallpaperBordeaux", "WoodMahogany", new Color(1.0f, 0.75f, 0.55f), 2.2f, 10f);
             suite205.AddAnchor("anchor_suite205_wardrobe", AnchorCategory.Shelf, new Vector3(21f, 10f, -7f));
+            suite205.AddAnchor("anchor_suite205_desk", AnchorCategory.Desk, new Vector3(23.5f, 10f, -7f));
+            suite205.AddAnchor("anchor_suite205_nightstand", AnchorCategory.Nightstand, new Vector3(19f, 10f, -9f));
             rooms.Add(suite205);
 
             // ==========================================
@@ -366,6 +380,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(-11f, 17.25f, 10.5f), new Vector3(14f, 4.5f, 7f),
                 "CarpetSapphire", "WallpaperEmerald", "WoodMahogany", new Color(1.0f, 0.82f, 0.60f), 2.2f, 12f);
             presBed.AddAnchor("anchor_presbed_wardrobe", AnchorCategory.Shelf, new Vector3(-14f, 15f, 11f));
+            presBed.AddAnchor("anchor_presbed_nightstand", AnchorCategory.Nightstand, new Vector3(-8.5f, 15f, 10.5f));
+            presBed.AddAnchor("anchor_presbed_vanity", AnchorCategory.Tabletop, new Vector3(-5.5f, 15f, 12f));
             rooms.Add(presBed);
 
             // 34. Presidential Private Study
@@ -390,6 +406,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(11f, 17.25f, 7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetBurgundy", "VelvetGold", "WoodMahogany", new Color(1.0f, 0.85f, 0.55f), 2.4f, 12f);
             vip301.AddAnchor("anchor_vip301_bed", AnchorCategory.FloorCorner, new Vector3(11f, 15f, 9f));
+            vip301.AddAnchor("anchor_vip301_desk", AnchorCategory.Desk, new Vector3(13.5f, 15f, 9f));
+            vip301.AddAnchor("anchor_vip301_nightstand", AnchorCategory.Nightstand, new Vector3(11f, 15f, 7f));
             vip301.AddConnection(new DoorwayConnection("conn_vip301_motor", "room_vip_301", "room_motor_room", new Vector3(16f, 15f, 7f), new Vector3(0f, 90f, 0f), true, "key_motor_room", "Access Door to Motor Room"));
             rooms.Add(vip301);
 
@@ -415,6 +433,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 new Vector3(11f, 17.25f, -7f), new Vector3(10f, 4.5f, 8f),
                 "CarpetSapphire", "WallpaperArtDecoDamask", "WoodWalnut", new Color(1.0f, 0.88f, 0.65f), 2.4f, 12f);
             vip302.AddAnchor("anchor_vip302_bed", AnchorCategory.FloorCorner, new Vector3(11f, 15f, -9f));
+            vip302.AddAnchor("anchor_vip302_desk", AnchorCategory.Desk, new Vector3(13.5f, 15f, -9f));
+            vip302.AddAnchor("anchor_vip302_nightstand", AnchorCategory.Nightstand, new Vector3(11f, 15f, -7f));
             vip302.AddConnection(new DoorwayConnection("conn_vip302_roof", "room_vip_302", "room_roof_garden", new Vector3(16f, 15f, -7f), new Vector3(0f, 90f, 0f), false, null, "Roof Garden Lookout Door"));
             rooms.Add(vip302);
 
