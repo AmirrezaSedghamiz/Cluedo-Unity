@@ -651,35 +651,154 @@ namespace TomorrowsCrime.EditorTools
             CreateArchitecturalWall("Wall_Room102_West", suiteRoot.transform, new Vector3(-5f, 0f, 16.5f), new Vector3(0.6f, 4.5f, 9f), woodMat, wallUpperMat, brassMat, false);
             CreateArchitecturalWall("Wall_Room102_East", suiteRoot.transform, new Vector3(5f, 0f, 16.5f), new Vector3(0.6f, 4.5f, 9f), woodMat, wallUpperMat, brassMat, false);
 
-            // 4. Four-Poster Bed with Luxury Velvet Duvet
+            // 4. Bespoke Four-Poster Luxury Bed with Pillows, Velvet Duvet, Posts & Nightstands
             var bedRoot = new GameObject("Prop_Room102_KingBed");
             bedRoot.transform.SetParent(suiteRoot.transform);
             bedRoot.transform.position = new Vector3(0f, 0f, 19.2f);
 
-            var bedBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            bedBase.name = "Bed_Mattress_Duvet";
-            bedBase.transform.SetParent(bedRoot.transform);
-            bedBase.transform.localPosition = new Vector3(0f, 0.5f, 0f);
-            bedBase.transform.localScale = new Vector3(2.6f, 0.9f, 2.8f);
-            var bedRend = bedBase.GetComponent<Renderer>();
-            if (bedRend != null && carpetMat != null) bedRend.sharedMaterial = carpetMat;
+            var bedCol = bedRoot.AddComponent<BoxCollider>();
+            bedCol.center = new Vector3(0f, 0.70f, 0f);
+            bedCol.size = new Vector3(2.4f, 1.4f, 2.6f);
 
+            // Wooden Bed Base Frame
+            var bedFrame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bedFrame.name = "Bed_Frame";
+            bedFrame.transform.SetParent(bedRoot.transform);
+            bedFrame.transform.localPosition = new Vector3(0f, 0.25f, 0f);
+            bedFrame.transform.localScale = new Vector3(2.35f, 0.25f, 2.55f);
+            if (bedFrame.GetComponent<Renderer>() != null && woodMat != null) bedFrame.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            // Mattress with White Linen Sheets
+            var mattress = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mattress.name = "Bed_Mattress";
+            mattress.transform.SetParent(bedRoot.transform);
+            mattress.transform.localPosition = new Vector3(0f, 0.50f, 0f);
+            mattress.transform.localScale = new Vector3(2.20f, 0.35f, 2.40f);
+            if (mattress.GetComponent<Renderer>() != null && paperMat != null) mattress.GetComponent<Renderer>().sharedMaterial = paperMat;
+
+            // Quilted Burgundy Velvet Duvet Runner
+            var duvet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            duvet.name = "Bed_Duvet_Runner";
+            duvet.transform.SetParent(bedRoot.transform);
+            duvet.transform.localPosition = new Vector3(0f, 0.54f, -0.45f);
+            duvet.transform.localScale = new Vector3(2.25f, 0.32f, 1.35f);
+            if (duvet.GetComponent<Renderer>() != null && carpetMat != null) duvet.GetComponent<Renderer>().sharedMaterial = carpetMat;
+
+            // Two Fluffy Bed Pillows at Headboard
+            for (int i = 0; i < 2; i++)
+            {
+                var pillow = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pillow.name = $"Bed_Pillow_{i}";
+                pillow.transform.SetParent(bedRoot.transform);
+                pillow.transform.localPosition = new Vector3(i == 0 ? -0.55f : 0.55f, 0.74f, 0.85f);
+                pillow.transform.localRotation = Quaternion.Euler(22f, 0f, 0f);
+                pillow.transform.localScale = new Vector3(0.70f, 0.16f, 0.45f);
+                if (pillow.GetComponent<Renderer>() != null && paperMat != null) pillow.GetComponent<Renderer>().sharedMaterial = paperMat;
+            }
+
+            // Carved Mahogany Headboard
             var headboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
             headboard.name = "Bed_Headboard";
             headboard.transform.SetParent(bedRoot.transform);
-            headboard.transform.localPosition = new Vector3(0f, 1.3f, 1.35f);
-            headboard.transform.localScale = new Vector3(2.8f, 1.8f, 0.25f);
-            var hRend = headboard.GetComponent<Renderer>();
-            if (hRend != null && woodMat != null) hRend.sharedMaterial = woodMat;
+            headboard.transform.localPosition = new Vector3(0f, 1.05f, 1.25f);
+            headboard.transform.localScale = new Vector3(2.45f, 1.35f, 0.15f);
+            if (headboard.GetComponent<Renderer>() != null && woodMat != null) headboard.GetComponent<Renderer>().sharedMaterial = woodMat;
 
-            // 5. Solid Mahogany Wardrobe
+            // Footboard at foot of the bed
+            var footboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            footboard.name = "Bed_Footboard";
+            footboard.transform.SetParent(bedRoot.transform);
+            footboard.transform.localPosition = new Vector3(0f, 0.55f, -1.25f);
+            footboard.transform.localScale = new Vector3(2.45f, 0.65f, 0.15f);
+            if (footboard.GetComponent<Renderer>() != null && woodMat != null) footboard.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            // 4 Turned Corner Bedposts with Brass Finials
+            Vector3[] postCoords = {
+                new Vector3(-1.18f, 0f, 1.25f),
+                new Vector3(1.18f, 0f, 1.25f),
+                new Vector3(-1.18f, 0f, -1.25f),
+                new Vector3(1.18f, 0f, -1.25f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var post = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                post.name = $"Bedpost_{i}";
+                post.transform.SetParent(bedRoot.transform);
+                post.transform.localPosition = postCoords[i] + new Vector3(0f, 1.05f, 0f);
+                post.transform.localScale = new Vector3(0.09f, 1.05f, 0.09f);
+                if (post.GetComponent<Renderer>() != null && woodMat != null) post.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+                var finial = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                finial.name = $"Finial_{i}";
+                finial.transform.SetParent(post.transform);
+                finial.transform.localPosition = new Vector3(0f, 1.02f, 0f);
+                finial.transform.localScale = new Vector3(1.6f, 0.15f, 1.6f);
+                if (finial.GetComponent<Renderer>() != null && brassMat != null) finial.GetComponent<Renderer>().sharedMaterial = brassMat;
+            }
+
+            // Bedside Nightstand & Lamp
+            var standGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            standGo.name = "Prop_BedsideNightstand";
+            standGo.transform.SetParent(suiteRoot.transform);
+            standGo.transform.position = new Vector3(1.85f, 0.35f, 20.0f);
+            standGo.transform.localScale = new Vector3(0.65f, 0.70f, 0.55f);
+            if (standGo.GetComponent<Renderer>() != null && woodMat != null) standGo.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            // Bedside Lamp
+            var lampGo = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            lampGo.name = "Lamp_Base";
+            lampGo.transform.SetParent(standGo.transform);
+            lampGo.transform.localPosition = new Vector3(0f, 0.72f, 0f);
+            lampGo.transform.localScale = new Vector3(0.35f, 0.40f, 0.35f);
+            if (lampGo.GetComponent<Renderer>() != null && brassMat != null) lampGo.GetComponent<Renderer>().sharedMaterial = brassMat;
+
+            var lampLightGo = new GameObject("Lamp_Light");
+            lampLightGo.transform.SetParent(lampGo.transform);
+            lampLightGo.transform.localPosition = new Vector3(0f, 0.6f, 0f);
+            var lampLight = lampLightGo.AddComponent<Light>();
+            lampLight.type = LightType.Point;
+            lampLight.color = new Color(1.0f, 0.90f, 0.70f);
+            lampLight.intensity = 1.6f;
+            lampLight.range = 5f;
+
+            // Luxury Velvet Armchair in Suite
+            var suiteChairPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Armchair.obj");
+            if (suiteChairPrefab != null)
+            {
+                var chair = SpawnProp(suiteChairPrefab, "Armchair_Suite102", suiteRoot.transform,
+                    new Vector3(-3.2f, 0f, 14.5f), new Vector3(0f, 40f, 0f), Vector3.one, mats);
+                var chairCol = chair.AddComponent<BoxCollider>();
+                chairCol.center = new Vector3(0f, 0.5f, 0f);
+                chairCol.size = new Vector3(0.9f, 1.0f, 0.9f);
+            }
+
+            // 5. Solid Carved Mahogany Armoire Wardrobe
             var wardrobe = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wardrobe.name = "Prop_Room102_Wardrobe";
             wardrobe.transform.SetParent(suiteRoot.transform);
-            wardrobe.transform.position = new Vector3(3.8f, 1.25f, 14.5f);
-            wardrobe.transform.localScale = new Vector3(1.6f, 2.5f, 0.7f);
+            wardrobe.transform.position = new Vector3(3.8f, 1.35f, 14.5f);
+            wardrobe.transform.localScale = new Vector3(1.6f, 2.7f, 0.75f);
             var wRend = wardrobe.GetComponent<Renderer>();
             if (wRend != null && woodMat != null) wRend.sharedMaterial = woodMat;
+
+            // Cornice top on wardrobe
+            var cornice = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cornice.name = "Wardrobe_Cornice";
+            cornice.transform.SetParent(wardrobe.transform);
+            cornice.transform.localPosition = new Vector3(0f, 0.52f, 0f);
+            cornice.transform.localScale = new Vector3(1.10f, 0.08f, 1.15f);
+            if (cornice.GetComponent<Renderer>() != null && woodMat != null) cornice.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            // Brass handles on wardrobe
+            for (int i = 0; i < 2; i++)
+            {
+                var handle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                handle.name = $"Handle_{i}";
+                handle.transform.SetParent(wardrobe.transform);
+                handle.transform.localPosition = new Vector3(i == 0 ? -0.15f : 0.15f, 0f, -0.54f);
+                handle.transform.localScale = new Vector3(0.04f, 0.12f, 0.05f);
+                if (handle.GetComponent<Renderer>() != null && brassMat != null) handle.GetComponent<Renderer>().sharedMaterial = brassMat;
+            }
 
             var wardrobeEvidence = GetOrCreateEvidenceAsset(
                 "evidence_room102_wardrobe",

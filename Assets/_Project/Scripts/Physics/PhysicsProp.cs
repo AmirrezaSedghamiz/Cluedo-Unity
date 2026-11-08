@@ -33,6 +33,16 @@ namespace TomorrowsCrime.PhysicsEngine
 
         public Rigidbody Rigidbody => _rigidbody;
         public string DisplayName => propDisplayName;
+        public string PropDisplayName
+        {
+            get => propDisplayName;
+            set => propDisplayName = value;
+        }
+        public PhysicsMaterialType MaterialType
+        {
+            get => materialType;
+            set => materialType = value;
+        }
         public bool IsHeld => _isHeld;
         public float ThrowForceMultiplier => throwForceMultiplier;
 

@@ -179,12 +179,12 @@ namespace TomorrowsCrime.Procedural.Hotel
                 var fRendW = floorWest.GetComponent<Renderer>();
                 if (fRendW != null && floorMat != null) fRendW.sharedMaterial = floorMat;
 
-                // 1C. East elevator landing floor slab (X in [12.5, 16.0], Z in [-3.0, 0.2])
+                // 1C. East landing floor slab south of elevator shaft (X in [12.5, 16.0], Z in [-3.0, -1.55])
                 var floorEast = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 floorEast.name = "Floor_Slab_EastLanding";
                 floorEast.transform.SetParent(roomGo.transform);
-                floorEast.transform.position = new Vector3(14.25f, yFloor - 0.10f, -1.4f);
-                floorEast.transform.localScale = new Vector3(3.5f, 0.2f, 3.2f);
+                floorEast.transform.position = new Vector3(14.25f, yFloor - 0.10f, -2.25f);
+                floorEast.transform.localScale = new Vector3(3.5f, 0.2f, 1.5f);
                 var fRendE = floorEast.GetComponent<Renderer>();
                 if (fRendE != null && floorMat != null) fRendE.sharedMaterial = floorMat;
 
@@ -202,14 +202,61 @@ namespace TomorrowsCrime.Procedural.Hotel
                 if (floorRend != null && floorMat != null) floorRend.sharedMaterial = floorMat;
             }
 
-            // 2. Room Ceiling Slab
-            var ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ceiling.name = "Ceiling_Slab";
-            ceiling.transform.SetParent(roomGo.transform);
-            ceiling.transform.position = new Vector3(center.x, yFloor + height + 0.25f, center.z);
-            ceiling.transform.localScale = new Vector3(size.x, 0.5f, size.z);
-            var ceilRend = ceiling.GetComponent<Renderer>();
-            if (ceilRend != null && ceilingMat != null) ceilRend.sharedMaterial = ceilingMat;
+            // 2. Room Ceiling Slab (With precise open shafts for Elevator and Central Staircase)
+            if (room.Type == RoomType.GroundCorridor)
+            {
+                // Floor 0: Leave vertical transport shafts completely unobstructed!
+                // North gallery ceiling (Z in [1.6, 6.0])
+                var ceilN = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilN.name = "Ceiling_Slab_North";
+                ceilN.transform.SetParent(roomGo.transform);
+                ceilN.transform.position = new Vector3(center.x, yFloor + height + 0.25f, 3.8f);
+                ceilN.transform.localScale = new Vector3(size.x, 0.5f, 4.4f);
+                if (ceilN.GetComponent<Renderer>() != null && ceilingMat != null) ceilN.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                // South gallery ceiling (Z in [-6.0, -3.0])
+                var ceilS = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilS.name = "Ceiling_Slab_South";
+                ceilS.transform.SetParent(roomGo.transform);
+                ceilS.transform.position = new Vector3(center.x, yFloor + height + 0.25f, -4.5f);
+                ceilS.transform.localScale = new Vector3(size.x, 0.5f, 3.0f);
+                if (ceilS.GetComponent<Renderer>() != null && ceilingMat != null) ceilS.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                // West corridor transition ceiling between reception archway and stairs (X in [8.0, 11.5], Z in [-1.6, 1.6])
+                var ceilW = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilW.name = "Ceiling_Slab_West";
+                ceilW.transform.SetParent(roomGo.transform);
+                ceilW.transform.position = new Vector3(9.75f, yFloor + height + 0.25f, 0f);
+                ceilW.transform.localScale = new Vector3(3.5f, 0.5f, 3.2f);
+                if (ceilW.GetComponent<Renderer>() != null && ceilingMat != null) ceilW.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+            }
+            else if (isUpperCorridor && room.FloorIndex < 3)
+            {
+                // Floor 1 & 2: Keep central stairwell and elevator shaft unobstructed
+                var ceilWalkway = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilWalkway.name = "Ceiling_Slab_Walkway";
+                ceilWalkway.transform.SetParent(roomGo.transform);
+                ceilWalkway.transform.position = new Vector3(center.x, yFloor + height + 0.25f, 1.6f);
+                ceilWalkway.transform.localScale = new Vector3(size.x, 0.5f, 2.8f);
+                if (ceilWalkway.GetComponent<Renderer>() != null && ceilingMat != null) ceilWalkway.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilWest = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilWest.name = "Ceiling_Slab_WestLanding";
+                ceilWest.transform.SetParent(roomGo.transform);
+                ceilWest.transform.position = new Vector3(0.25f, yFloor + height + 0.25f, -1.4f);
+                ceilWest.transform.localScale = new Vector3(8.5f, 0.5f, 3.2f);
+                if (ceilWest.GetComponent<Renderer>() != null && ceilingMat != null) ceilWest.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+            }
+            else
+            {
+                var ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceiling.name = "Ceiling_Slab";
+                ceiling.transform.SetParent(roomGo.transform);
+                ceiling.transform.position = new Vector3(center.x, yFloor + height + 0.25f, center.z);
+                ceiling.transform.localScale = new Vector3(size.x, 0.5f, size.z);
+                var ceilRend = ceiling.GetComponent<Renderer>();
+                if (ceilRend != null && ceilingMat != null) ceilRend.sharedMaterial = ceilingMat;
+            }
 
             // 3. Atmospheric Room Point Light
             var lightGo = new GameObject($"{room.RoomId}_PointLight");
@@ -1334,7 +1381,7 @@ namespace TomorrowsCrime.Procedural.Hotel
 
         /// <summary>
         /// Builds a majestic 4-poster mahogany luxury bed with plush mattress, quilted velvet duvet,
-        /// twin bedside nightstands, and warm glowing Art Deco bedside lamps.
+        /// fluffy pillows, carved footboard, bedposts with brass finials, twin bedside nightstands, and warm bedside lamps.
         /// </summary>
         private static void BuildLuxuryFourPosterBed(Transform parent, Vector3 bedCenter, float yFloor,
             Material frameMat, Material duvetMat, Material sheetMat, Material brassMat, string name)
@@ -1349,6 +1396,14 @@ namespace TomorrowsCrime.Procedural.Hotel
             col.size = new Vector3(2.2f, 1.4f, 2.4f);
             col.isTrigger = false;
 
+            // Wooden Bed Base Frame
+            var bedFrame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bedFrame.name = "Bed_Base_Frame";
+            bedFrame.transform.SetParent(bedRoot.transform);
+            bedFrame.transform.localPosition = new Vector3(0f, 0.20f, 0f);
+            bedFrame.transform.localScale = new Vector3(2.05f, 0.20f, 2.25f);
+            if (bedFrame.GetComponent<Renderer>() != null && frameMat != null) bedFrame.GetComponent<Renderer>().sharedMaterial = frameMat;
+
             // Mattress
             var mattress = GameObject.CreatePrimitive(PrimitiveType.Cube);
             mattress.name = "Mattress";
@@ -1356,7 +1411,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             mattress.transform.localPosition = new Vector3(0f, 0.45f, 0f);
             mattress.transform.localScale = new Vector3(1.95f, 0.40f, 2.15f);
             var mRend = mattress.GetComponent<Renderer>();
-            if (mRend != null) mRend.sharedMaterial = sheetMat;
+            if (mRend != null && sheetMat != null) mRend.sharedMaterial = sheetMat;
 
             // Quilted Duvet Runner
             var duvet = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1365,7 +1420,19 @@ namespace TomorrowsCrime.Procedural.Hotel
             duvet.transform.localPosition = new Vector3(0f, 0.50f, -0.45f);
             duvet.transform.localScale = new Vector3(1.98f, 0.35f, 1.10f);
             var dRend = duvet.GetComponent<Renderer>();
-            if (dRend != null) dRend.sharedMaterial = duvetMat;
+            if (dRend != null && duvetMat != null) dRend.sharedMaterial = duvetMat;
+
+            // Two White Linen Pillows propped against Headboard
+            for (int i = 0; i < 2; i++)
+            {
+                var pillow = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pillow.name = $"Pillow_{i}";
+                pillow.transform.SetParent(bedRoot.transform);
+                pillow.transform.localPosition = new Vector3(i == 0 ? -0.52f : 0.52f, 0.68f, 0.75f);
+                pillow.transform.localRotation = Quaternion.Euler(20f, 0f, 0f);
+                pillow.transform.localScale = new Vector3(0.65f, 0.15f, 0.40f);
+                if (pillow.GetComponent<Renderer>() != null && sheetMat != null) pillow.GetComponent<Renderer>().sharedMaterial = sheetMat;
+            }
 
             // Carved Mahogany Headboard
             var headboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1374,9 +1441,17 @@ namespace TomorrowsCrime.Procedural.Hotel
             headboard.transform.localPosition = new Vector3(0f, 0.85f, 1.05f);
             headboard.transform.localScale = new Vector3(2.15f, 1.10f, 0.14f);
             var hRend = headboard.GetComponent<Renderer>();
-            if (hRend != null) hRend.sharedMaterial = frameMat;
+            if (hRend != null && frameMat != null) hRend.sharedMaterial = frameMat;
 
-            // 4 Turned Corner Bedposts
+            // Carved Mahogany Footboard
+            var footboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            footboard.name = "Footboard";
+            footboard.transform.SetParent(bedRoot.transform);
+            footboard.transform.localPosition = new Vector3(0f, 0.45f, -1.05f);
+            footboard.transform.localScale = new Vector3(2.15f, 0.50f, 0.14f);
+            if (footboard.GetComponent<Renderer>() != null && frameMat != null) footboard.GetComponent<Renderer>().sharedMaterial = frameMat;
+
+            // 4 Turned Corner Bedposts with Brass Finials
             Vector3[] postPositions = {
                 new Vector3(-1.05f, 0.95f, 1.10f),
                 new Vector3(1.05f, 0.95f, 1.10f),
@@ -1391,12 +1466,94 @@ namespace TomorrowsCrime.Procedural.Hotel
                 post.transform.localPosition = postPositions[i];
                 post.transform.localScale = new Vector3(0.08f, 0.95f, 0.08f);
                 var pRend = post.GetComponent<Renderer>();
-                if (pRend != null) pRend.sharedMaterial = frameMat;
+                if (pRend != null && frameMat != null) pRend.sharedMaterial = frameMat;
+
+                var finial = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                finial.name = $"Finial_{i}";
+                finial.transform.SetParent(post.transform);
+                finial.transform.localPosition = new Vector3(0f, 1.02f, 0f);
+                finial.transform.localScale = new Vector3(1.5f, 0.14f, 1.5f);
+                if (finial.GetComponent<Renderer>() != null && brassMat != null) finial.GetComponent<Renderer>().sharedMaterial = brassMat;
             }
 
             // Twin Bedside Nightstands with Glowing Lamps
             BuildNightstandWithLamp(bedRoot.transform, new Vector3(-1.55f, 0f, 0.70f), frameMat, brassMat, sheetMat, "Nightstand_L");
             BuildNightstandWithLamp(bedRoot.transform, new Vector3(1.55f, 0f, 0.70f), frameMat, brassMat, sheetMat, "Nightstand_R");
+        }
+
+        private static GameObject BuildDetailedChair(Transform parent, Vector3 localPos, Quaternion localRot, Material woodMat, Material fabricMat, string name)
+        {
+#if UNITY_EDITOR
+            var armchairPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Armchair.obj");
+            if (armchairPrefab != null)
+            {
+                var chairInst = Object.Instantiate(armchairPrefab, parent);
+                chairInst.name = name;
+                chairInst.transform.localPosition = localPos;
+                chairInst.transform.localRotation = localRot;
+                chairInst.transform.localScale = Vector3.one;
+                var r = chairInst.GetComponentInChildren<Renderer>();
+                if (r != null && fabricMat != null) r.sharedMaterial = fabricMat;
+                var col = chairInst.GetComponent<BoxCollider>();
+                if (col == null) col = chairInst.AddComponent<BoxCollider>();
+                col.center = new Vector3(0f, 0.5f, 0f);
+                col.size = new Vector3(0.9f, 1.0f, 0.9f);
+                return chairInst;
+            }
+#endif
+            var chairGo = new GameObject(name);
+            chairGo.transform.SetParent(parent, false);
+            chairGo.transform.localPosition = localPos;
+            chairGo.transform.localRotation = localRot;
+
+            Vector3[] legOffsets = {
+                new Vector3(-0.30f, 0.20f, -0.28f),
+                new Vector3(0.30f, 0.20f, -0.28f),
+                new Vector3(-0.30f, 0.20f, 0.28f),
+                new Vector3(0.30f, 0.20f, 0.28f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                leg.name = $"Leg_{i}";
+                leg.transform.SetParent(chairGo.transform, false);
+                leg.transform.localPosition = legOffsets[i];
+                leg.transform.localScale = new Vector3(0.06f, 0.20f, 0.06f);
+                if (woodMat != null) leg.GetComponent<Renderer>().sharedMaterial = woodMat;
+            }
+
+            var seat = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            seat.name = "Seat_Cushion";
+            seat.transform.SetParent(chairGo.transform, false);
+            seat.transform.localPosition = new Vector3(0f, 0.44f, 0f);
+            seat.transform.localScale = new Vector3(0.74f, 0.16f, 0.70f);
+            if (fabricMat != null) seat.GetComponent<Renderer>().sharedMaterial = fabricMat;
+
+            var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            back.name = "Backrest";
+            back.transform.SetParent(chairGo.transform, false);
+            back.transform.localPosition = new Vector3(0f, 0.82f, 0.30f);
+            back.transform.localScale = new Vector3(0.74f, 0.65f, 0.14f);
+            if (fabricMat != null) back.GetComponent<Renderer>().sharedMaterial = fabricMat;
+
+            var armL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            armL.name = "Armrest_L";
+            armL.transform.SetParent(chairGo.transform, false);
+            armL.transform.localPosition = new Vector3(-0.36f, 0.62f, 0.02f);
+            armL.transform.localScale = new Vector3(0.12f, 0.26f, 0.62f);
+            if (fabricMat != null) armL.GetComponent<Renderer>().sharedMaterial = fabricMat;
+
+            var armR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            armR.name = "Armrest_R";
+            armR.transform.SetParent(chairGo.transform, false);
+            armR.transform.localPosition = new Vector3(0.36f, 0.62f, 0.02f);
+            armR.transform.localScale = new Vector3(0.12f, 0.26f, 0.62f);
+            if (fabricMat != null) armR.GetComponent<Renderer>().sharedMaterial = fabricMat;
+
+            var colBox = chairGo.AddComponent<BoxCollider>();
+            colBox.center = new Vector3(0f, 0.52f, 0f);
+            colBox.size = new Vector3(0.85f, 1.05f, 0.80f);
+            return chairGo;
         }
 
         private static void BuildNightstandWithLamp(Transform parent, Vector3 localPos, Material woodMat, Material brassMat, Material shadeMat, string name)
@@ -1679,13 +1836,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             l.range = 2.5f;
 
             // Executive Chair behind desk
-            var chair = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            chair.name = "Executive_Chair";
-            chair.transform.SetParent(deskRoot.transform);
-            chair.transform.localPosition = new Vector3(0f, 0.48f, 0.65f);
-            chair.transform.localScale = new Vector3(0.65f, 0.95f, 0.60f);
-            var cRend = chair.GetComponent<Renderer>();
-            if (cRend != null) cRend.sharedMaterial = woodMat;
+            BuildDetailedChair(deskRoot.transform, new Vector3(0f, 0f, 0.65f), Quaternion.identity, woodMat, blotterMat, "Executive_Chair");
         }
 
         private static void BuildFloorGlobe(Transform parent, Vector3 position, Material brassMat, string name)
@@ -2021,13 +2172,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             if (blRend != null) blRend.sharedMaterial = greenFeltMat;
 
             // Manager's Chair (Behind Desk at Z = 2.5m -> World Z = 6.5m)
-            var chair = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            chair.name = "Manager_ExecutiveChair";
-            chair.transform.SetParent(officeRoot.transform);
-            chair.transform.localPosition = new Vector3(0.5f, 0.55f, 2.5f);
-            chair.transform.localScale = new Vector3(0.70f, 1.10f, 0.65f);
-            var cRend = chair.GetComponent<Renderer>();
-            if (cRend != null) cRend.sharedMaterial = walnutMat;
+            BuildDetailedChair(officeRoot.transform, new Vector3(0.5f, 0f, 2.5f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Manager_ExecutiveChair");
 
             // Solid Desk Collider
             var dCol = desk.GetComponent<BoxCollider>();
@@ -2115,12 +2260,12 @@ namespace TomorrowsCrime.Procedural.Hotel
             BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(-4.8f, 0f, -1.2f),
                 new Vector3(2.4f, 0.85f, 0.85f), velvetEmerald, "Lobby_WestLounge_SofaNorth");
 
-            // East Lounge: Fireplace & Wingback Chairs at World (4.8m, 0m, -2.5m)
+            // East Lounge: Fireplace & Wingback Armchairs at World (4.8m, 0m, -2.5m)
             BuildSolidFireplace(lobbyRoot.transform, center + new Vector3(6.5f, 0f, -2.5f), mats, "Lobby_GrandFireplace");
-            BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -3.4f),
-                new Vector3(1.0f, 1.10f, 0.9f), carpetBurgundy, "Lobby_WingbackChair_South");
-            BuildSolidStorageUnit(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -1.6f),
-                new Vector3(1.0f, 1.10f, 0.9f), carpetBurgundy, "Lobby_WingbackChair_North");
+            BuildDetailedChair(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -3.4f),
+                Quaternion.Euler(0f, -55f, 0f), walnutMat, carpetBurgundy, "Lobby_WingbackChair_South");
+            BuildDetailedChair(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -1.6f),
+                Quaternion.Euler(0f, 55f, 0f), walnutMat, carpetBurgundy, "Lobby_WingbackChair_North");
 
             // Grandfather Clock in Lobby Corner
             BuildGrandfatherClock(lobbyRoot.transform, center + new Vector3(-6.5f, 0f, 12.5f), walnutMat, brassMat, whiteMat, "Lobby_GrandfatherClock");
@@ -2136,9 +2281,13 @@ namespace TomorrowsCrime.Procedural.Hotel
 
             // North Banquet Table (-16m, y, 3m)
             BuildSolidTable(parent, center + new Vector3(-1.0f, 0f, 3.0f), new Vector3(2.2f, 0.85f, 5.8f), mahoganyMat, "Dining_BanquetTable_North");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, 3.0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_W");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, 3.0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_E");
 
             // South Banquet Table (-16m, y, -3m)
             BuildSolidTable(parent, center + new Vector3(-1.0f, 0f, -3.0f), new Vector3(2.2f, 0.85f, 5.8f), mahoganyMat, "Dining_BanquetTable_South");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, -3.0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_W");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, -3.0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_E");
 
             // Sideboard Cabinet against West Wall
             BuildSolidStorageUnit(parent, center + new Vector3(-6.0f, 0f, 0f), new Vector3(1.2f, 1.6f, 3.5f), walnutMat, "Dining_SideboardCabinet");

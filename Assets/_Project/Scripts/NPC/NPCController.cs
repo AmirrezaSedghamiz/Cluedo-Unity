@@ -331,7 +331,19 @@ namespace TomorrowsCrime.NPC
                 }
                 else
                 {
-                    // 2. Smooth direct locomotion fallback when off-mesh
+                    // 2. Try to reconnect agent to NavMesh if nearby
+                    if (_agent != null && NavMesh.SamplePosition(transform.position, out var navHit, 3.0f, NavMesh.AllAreas))
+                    {
+                        _agent.Warp(navHit.position);
+                        _agent.enabled = true;
+                        if (!string.IsNullOrEmpty(activity.DestinationKey) && _waypoints.TryGetValue(activity.DestinationKey, out var destT))
+                        {
+                            RequestNavigation(destT.position, activity.DestinationKey, simTime);
+                        }
+                        return;
+                    }
+
+                    // 3. Collision-Checked fallback locomotion when off-mesh
                     Transform destTrans = null;
                     if (!string.IsNullOrEmpty(activity.DestinationKey))
                     {
@@ -352,9 +364,6 @@ namespace TomorrowsCrime.NPC
                         }
                         else
                         {
-                            float speed = definition != null ? definition.MovementSpeed : 3.0f;
-                            transform.position = Vector3.MoveTowards(transform.position, destPos, speed * Time.deltaTime);
-
                             Vector3 flatDir = toDest;
                             flatDir.y = 0f;
                             if (flatDir.sqrMagnitude > 0.001f)
@@ -362,7 +371,26 @@ namespace TomorrowsCrime.NPC
                                 Quaternion targetRot = Quaternion.LookRotation(flatDir);
                                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, 360f * Time.deltaTime);
                             }
-                            _runtimeState.SetNavigationStatus(NPCNavigationStatus.Traversing);
+
+                            // Obstacle collision prevention: Never walk through solid walls, closed doors, or furniture!
+                            float speed = definition != null ? definition.MovementSpeed : 3.0f;
+                            float stepDist = speed * Time.deltaTime;
+                            Vector3 moveDir = flatDir.normalized;
+
+                            // Cast forward at chest height and knee height
+                            bool isBlocked = Physics.SphereCast(transform.position + Vector3.up * 0.9f, 0.35f, moveDir, out var chestHit, stepDist + 0.35f) ||
+                                             Physics.Raycast(transform.position + Vector3.up * 0.3f, moveDir, out var kneeHit, stepDist + 0.35f);
+
+                            if (!isBlocked)
+                            {
+                                transform.position = Vector3.MoveTowards(transform.position, destPos, stepDist);
+                                _runtimeState.SetNavigationStatus(NPCNavigationStatus.Traversing);
+                            }
+                            else
+                            {
+                                // Route is blocked by solid architecture or closed door
+                                HandleBlockedRoute(activity.DestinationKey);
+                            }
                         }
                     }
                     else

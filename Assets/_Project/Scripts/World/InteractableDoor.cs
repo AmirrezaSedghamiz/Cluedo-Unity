@@ -9,6 +9,7 @@ namespace TomorrowsCrime.World
     /// Can be opened/closed when unlocked, or unlocked via scenario events.
     /// Resets deterministically to locked and closed on loop turnover.
     /// </summary>
+    [ExecuteAlways]
     public class InteractableDoor : MonoBehaviour, IInteractable, ILoopResetReceiver
     {
         [Header("Configuration")]
@@ -24,8 +25,10 @@ namespace TomorrowsCrime.World
 
         private Quaternion _closedRotation;
         private Quaternion _openRotation;
+        private UnityEngine.AI.NavMeshObstacle _navObstacle;
 
         public string DoorId => doorId;
+        public UnityEngine.AI.NavMeshObstacle NavObstacle => _navObstacle;
         public string RequiredKeyId
         {
             get => requiredKeyId;
@@ -70,6 +73,16 @@ namespace TomorrowsCrime.World
             return false;
         }
 
+        public void EnsureNavObstacle()
+        {
+            if (_navObstacle == null) _navObstacle = GetComponent<UnityEngine.AI.NavMeshObstacle>();
+            if (_navObstacle == null) _navObstacle = gameObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            _navObstacle.carving = true;
+            _navObstacle.size = new Vector3(2.2f, 2.8f, 0.4f);
+            _navObstacle.center = new Vector3(0f, 1.4f, 0f);
+            _navObstacle.enabled = (openState == DoorOpenState.Closed);
+        }
+
         private void Awake()
         {
             if (doorHingeTransform == null)
@@ -80,6 +93,8 @@ namespace TomorrowsCrime.World
             _openRotation = Quaternion.Euler(0f, openAngle, 0f);
 
             doorHingeTransform.localRotation = (openState == DoorOpenState.Open) ? _openRotation : _closedRotation;
+
+            EnsureNavObstacle();
         }
 
         private void Start()
@@ -134,6 +149,11 @@ namespace TomorrowsCrime.World
                 doorHingeTransform.localRotation = _openRotation;
             }
 
+            if (_navObstacle != null)
+            {
+                _navObstacle.enabled = false;
+            }
+
             if (WorldStateManager.Instance != null)
             {
                 WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Unlocked);
@@ -151,6 +171,10 @@ namespace TomorrowsCrime.World
             {
                 doorHingeTransform.localRotation = openState == DoorOpenState.Open ? _openRotation : _closedRotation;
             }
+            if (_navObstacle != null)
+            {
+                _navObstacle.enabled = (openState == DoorOpenState.Closed);
+            }
             TomorrowsCrime.Audio.AudioManager.Instance?.PlayDoorCreak();
         }
 
@@ -162,6 +186,7 @@ namespace TomorrowsCrime.World
                 lockState = DoorLockState.Unlocked;
                 openState = DoorOpenState.Open;
                 if (doorHingeTransform != null) doorHingeTransform.localRotation = _openRotation;
+                if (_navObstacle != null) _navObstacle.enabled = false;
                 if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
                 {
                     WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Unlocked);
@@ -176,6 +201,7 @@ namespace TomorrowsCrime.World
                 {
                     doorHingeTransform.localRotation = _closedRotation;
                 }
+                if (_navObstacle != null) _navObstacle.enabled = true;
 
                 if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
                 {

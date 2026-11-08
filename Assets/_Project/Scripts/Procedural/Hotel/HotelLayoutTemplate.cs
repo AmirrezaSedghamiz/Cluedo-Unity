@@ -37,6 +37,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             lobby.AddConnection(new DoorwayConnection("conn_lobby_reception", "room_lobby", "room_reception", new Vector3(0f, 0f, 6f), Vector3.zero, false, null, "Front Reception Archway"));
             lobby.AddConnection(new DoorwayConnection("conn_lobby_dining", "room_lobby", "room_dining", new Vector3(-8f, 0f, 0f), new Vector3(0f, 90f, 0f), false, null, "Dining Hall Grand Archway"));
             lobby.AddConnection(new DoorwayConnection("conn_lobby_corridor", "room_lobby", "room_corridor_ground", new Vector3(8f, 0f, 0f), new Vector3(0f, 90f, 0f), false, null, "East Wing Transport Archway"));
+            lobby.AddConnection(new DoorwayConnection("conn_lobby_staircase_arch", "room_lobby", "room_corridor_ground", new Vector3(8f, 0f, -2f), new Vector3(0f, 90f, 0f), false, null, "Grand Staircase Open Archway"));
             lobby.AddConnection(new DoorwayConnection("conn_lobby_bar", "room_lobby", "room_bar_lounge", new Vector3(-3f, 0f, -6f), Vector3.zero, false, null, "Bar Lounge Entrance"));
             lobby.AddConnection(new DoorwayConnection("conn_lobby_luggage", "room_lobby", "room_luggage_storage", new Vector3(5f, 0f, -6f), Vector3.zero, false, null, "Luggage Room Door"));
             rooms.Add(lobby);

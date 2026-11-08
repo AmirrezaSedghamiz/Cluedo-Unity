@@ -131,7 +131,7 @@ namespace TomorrowsCrime.Procedural.Objects
                     "A folded slip of paper with aggressive cursive handwriting.",
                     "Reads: 'Midnight is your last chance to pay what you owe. Once the doors lock, there is no leaving Meridian House.'", "evidence_letter")
                     .WithRooms(RoomType.GuestRoom101, RoomType.GuestRoom102, RoomType.GuestRoom103, RoomType.StaffOffice)
-                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Nightstand, AnchorCategory.FloorCorner)
+                    .WithAnchors(AnchorCategory.Desk, AnchorCategory.Nightstand, AnchorCategory.Tabletop)
                     .WithCollider(new Vector3(0.35f, 0.05f, 0.35f)),
 
                 new ObjectDefinition("obj_guest_register", "Meridian House Ledger", ObjectCategory.Document, ObjectRole.InvestigativeEvidence,
@@ -188,7 +188,7 @@ namespace TomorrowsCrime.Procedural.Objects
                     "A collapsible brass astronomical telescope with quartz lenses.",
                     "Precision nautical and celestial spotting glass.", null)
                     .WithRooms(RoomType.Observatory, RoomType.RoofGarden, RoomType.GuestRoom204)
-                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Desk, AnchorCategory.FloorCorner)
+                    .WithAnchors(AnchorCategory.Tabletop, AnchorCategory.Desk, AnchorCategory.Shelf)
                     .WithCollider(new Vector3(0.2f, 0.45f, 0.2f)),
 
                 new ObjectDefinition("obj_cigar_box", "Cedar Cigar Humidor", ObjectCategory.Container, ObjectRole.Decorative,
@@ -364,7 +364,7 @@ namespace TomorrowsCrime.Procedural.Objects
             }
         }
 
-        private static GameObject SpawnObjectAtAnchor(Transform parent, ObjectDefinition def, RoomAnchor anchor, Dictionary<string, Material> mats)
+        public static GameObject SpawnObjectAtAnchor(Transform parent, ObjectDefinition def, RoomAnchor anchor, Dictionary<string, Material> mats)
         {
             anchor.IsOccupied = true;
             anchor.OccupyingObjectId = def.ObjectId;
@@ -392,19 +392,16 @@ namespace TomorrowsCrime.Procedural.Objects
 
             if (visual == null)
             {
-                // Fallback primitive
-                visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                visual.name = "Primitive";
-                visual.transform.SetParent(objGo.transform);
-                visual.transform.localPosition = Vector3.zero;
-                visual.transform.localScale = def.ColliderSize;
+                visual = CreateBespokePropVisual(def, objGo, mats);
             }
-
-            // Apply Material
-            if (!string.IsNullOrEmpty(def.MaterialKey) && mats.TryGetValue(def.MaterialKey, out var mat))
+            else
             {
-                var rends = visual.GetComponentsInChildren<Renderer>(true);
-                foreach (var r in rends) r.sharedMaterial = mat;
+                // Apply Material to instantiated prefab
+                if (!string.IsNullOrEmpty(def.MaterialKey) && mats.TryGetValue(def.MaterialKey, out var mat))
+                {
+                    var rends = visual.GetComponentsInChildren<Renderer>(true);
+                    foreach (var r in rends) r.sharedMaterial = mat;
+                }
             }
 
             // Collider Setup
@@ -416,6 +413,25 @@ namespace TomorrowsCrime.Procedural.Objects
             col.size = def.ColliderSize;
             col.center = new Vector3(0f, def.ColliderSize.y * 0.5f, 0f);
             col.isTrigger = false;
+
+            // Attach 3D Physics prop integration for pickup, throw, and collision audio
+            var rb = objGo.GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                rb = objGo.AddComponent<Rigidbody>();
+                rb.mass = def.Category == ObjectCategory.Tool || def.Category == ObjectCategory.Valuable ? 3.5f : 0.8f;
+                rb.linearDamping = 0.5f;
+                rb.angularDamping = 0.5f;
+                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            }
+            if (objGo.GetComponent<TomorrowsCrime.PhysicsEngine.PhysicsProp>() == null)
+            {
+                var pp = objGo.AddComponent<TomorrowsCrime.PhysicsEngine.PhysicsProp>();
+                pp.PropDisplayName = def.DisplayName;
+                pp.MaterialType = def.Category == ObjectCategory.Valuable || def.Category == ObjectCategory.Tool ?
+                    TomorrowsCrime.PhysicsEngine.PhysicsMaterialType.Metal :
+                    TomorrowsCrime.PhysicsEngine.PhysicsMaterialType.Wood;
+            }
 
             // Evidence Inspection or Key Component
             if (!string.IsNullOrEmpty(def.LinkedEvidenceId))
@@ -469,6 +485,254 @@ namespace TomorrowsCrime.Procedural.Objects
             );
             return asset;
 #endif
+        }
+
+        private static GameObject CreateBespokePropVisual(ObjectDefinition def, GameObject objGo, Dictionary<string, Material> mats)
+        {
+            var visual = new GameObject("VisualModel");
+            visual.transform.SetParent(objGo.transform, false);
+
+            Material brassMat = null, mahoganyMat = null, walnutMat = null, paperMat = null, steelMat = null, amberMat = null, glassMat = null;
+            if (mats != null)
+            {
+                mats.TryGetValue("BrassGold", out brassMat);
+                mats.TryGetValue("WoodMahogany", out mahoganyMat);
+                mats.TryGetValue("WoodWalnut", out walnutMat);
+                mats.TryGetValue("ShirtWhite", out paperMat);
+                mats.TryGetValue("FloorSlate", out steelMat);
+                mats.TryGetValue("AmberGlow", out amberMat);
+                mats.TryGetValue("UniformNavy", out glassMat);
+            }
+
+            string id = def.ObjectId.ToLower();
+
+            if (id.Contains("cleaver"))
+            {
+                // French Meat Cleaver: Steel Blade + Rosewood Handle
+                var blade = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                blade.name = "Cleaver_Blade";
+                blade.transform.SetParent(visual.transform, false);
+                blade.transform.localPosition = new Vector3(0f, 0.10f, 0.08f);
+                blade.transform.localScale = new Vector3(0.03f, 0.18f, 0.28f);
+                if (steelMat != null) blade.GetComponent<Renderer>().sharedMaterial = steelMat;
+                DestroyCollider(blade);
+
+                var handle = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                handle.name = "Cleaver_Handle";
+                handle.transform.SetParent(visual.transform, false);
+                handle.transform.localPosition = new Vector3(0f, 0.05f, -0.12f);
+                handle.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                handle.transform.localScale = new Vector3(0.045f, 0.10f, 0.045f);
+                if (mahoganyMat != null) handle.GetComponent<Renderer>().sharedMaterial = mahoganyMat;
+                DestroyCollider(handle);
+            }
+            else if (id.Contains("candlestick"))
+            {
+                // Heavy Brass Candlestick: Turned Brass Base + Stem + Wax Candle + Wick
+                var basePlate = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                basePlate.name = "Candle_Base";
+                basePlate.transform.SetParent(visual.transform, false);
+                basePlate.transform.localPosition = new Vector3(0f, 0.02f, 0f);
+                basePlate.transform.localScale = new Vector3(0.24f, 0.02f, 0.24f);
+                if (brassMat != null) basePlate.GetComponent<Renderer>().sharedMaterial = brassMat;
+                DestroyCollider(basePlate);
+
+                var stem = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                stem.name = "Candle_Stem";
+                stem.transform.SetParent(visual.transform, false);
+                stem.transform.localPosition = new Vector3(0f, 0.16f, 0f);
+                stem.transform.localScale = new Vector3(0.065f, 0.14f, 0.065f);
+                if (brassMat != null) stem.GetComponent<Renderer>().sharedMaterial = brassMat;
+                DestroyCollider(stem);
+
+                var candle = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                candle.name = "Wax_Candle";
+                candle.transform.SetParent(visual.transform, false);
+                candle.transform.localPosition = new Vector3(0f, 0.36f, 0f);
+                candle.transform.localScale = new Vector3(0.055f, 0.10f, 0.055f);
+                if (paperMat != null) candle.GetComponent<Renderer>().sharedMaterial = paperMat;
+                DestroyCollider(candle);
+
+                var wick = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                wick.name = "Candle_Wick";
+                wick.transform.SetParent(visual.transform, false);
+                wick.transform.localPosition = new Vector3(0f, 0.47f, 0f);
+                wick.transform.localScale = new Vector3(0.01f, 0.015f, 0.01f);
+                if (steelMat != null) wick.GetComponent<Renderer>().sharedMaterial = steelMat;
+                DestroyCollider(wick);
+            }
+            else if (id.Contains("poison") || id.Contains("vial") || id.Contains("bottle"))
+            {
+                // Apothecary Bottle / Wine Bottle: Bottle Body + Neck + Cork + Label
+                var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                body.name = "Bottle_Body";
+                body.transform.SetParent(visual.transform, false);
+                body.transform.localPosition = new Vector3(0f, 0.12f, 0f);
+                body.transform.localScale = new Vector3(0.12f, 0.12f, 0.12f);
+                var botMat = id.Contains("poison") ? (amberMat ?? brassMat) : (glassMat ?? mahoganyMat);
+                if (botMat != null) body.GetComponent<Renderer>().sharedMaterial = botMat;
+                DestroyCollider(body);
+
+                var neck = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                neck.name = "Bottle_Neck";
+                neck.transform.SetParent(visual.transform, false);
+                neck.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+                neck.transform.localScale = new Vector3(0.045f, 0.06f, 0.045f);
+                if (botMat != null) neck.GetComponent<Renderer>().sharedMaterial = botMat;
+                DestroyCollider(neck);
+
+                var cork = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                cork.name = "Bottle_Cork";
+                cork.transform.SetParent(visual.transform, false);
+                cork.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+                cork.transform.localScale = new Vector3(0.048f, 0.02f, 0.048f);
+                if (walnutMat != null) cork.GetComponent<Renderer>().sharedMaterial = walnutMat;
+                DestroyCollider(cork);
+
+                var label = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                label.name = "Poison_Label";
+                label.transform.SetParent(visual.transform, false);
+                label.transform.localPosition = new Vector3(0f, 0.12f, 0.062f);
+                label.transform.localScale = new Vector3(0.08f, 0.09f, 0.01f);
+                if (paperMat != null) label.GetComponent<Renderer>().sharedMaterial = paperMat;
+                DestroyCollider(label);
+            }
+            else if (id.Contains("wrench"))
+            {
+                // Heavy Steel Pipe Wrench: Handle + Threaded Collar + L-Jaw
+                var handle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                handle.name = "Wrench_Handle";
+                handle.transform.SetParent(visual.transform, false);
+                handle.transform.localPosition = new Vector3(0f, 0.03f, -0.06f);
+                handle.transform.localScale = new Vector3(0.04f, 0.025f, 0.34f);
+                if (steelMat != null) handle.GetComponent<Renderer>().sharedMaterial = steelMat;
+                DestroyCollider(handle);
+
+                var jaw = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                jaw.name = "Wrench_Jaw";
+                jaw.transform.SetParent(visual.transform, false);
+                jaw.transform.localPosition = new Vector3(0f, 0.06f, 0.15f);
+                jaw.transform.localScale = new Vector3(0.055f, 0.08f, 0.12f);
+                if (steelMat != null) jaw.GetComponent<Renderer>().sharedMaterial = steelMat;
+                DestroyCollider(jaw);
+
+                var collar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                collar.name = "Wrench_KnurledCollar";
+                collar.transform.SetParent(visual.transform, false);
+                collar.transform.localPosition = new Vector3(0f, 0.04f, 0.07f);
+                collar.transform.localScale = new Vector3(0.055f, 0.03f, 0.055f);
+                if (brassMat != null) collar.GetComponent<Renderer>().sharedMaterial = brassMat;
+                DestroyCollider(collar);
+            }
+            else if (id.Contains("letter") || id.Contains("memo") || id.Contains("sheet_music"))
+            {
+                // Parchment Stationery Document + Brass Fountain Pen
+                var paper = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                paper.name = "Paper_Sheet";
+                paper.transform.SetParent(visual.transform, false);
+                paper.transform.localPosition = new Vector3(0f, 0.005f, 0f);
+                paper.transform.localScale = new Vector3(0.30f, 0.008f, 0.40f);
+                if (paperMat != null) paper.GetComponent<Renderer>().sharedMaterial = paperMat;
+                DestroyCollider(paper);
+
+                var pen = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                pen.name = "Fountain_Pen";
+                pen.transform.SetParent(visual.transform, false);
+                pen.transform.localPosition = new Vector3(0.12f, 0.015f, 0.08f);
+                pen.transform.localRotation = Quaternion.Euler(0f, 25f, 90f);
+                pen.transform.localScale = new Vector3(0.012f, 0.10f, 0.012f);
+                if (brassMat != null) pen.GetComponent<Renderer>().sharedMaterial = brassMat;
+                DestroyCollider(pen);
+            }
+            else if (id.Contains("register") || id.Contains("ledger"))
+            {
+                // Leather-Bound Ledger Book
+                var cover = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cover.name = "Ledger_Cover";
+                cover.transform.SetParent(visual.transform, false);
+                cover.transform.localPosition = new Vector3(0f, 0.035f, 0f);
+                cover.transform.localScale = new Vector3(0.38f, 0.07f, 0.48f);
+                if (mahoganyMat != null) cover.GetComponent<Renderer>().sharedMaterial = mahoganyMat;
+                DestroyCollider(cover);
+
+                var pages = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pages.name = "Ledger_Pages";
+                pages.transform.SetParent(visual.transform, false);
+                pages.transform.localPosition = new Vector3(0.01f, 0.035f, 0f);
+                pages.transform.localScale = new Vector3(0.35f, 0.058f, 0.45f);
+                if (paperMat != null) pages.GetComponent<Renderer>().sharedMaterial = paperMat;
+                DestroyCollider(pages);
+            }
+            else if (id.Contains("glass") || id.Contains("tumbler"))
+            {
+                // Cut Crystal Tumbler with Amber Liquid
+                var glass = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                glass.name = "Tumbler_Glass";
+                glass.transform.SetParent(visual.transform, false);
+                glass.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+                glass.transform.localScale = new Vector3(0.12f, 0.08f, 0.12f);
+                if (paperMat != null) glass.GetComponent<Renderer>().sharedMaterial = paperMat;
+                DestroyCollider(glass);
+
+                var liquor = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                liquor.name = "Tumbler_AmberLiquor";
+                liquor.transform.SetParent(visual.transform, false);
+                liquor.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+                liquor.transform.localScale = new Vector3(0.10f, 0.04f, 0.10f);
+                if (amberMat != null) liquor.GetComponent<Renderer>().sharedMaterial = amberMat;
+                DestroyCollider(liquor);
+            }
+            else if (id.Contains("cigar") || id.Contains("humidor"))
+            {
+                // Spanish Cedar Cigar Humidor Box
+                var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                box.name = "Humidor_Box";
+                box.transform.SetParent(visual.transform, false);
+                box.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+                box.transform.localScale = new Vector3(0.34f, 0.15f, 0.24f);
+                if (walnutMat != null) box.GetComponent<Renderer>().sharedMaterial = walnutMat;
+                DestroyCollider(box);
+
+                var latch = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                latch.name = "Brass_Latch";
+                latch.transform.SetParent(visual.transform, false);
+                latch.transform.localPosition = new Vector3(0f, 0.08f, -0.125f);
+                latch.transform.localScale = new Vector3(0.04f, 0.04f, 0.015f);
+                if (brassMat != null) latch.GetComponent<Renderer>().sharedMaterial = brassMat;
+                DestroyCollider(latch);
+            }
+            else if (id.Contains("bucket"))
+            {
+                // Galvanized Wash Bucket
+                var bucket = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                bucket.name = "Wash_Bucket";
+                bucket.transform.SetParent(visual.transform, false);
+                bucket.transform.localPosition = new Vector3(0f, 0.16f, 0f);
+                bucket.transform.localScale = new Vector3(0.30f, 0.16f, 0.30f);
+                if (steelMat != null) bucket.GetComponent<Renderer>().sharedMaterial = steelMat;
+                DestroyCollider(bucket);
+            }
+            else
+            {
+                var fallback = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                fallback.name = "Prop_Geometry";
+                fallback.transform.SetParent(visual.transform, false);
+                fallback.transform.localPosition = new Vector3(0f, def.ColliderSize.y * 0.5f, 0f);
+                fallback.transform.localScale = def.ColliderSize;
+                if (!string.IsNullOrEmpty(def.MaterialKey) && mats != null && mats.TryGetValue(def.MaterialKey, out var m))
+                {
+                    fallback.GetComponent<Renderer>().sharedMaterial = m;
+                }
+                DestroyCollider(fallback);
+            }
+
+            return visual;
+        }
+
+        private static void DestroyCollider(GameObject go)
+        {
+            var c = go.GetComponent<Collider>();
+            if (c != null) UnityEngine.Object.DestroyImmediate(c);
         }
     }
 }

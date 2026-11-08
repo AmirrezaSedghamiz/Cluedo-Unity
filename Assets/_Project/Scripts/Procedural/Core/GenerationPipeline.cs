@@ -98,6 +98,12 @@ namespace TomorrowsCrime.Procedural.Core
             // 1. Build Physical Hotel Architecture & Colliders
             var hotelArch = HotelBuilder.BuildHotelEnvironment(worldRoot.transform, investigation.Rooms, mats, investigation.Seed.LayoutStream);
 
+            // 1b. Bake NavMesh across all 4 floors, corridors, and rooms so NPCs traverse authentic navmesh polygons
+            var navSurface = hotelArch.AddComponent<Unity.AI.Navigation.NavMeshSurface>();
+            navSurface.collectObjects = Unity.AI.Navigation.CollectObjects.All;
+            navSurface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
+            navSurface.BuildNavMesh();
+
             // 2. Populate Rooms with Objects & Scenario Evidence
             RoomObjectPlacer.PopulateRooms(worldRoot.transform, investigation.Rooms, investigation.Seed.ObjectStream,
                 mats, investigation.GroundTruth.MandatoryObjectPlacements);

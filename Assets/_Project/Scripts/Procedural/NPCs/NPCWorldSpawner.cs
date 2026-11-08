@@ -197,8 +197,24 @@ namespace TomorrowsCrime.Procedural.NPCs
             {
                 // Flowing Evening Gown Skirt
                 CreatePart(charRoot.transform, PrimitiveType.Cylinder, "GownSkirt",
-                    new Vector3(0f, 0.45f * heightScale, 0f),
-                    new Vector3(0.50f, 0.48f * heightScale, 0.46f), jacketMat);
+                    new Vector3(0f, 0.48f * heightScale, 0f),
+                    new Vector3(0.50f, 0.42f * heightScale, 0.46f), jacketMat);
+
+                // Elegant Legs below evening gown
+                var leftLeg = CreatePart(charRoot.transform, PrimitiveType.Cube, "LeftLeg",
+                    new Vector3(-0.11f, 0.16f * heightScale, 0f),
+                    new Vector3(0.12f, 0.32f * heightScale, 0.14f), slateBlack);
+                var rightLeg = CreatePart(charRoot.transform, PrimitiveType.Cube, "RightLeg",
+                    new Vector3(0.11f, 0.16f * heightScale, 0f),
+                    new Vector3(0.12f, 0.32f * heightScale, 0.14f), slateBlack);
+
+                // Satin Evening Pumps parented to legs
+                CreatePart(leftLeg.transform, PrimitiveType.Cube, "Shoe_L",
+                    new Vector3(0f, -0.46f, 0.18f),
+                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
+                CreatePart(rightLeg.transform, PrimitiveType.Cube, "Shoe_R",
+                    new Vector3(0f, -0.46f, 0.18f),
+                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
             }
             else if (profile.Role == NPCRole.HousekeepingMaid || profile.Role == NPCRole.Receptionist)
             {
@@ -216,31 +232,39 @@ namespace TomorrowsCrime.Procedural.NPCs
                 }
 
                 // Legs below skirt
-                CreatePart(charRoot.transform, PrimitiveType.Cube, "LeftLeg",
+                var leftLeg = CreatePart(charRoot.transform, PrimitiveType.Cube, "LeftLeg",
                     new Vector3(-0.11f, 0.22f * heightScale, 0f),
                     new Vector3(0.14f, 0.45f * heightScale, 0.16f), slateBlack);
-                CreatePart(charRoot.transform, PrimitiveType.Cube, "RightLeg",
+                var rightLeg = CreatePart(charRoot.transform, PrimitiveType.Cube, "RightLeg",
                     new Vector3(0.11f, 0.22f * heightScale, 0f),
                     new Vector3(0.14f, 0.45f * heightScale, 0.16f), slateBlack);
+
+                // Polished Leather Shoes parented directly to legs
+                CreatePart(leftLeg.transform, PrimitiveType.Cube, "Shoe_L",
+                    new Vector3(0f, -0.46f, 0.18f),
+                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
+                CreatePart(rightLeg.transform, PrimitiveType.Cube, "Shoe_R",
+                    new Vector3(0f, -0.46f, 0.18f),
+                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
             }
             else
             {
                 // Tailored Trousers
                 Material pantsMat = (profile.Role == NPCRole.HeadChef) ? slateBlack : jacketMat;
-                CreatePart(charRoot.transform, PrimitiveType.Cube, "LeftLeg",
+                var leftLeg = CreatePart(charRoot.transform, PrimitiveType.Cube, "LeftLeg",
                     new Vector3(-0.14f * (shoulderWidth / 0.52f), 0.45f * heightScale, 0f),
                     new Vector3(0.18f, 0.85f * heightScale, 0.22f), pantsMat);
-                CreatePart(charRoot.transform, PrimitiveType.Cube, "RightLeg",
+                var rightLeg = CreatePart(charRoot.transform, PrimitiveType.Cube, "RightLeg",
                     new Vector3(0.14f * (shoulderWidth / 0.52f), 0.45f * heightScale, 0f),
                     new Vector3(0.18f, 0.85f * heightScale, 0.22f), pantsMat);
 
-                // Polished Leather Shoes
-                CreatePart(charRoot.transform, PrimitiveType.Cube, "Shoe_L",
-                    new Vector3(-0.14f * (shoulderWidth / 0.52f), 0.05f, 0.04f),
-                    new Vector3(0.19f, 0.10f, 0.28f), slateBlack);
-                CreatePart(charRoot.transform, PrimitiveType.Cube, "Shoe_R",
-                    new Vector3(0.14f * (shoulderWidth / 0.52f), 0.05f, 0.04f),
-                    new Vector3(0.19f, 0.10f, 0.28f), slateBlack);
+                // Polished Leather Shoes parented directly to legs so they walk in lockstep
+                CreatePart(leftLeg.transform, PrimitiveType.Cube, "Shoe_L",
+                    new Vector3(0f, -0.46f, 0.18f),
+                    new Vector3(1.08f, 0.14f, 1.35f), slateBlack);
+                CreatePart(rightLeg.transform, PrimitiveType.Cube, "Shoe_R",
+                    new Vector3(0f, -0.46f, 0.18f),
+                    new Vector3(1.08f, 0.14f, 1.35f), slateBlack);
             }
 
             // 4. Arms

@@ -871,5 +871,91 @@ namespace TomorrowsCrime.Tests.EditMode
             Assert.Greater(pierre.BaselinePosition.z, 11.2f, "Concierge must be behind front desk.");
             Assert.Greater(celeste.BaselinePosition.z, 11.2f, "Receptionist must be behind front desk.");
         }
+
+        [Test]
+        public void NPCWorldSpawner_ShoesAreParentedToLegs_EliminatingFrozenFeet()
+        {
+            var seed = InvestigationSeed.FromCode("TC-SHOES-TEST");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var testRoot = new GameObject("TestRoot_Shoes");
+
+            NPCWorldSpawner.SpawnRoster(testRoot.transform, investigation.Roster, investigation.Routines, null);
+
+            var rosterRoot = testRoot.transform.Find("Hotel_NPC_Roster");
+            Assert.IsNotNull(rosterRoot);
+
+            for (int i = 0; i < rosterRoot.childCount; i++)
+            {
+                var profile = investigation.Roster[i];
+                if (profile.Role == NPCRole.Concierge) continue; // Concierge Pierre uses static 3D mesh
+
+                var npcGo = rosterRoot.GetChild(i);
+                var leftLeg = npcGo.Find($"Visual_{profile.DisplayName.Replace(" ", "")}/LeftLeg");
+                var rightLeg = npcGo.Find($"Visual_{profile.DisplayName.Replace(" ", "")}/RightLeg");
+
+                Assert.IsNotNull(leftLeg, $"{npcGo.name} must have LeftLeg.");
+                Assert.IsNotNull(rightLeg, $"{npcGo.name} must have RightLeg.");
+
+                var shoeL = leftLeg.Find("Shoe_L");
+                var shoeR = rightLeg.Find("Shoe_R");
+
+                Assert.IsNotNull(shoeL, $"{npcGo.name} Shoe_L must be parented directly to LeftLeg.");
+                Assert.IsNotNull(shoeR, $"{npcGo.name} Shoe_R must be parented directly to RightLeg.");
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void HotelLayout_GrandStaircaseHasArchwayCutout_EliminatingWallInStairs()
+        {
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var lobby = rooms.Find(r => r.RoomId == "room_lobby");
+            Assert.IsNotNull(lobby);
+
+            var stairConn = lobby.Connections.Find(c => c.ToRoomId == "room_corridor_ground" && Mathf.Abs(c.WorldPosition.z - (-2.0f)) < 0.5f);
+            Assert.IsNotNull(stairConn, "Lobby must have an open archway connection to transport hub at Z=-2.0m to prevent wall across stairs.");
+        }
+
+        [Test]
+        public void InteractableDoor_CarvesNavMeshObstacleWhenClosed()
+        {
+            var doorGo = new GameObject("TestDoor");
+            var doorComp = doorGo.AddComponent<InteractableDoor>();
+            doorComp.EnsureNavObstacle();
+
+            var obstacle = doorGo.GetComponent<UnityEngine.AI.NavMeshObstacle>();
+            Assert.IsNotNull(obstacle, "InteractableDoor must have NavMeshObstacle component.");
+            Assert.IsTrue(obstacle.carving, "NavMeshObstacle must have carving enabled to block NPC navigation.");
+            Assert.IsTrue(obstacle.enabled, "NavMeshObstacle must be enabled when door is closed.");
+
+            doorComp.UnlockAndOpen();
+            Assert.IsFalse(obstacle.enabled, "NavMeshObstacle must be disabled when door is unlocked and opened.");
+
+            Object.DestroyImmediate(doorGo);
+        }
+
+        [Test]
+        public void RoomObjectPlacer_BespokePropsHavePhysicsAndRealisticParts()
+        {
+            var testRoot = new GameObject("TestRoot_Props");
+            var catalog = RoomObjectPlacer.GetCatalog();
+
+            var cleaverDef = catalog.Find(o => o.ObjectId == "obj_chef_cleaver");
+            Assert.IsNotNull(cleaverDef);
+
+            var cleaverGo = RoomObjectPlacer.SpawnObjectAtAnchor(testRoot.transform, cleaverDef,
+                new RoomAnchor("anchor_test", AnchorCategory.Counter, Vector3.zero, Vector3.zero),
+                new Dictionary<string, Material>());
+
+            Assert.IsNotNull(cleaverGo);
+            var blade = cleaverGo.transform.Find("VisualModel/Cleaver_Blade");
+            Assert.IsNotNull(blade, "Cleaver must have bespoke blade model, not a raw generic cube.");
+
+            var physProp = cleaverGo.GetComponent<TomorrowsCrime.PhysicsEngine.PhysicsProp>();
+            Assert.IsNotNull(physProp, "Prop must have PhysicsProp component for interactive pickup and throwing.");
+
+            Object.DestroyImmediate(testRoot);
+        }
     }
 }

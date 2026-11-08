@@ -72,6 +72,9 @@ namespace TomorrowsCrime.NPC
         private void LocateLimbsAndSetupPivots()
         {
             var allTransforms = GetComponentsInChildren<Transform>(true);
+            Transform shoeL = null;
+            Transform shoeR = null;
+
             foreach (var t in allTransforms)
             {
                 string lower = t.name.ToLower();
@@ -81,6 +84,19 @@ namespace TomorrowsCrime.NPC
                 else if (_rightLegTransform == null && (lower.Contains("rightleg") || lower.Contains("leg_r"))) _rightLegTransform = t;
                 else if (_leftArmTransform == null && (lower.Contains("arm_l") || lower.Contains("leftarm"))) _leftArmTransform = t;
                 else if (_rightArmTransform == null && (lower.Contains("arm_r") || lower.Contains("rightarm"))) _rightArmTransform = t;
+
+                if (shoeL == null && (lower.Contains("shoe_l") || lower.Contains("foot_l") || lower.Contains("shoe.l"))) shoeL = t;
+                else if (shoeR == null && (lower.Contains("shoe_r") || lower.Contains("foot_r") || lower.Contains("shoe.r"))) shoeR = t;
+            }
+
+            // Ensure shoes are solidly parented to their respective legs before pivots are built
+            if (shoeL != null && _leftLegTransform != null && shoeL.parent != _leftLegTransform)
+            {
+                shoeL.SetParent(_leftLegTransform, true);
+            }
+            if (shoeR != null && _rightLegTransform != null && shoeR.parent != _rightLegTransform)
+            {
+                shoeR.SetParent(_rightLegTransform, true);
             }
 
             // Create anatomical pivot hierarchy so limbs rotate from hip and shoulder joints

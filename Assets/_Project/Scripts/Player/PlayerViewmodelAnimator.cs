@@ -108,16 +108,36 @@ namespace TomorrowsCrime.Player
             float side = isLeft ? -1f : 1f;
             var armRoot = new GameObject(isLeft ? "Arm_Left" : "Arm_Right");
             armRoot.transform.SetParent(parent, false);
-            armRoot.transform.localPosition = new Vector3(side * 0.24f, -0.05f, 0f);
-            armRoot.transform.localRotation = Quaternion.Euler(isLeft ? 15f : 15f, side * 12f, side * -10f);
+            // Arm root positioned naturally at detective's shoulder joint
+            armRoot.transform.localPosition = new Vector3(side * 0.28f, -0.12f, 0.02f);
+            armRoot.transform.localRotation = Quaternion.Euler(12f, side * 10f, side * -8f);
+
+            // 0. Upper Arm & Shoulder Sleeve (Extends deep off-screen so arm never floats or shows open ends)
+            var upperArm = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            upperArm.name = "UpperArm_Shoulder";
+            upperArm.transform.SetParent(armRoot.transform, false);
+            upperArm.transform.localPosition = new Vector3(side * 0.06f, -0.20f, -0.16f);
+            upperArm.transform.localRotation = Quaternion.Euler(42f, side * -12f, side * 18f);
+            upperArm.transform.localScale = new Vector3(0.115f, 0.28f, 0.115f);
+            DestroyCollider(upperArm);
+            if (coatMaterial != null) upperArm.GetComponent<Renderer>().sharedMaterial = coatMaterial;
+
+            // 0b. Elbow Joint Cover (Seamless transition between upper arm and forearm)
+            var elbow = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            elbow.name = "Elbow_Joint";
+            elbow.transform.SetParent(armRoot.transform, false);
+            elbow.transform.localPosition = new Vector3(side * 0.02f, -0.06f, -0.02f);
+            elbow.transform.localScale = new Vector3(0.125f, 0.125f, 0.125f);
+            DestroyCollider(elbow);
+            if (coatMaterial != null) elbow.GetComponent<Renderer>().sharedMaterial = coatMaterial;
 
             // 1. Forearm Sleeve (Royal Wool Overcoat)
             var sleeve = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             sleeve.name = "Forearm_Sleeve";
             sleeve.transform.SetParent(armRoot.transform, false);
-            sleeve.transform.localPosition = new Vector3(0f, 0.04f, 0.12f);
-            sleeve.transform.localRotation = Quaternion.Euler(75f, 0f, 0f);
-            sleeve.transform.localScale = new Vector3(0.095f, 0.18f, 0.095f);
+            sleeve.transform.localPosition = new Vector3(0f, 0.04f, 0.14f);
+            sleeve.transform.localRotation = Quaternion.Euler(72f, 0f, 0f);
+            sleeve.transform.localScale = new Vector3(0.10f, 0.22f, 0.10f);
             DestroyCollider(sleeve);
             if (coatMaterial != null) sleeve.GetComponent<Renderer>().sharedMaterial = coatMaterial;
 
