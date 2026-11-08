@@ -507,13 +507,80 @@ Transformed *Tomorrow's Crime* into a replayable detective simulation where ever
 - Added pure `EvaluateAccusation` method decoupled from `MonoBehaviour`, supporting full unit-testing outside the Unity runtime.
 - Enhanced accusation matching to handle all 9 suspect personas, 4 murder methods, 6 crime scenes, and 5 motive categories.
 
-### Validation & Test Results
-- **Automated Batch Verification**:
-  - 100/100 multi-seed stress test passed through generation and solvability solver (100% pass rate, avg 0.23 ms/seed).
-  - 50/50 randomized scenario case accusation tests verified with 100% accuracy (correct deductions awarded victory, false accusations properly rebutted with documented suspect alibis).
-- **Compilation**:
-  - `TomorrowsCrime.Runtime.csproj`: 0 Errors.
-  - `TomorrowsCrime.Tests.EditMode.csproj`: 0 Errors.
+---
+
+## [2026-11-08] Milestone 8: Visual Perfection, 3D Physics & Locomotion Animation Overhaul
+
+### Problem Addressed
+The previous visual state relied on flat, cartoonish solid colors with no normal maps, unconfigured Universal Render Pipeline (URP) fallback, missing post-processing volume, rigid static character meshes sliding across the floor with no leg or arm movement, and lack of dynamic 3D physics interaction.
+
+### Core Architectural Features Implemented
+
+#### 1. High-Fidelity Universal Render Pipeline & SSAO Setup (`URPConfigurationHelper.cs`)
+- **Render Pipeline Asset (`URP_HighFidelity_PipelineAsset.asset`)**:
+  - Activated High Dynamic Range (HDR) buffer rendering with 4x MSAA anti-aliasing.
+  - Enabled razor-sharp 4096 Main Light shadow maps with Soft Shadows and 4 Shadow Cascades.
+  - Enabled Camera Depth and Opaque textures for advanced screen-space shader calculations.
+- **Screen Space Ambient Occlusion (SSAO)**:
+  - Injected `ScreenSpaceAmbientOcclusion` renderer feature directly into `UniversalRendererData.asset`.
+  - Banished the "floating cartoon object" look by introducing deep, realistic contact shadows in architectural corners, crevices, moldings, under furniture, and at character feet.
+- **Cinematic Post-Processing Volume (`Cinematic_VolumeProfile.asset`)**:
+  - **ACES Filmic Tonemapping**: Preserves high dynamic range specular highlights without blowing out into cartoonish pure whites.
+  - **Atmospheric Bloom**: Warm tungsten diffusion (threshold 0.85, intensity 0.65, warm golden tint `#FFEBC8`).
+  - **Filmic Vignette**: Subtle edge darkening (intensity 0.28, smoothness 0.35) for dramatic mystery immersion.
+  - **Color Adjustments**: Cinematic contrast (+16), subtle film saturation (+5), and exposure balancing.
+  - **Film Grain & Motion Blur**: Analog noir texture and fluid camera motion feel.
+  - Configured `UniversalAdditionalCameraData` on the main camera with `renderPostProcessing = true`.
+
+#### 2. Procedural PBR Texture & Normal Map Engine (`ProceduralPBRTextureEngine.cs`, `ArtAssetSetup.cs`)
+- Generates 1024x1024 / 2048x2048 seamless PBR texture sets with tangent-space normal maps and metallic/smoothness masks:
+  - **Floor Checker Marble**: Carrara ivory marble alternating with Nero Marquina black marble with organic calcite veins, beveled tile edges, and recessed grout lines.
+  - **Polished Mahogany Wood**: Rich bordeaux wood tones with longitudinal growth ring fibers, clearcoat varnish gloss, and tactile grain normal maps.
+  - **Art Deco Damask Wallpaper**: Deep royal emerald silk weave background with 3D embossed gold foil fans and chevron relief normal maps.
+  - **Velvet Burgundy Carpet**: Luxurious woven wool pile with gold border pinstripes and soft textile micro-shading.
+  - **Chesterfield Vintage Leather**: Cognac antique leather with natural pebble grain cell noise and crease normals.
+  - **Brushed Antique Brass**: Concentric micro-lathe scratches for chandeliers, sconces, and hardware.
+- Upgraded all scene materials to `Universal Render Pipeline/Lit` shader with `_BumpMap`, `_BumpScale`, `_Smoothness`, and `_Metallic`.
+
+#### 3. Humanoid Locomotion Animation System (`NPCProceduralAnimator.cs`)
+- Applied to Concierge Pierre and all procedural hotel NPCs in `NPCWorldSpawner.cs`.
+- Dynamically drives an articulated humanoid skeletal hierarchy (Hips, LeftLeg, RightLeg, Torso, LeftArm, RightArm, Head):
+  - **Idle State**: Natural chest breathing expansion (15 breaths/min), subtle weight shifting.
+  - **Dynamic Head Look-At**: Automatically rotates the NPC's head and neck to establish eye contact with the player when within 6 meters and inside a 75° viewing cone.
+  - **Walking Cycle**: Coordinated leg strides (±28° pitch) with knee bend and foot lift, counter-balancing arm swings (±22° pitch), torso vertical bounce, and hip roll.
+  - **Running Cycle**: High-speed cadence, wide leg strides (±44° pitch), athletic arm pumps (±38° pitch), and forward torso lean (-10° pitch) when velocity exceeds 3.4 m/s.
+
+#### 4. First-Person Detective Locomotion & Animated Viewmodel (`PlayerViewmodelAnimator.cs`)
+- Procedural first-person detective viewmodel featuring royal navy wool overcoat sleeves, crisp white French cuffs, and gleaming brass cufflinks.
+- **Locomotion Cycles**:
+  - Dual-axis figure-8 walk bobbing synchronized with distance-based footstep audio.
+  - High-energy running pump when sprinting with dynamic sprint FOV expansion (60° to 74°).
+  - Mouse look inertia sway (arms lag slightly behind rapid camera panning before snapping back).
+  - Compressive landing impact recoil (arms and camera dip downward with damped harmonic spring recovery upon landing from a jump).
+
+#### 5. 3D Physics Engine & Object Interaction (`PlayerController.cs`, `PhysicsProp.cs`, `PlayerPhysicsGrabber.cs`)
+- **Physics-Driven Locomotion**:
+  - Full 3D jumping with `KeyCode.Space` (jump force 5.6 m/s, realistic gravity -18 m/s², airborne trajectory control).
+  - Kinematic acceleration and friction-based braking (momentum-based locomotion replacing instant arcade stops).
+  - Camera roll tilt (-1.6° to +1.6°) into horizontal strafing motion.
+  - Push physics (`OnControllerColliderHit`): Player physically pushes dynamic Rigidbody obstacles when walking or sprinting into them.
+- **Interactive Rigidbody Physics**:
+  - The heavy brass candlestick murder weapon and hotel props now feature active `Rigidbody` components with mass, friction, and bounciness.
+  - Procedural collision audio: Detects impact velocity and material type (metal clang, wood thud, glass clink) with speed-scaled pitch and volume.
+- **Physical Pickup, Carrying, and Throwing**:
+  - Pick up physical objects via `E` or `G`. Held objects float in front of the camera using spring-damped physics velocity, interacting realistically with the environment without wall clipping.
+  - **Left Click**: Forcefully **THROWS** the held object forward with realistic physics trajectory and rotational torque!
+  - **Right Click / E**: Gently drops the object.
+
+#### 6. Atmospheric VFX & Scene Polish (`AtmosphericVFX.cs`, `PrototypeSceneSetup.cs`)
+- Added floating incandescent golden dust motes particle system dancing in chandelier and window light beams.
+- Multi-source Chiaroscuro lighting design with soft shadows on the 5500K midnight moonlight and 2700K warm tungsten chandelier.
+
+### Test Validation & Verification
+- **Test Suite**: 113 / 113 EditMode unit tests passed (100% pass rate, 0 failures).
+- **Scene Build**: `PrototypeSceneSetup.BuildPrototypeSceneBatchmode` completed with exit code 0.
+- **Compilation**: Clean compilation on `TomorrowsCrime.Runtime` and `TomorrowsCrime.Editor`.
+
 
 
 
