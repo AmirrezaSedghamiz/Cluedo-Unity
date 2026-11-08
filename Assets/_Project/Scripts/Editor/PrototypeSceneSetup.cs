@@ -49,24 +49,31 @@ namespace TomorrowsCrime.EditorTools
         [MenuItem("Tomorrow's Crime/Build Prototype Scene", priority = 1)]
         public static void BuildPrototypeScene()
         {
-            Debug.Log("[Tomorrow's Crime] Commencing Step 7 Complete Visual Reboot Scene Build...");
+            Debug.Log("[Tomorrow's Crime] Commencing Complete Visual Reboot & High-Fidelity Graphics Build...");
 
-            // 1. Setup PBR Materials & Model Assets
+            // 1. Setup PBR Materials, Textures, Normal Maps, and High-Fidelity URP
+            ArtAssetSetup.SetupAllArtAssets();
             var mats = ArtAssetSetup.CreateOrUpdateMaterials();
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             // 2. Chiaroscuro Lighting Rig
-            // Soft cool midnight ambient moonlight (5500K)
+            // Soft cool midnight ambient moonlight (5500K) with soft shadow casting
             var moonLightGo = new GameObject("Moonlight_Directional");
             var moonLight = moonLightGo.AddComponent<Light>();
             moonLight.type = LightType.Directional;
-            moonLight.color = new Color(0.55f, 0.65f, 0.85f); // Cool midnight blue
-            moonLight.intensity = 0.45f;
-            moonLightGo.transform.rotation = Quaternion.Euler(60f, -40f, 0f);
+            moonLight.color = new Color(0.55f, 0.65f, 0.88f); // Cool midnight blue
+            moonLight.intensity = 0.65f;
+            moonLight.shadows = LightShadows.Soft;
+            moonLight.shadowResolution = UnityEngine.Rendering.LightShadowResolution.High;
+            moonLightGo.transform.rotation = Quaternion.Euler(58f, -42f, 0f);
 
             // 3. Architectural Meridian House Lobby Environment
             var envRoot = new GameObject("[Environment_HotelLobby]");
+
+            // 3b. Cinematic Atmospheric Dust Motes & Global Post-Processing Volume
+            AtmosphericVFX.EnsureGlobalPostProcessingVolume(envRoot.transform);
+            AtmosphericVFX.CreateDustMotes(envRoot.transform, new Vector3(0f, 2.5f, 0f), new Vector3(14f, 4f, 18f));
 
             // Floor Base (Checker Italian Marble)
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -139,8 +146,10 @@ namespace TomorrowsCrime.EditorTools
             var chandelierLight = chandelierLightGo.AddComponent<Light>();
             chandelierLight.type = LightType.Point;
             chandelierLight.color = new Color(1.0f, 0.88f, 0.65f); // 2700K warm tungsten
-            chandelierLight.intensity = 3.2f;
-            chandelierLight.range = 18f;
+            chandelierLight.intensity = 3.4f;
+            chandelierLight.range = 20f;
+            chandelierLight.shadows = LightShadows.Soft;
+            chandelierLight.shadowResolution = UnityEngine.Rendering.LightShadowResolution.High;
 
             // 7. Reception Desk, Banker's Lamp & Solid Key Cubbies / Staff Lockers
             var deskPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_ReceptionDesk.obj");
@@ -389,7 +398,10 @@ namespace TomorrowsCrime.EditorTools
             soNpc.FindProperty("waypointRoom102Door").objectReferenceValue = wpRoom102Door.transform;
             soNpc.ApplyModifiedPropertiesWithoutUndo();
 
-            // 15. First-Person Player Rig (Collision Hardened)
+            // Procedural Humanoid Locomotion Animation (Walking, Running, Idle Breathing, Head Look-At)
+            npcGo.AddComponent<NPCProceduralAnimator>();
+
+            // 15b. First-Person Player Rig (Physics-Driven with Animated Detective Viewmodel)
             var playerGo = new GameObject("Player");
             playerGo.tag = "Player";
             playerGo.transform.position = new Vector3(0f, 0.2f, -2.0f);
@@ -405,6 +417,8 @@ namespace TomorrowsCrime.EditorTools
 
             var playerController = playerGo.AddComponent<PlayerController>();
             var playerInteraction = playerGo.AddComponent<PlayerInteraction>();
+            var playerGrabber = playerGo.AddComponent<TomorrowsCrime.PhysicsEngine.PlayerPhysicsGrabber>();
+            var playerViewmodel = playerGo.AddComponent<PlayerViewmodelAnimator>();
 
             var cameraGo = new GameObject("Main Camera");
             cameraGo.tag = "MainCamera";
@@ -413,7 +427,13 @@ namespace TomorrowsCrime.EditorTools
             cameraGo.transform.localRotation = Quaternion.identity;
 
             var cam = cameraGo.AddComponent<Camera>();
+            cam.nearClipPlane = 0.05f;
             cameraGo.AddComponent<AudioListener>();
+
+            // Enable URP Post-Processing on Main Camera
+            var camData = cameraGo.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            camData.renderPostProcessing = true;
+            camData.antialiasing = UnityEngine.Rendering.Universal.AntialiasingMode.SubpixelMorphologicalAntiAliasing;
 
             var soPlayer = new SerializedObject(playerController);
             soPlayer.FindProperty("cameraTransform").objectReferenceValue = cameraGo.transform;
@@ -741,6 +761,12 @@ namespace TomorrowsCrime.EditorTools
             );
             var candleInspect = candleGo.AddComponent<InspectableEvidence>();
             candleInspect.Definition = weaponEvidence;
+
+            // Physics Rigidbody & Interactive Physics Throwing
+            var candleRb = candleGo.AddComponent<Rigidbody>();
+            candleRb.mass = 2.4f;
+            candleRb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            var candlePhys = candleGo.AddComponent<TomorrowsCrime.PhysicsEngine.PhysicsProp>();
 
             // 10. Atmospheric Suite Lighting
             var bedLightGo = new GameObject("Room102_BedsideLamp_Light");

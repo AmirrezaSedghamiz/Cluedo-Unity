@@ -8,22 +8,27 @@ using TomorrowsCrime.UI.Core;
 namespace TomorrowsCrime.Player
 {
     /// <summary>
-    /// Robust First-Person Player Controller using CharacterController.
-    /// Features:
-    /// - Smooth WASD movement with walk, sprint, and crouch modes.
-    /// - Dynamic procedural head-bobbing based on movement speed.
-    /// - Distance-based footstep audio triggers that differentiate carpet vs hardwood.
-    /// - Contextual room location detection for atmospheric HUD navigation.
-    /// - Full loop turnover reset via ILoopResetReceiver.
+    /// Robust First-Person Player Controller using CharacterController with realistic physics,
+    /// momentum-based locomotion, jumping, crouching, dynamic head bobbing, push physics,
+    /// strafe camera tilt, distance footstep audio, and animated viewmodel integration.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour, ILoopResetReceiver
     {
-        [Header("Locomotion")]
+        [Header("Locomotion & Momentum")]
         [SerializeField] private float walkSpeed = 3.8f;
-        [SerializeField] private float sprintSpeed = 6.2f;
+        [SerializeField] private float sprintSpeed = 6.4f;
         [SerializeField] private float crouchSpeed = 2.0f;
-        [SerializeField] private float gravity = -15.0f;
+        [SerializeField] private float acceleration = 12.0f;
+        [SerializeField] private float brakingDeceleration = 14.0f;
+
+        [Header("Jump & Vertical Physics")]
+        [SerializeField] private float jumpForce = 5.6f;
+        [SerializeField] private float gravity = -18.0f;
+        [SerializeField] private float airControl = 0.5f;
+
+        [Header("Push Physics")]
+        [SerializeField] private float pushPower = 2.4f;
 
         [Header("Crouch Configuration")]
         [SerializeField] private float standingHeight = 2.0f;
@@ -32,11 +37,12 @@ namespace TomorrowsCrime.Player
         [SerializeField] private float crouchingEyeHeight = 0.95f;
         [SerializeField] private float crouchTransitionSpeed = 8f;
 
-        [Header("Head Bobbing")]
+        [Header("Head Bobbing & Camera Tilt")]
         [SerializeField] private bool enableHeadBob = true;
         [SerializeField] private float bobFrequency = 9.0f;
         [SerializeField] private float bobHorizontalAmplitude = 0.035f;
         [SerializeField] private float bobVerticalAmplitude = 0.045f;
+        [SerializeField] private float strafeCameraTilt = 1.6f;
 
         [Header("Mouse Look")]
         [SerializeField] private Transform cameraTransform;
@@ -45,22 +51,30 @@ namespace TomorrowsCrime.Player
         [SerializeField] private float minPitch = -85.0f;
 
         private CharacterController _characterController;
+        private PlayerViewmodelAnimator _viewmodelAnimator;
         private Vector3 _spawnPosition;
         private Quaternion _spawnRotation;
         private float _verticalVelocity;
         private float _cameraPitch;
+        private float _cameraRoll;
 
-        // Locomotion & Head Bob State
+        // Locomotion & Physics State
+        private Vector3 _currentPlanarVelocity = Vector3.zero;
         private bool _isCrouching = false;
+        private bool _wasGroundedLastFrame = true;
         private float _currentEyeHeight;
         private float _bobTimer = 0f;
         private float _footstepDistanceCounter = 0f;
         private Vector3 _lastPosition;
+        private float _lastMouseX = 0f;
+        private float _lastMouseY = 0f;
 
         // Current Room Detection
         public string CurrentRoomName { get; private set; } = "Meridian House • Grand Lobby";
 
         public bool IsCrouching => _isCrouching;
+        public bool IsGrounded => _characterController != null && _characterController.isGrounded;
+        public Vector3 Velocity => _characterController != null ? _characterController.velocity : Vector3.zero;
 
         private void Awake()
         {
@@ -81,6 +95,13 @@ namespace TomorrowsCrime.Player
             {
                 var cam = GetComponentInChildren<Camera>();
                 if (cam != null) cameraTransform = cam.transform;
+            }
+
+            // Ensure PlayerViewmodelAnimator is attached for animated hands
+            _viewmodelAnimator = GetComponent<PlayerViewmodelAnimator>();
+            if (_viewmodelAnimator == null && cameraTransform != null)
+            {
+                _viewmodelAnimator = gameObject.AddComponent<PlayerViewmodelAnimator>();
             }
         }
 
@@ -141,15 +162,22 @@ namespace TomorrowsCrime.Player
 
             float mouseX = Input.GetAxisRaw("Mouse X") * activeSensitivity;
             float mouseY = Input.GetAxisRaw("Mouse Y") * activeSensitivity;
+            _lastMouseX = mouseX;
+            _lastMouseY = mouseY;
 
             transform.Rotate(Vector3.up * mouseX);
 
             _cameraPitch -= mouseY;
             _cameraPitch = Mathf.Clamp(_cameraPitch, minPitch, maxPitch);
 
+            // Dynamic camera roll into strafing motion
+            float horizontalInput = Input.GetAxisRaw("Horizontal");
+            float targetRoll = -horizontalInput * strafeCameraTilt;
+            _cameraRoll = Mathf.Lerp(_cameraRoll, targetRoll, Time.deltaTime * 6f);
+
             if (cameraTransform != null)
             {
-                cameraTransform.localRotation = Quaternion.Euler(_cameraPitch, 0f, 0f);
+                cameraTransform.localRotation = Quaternion.Euler(_cameraPitch, 0f, _cameraRoll);
             }
         }
 
@@ -170,37 +198,68 @@ namespace TomorrowsCrime.Player
 
         private void HandleMovement()
         {
+            bool isGrounded = _characterController.isGrounded;
+
+            // Landing Impact Detection
+            if (!_wasGroundedLastFrame && isGrounded)
+            {
+                if (_verticalVelocity < -2.0f)
+                {
+                    _viewmodelAnimator?.TriggerLandingImpact(_verticalVelocity);
+                    bool isCarpet = CheckIsOnCarpet();
+                    AudioManager.Instance?.PlayFootstep(false, isCarpet);
+                }
+            }
+            _wasGroundedLastFrame = isGrounded;
+
             float horizontal = Input.GetAxisRaw("Horizontal");
             float vertical = Input.GetAxisRaw("Vertical");
 
             bool isSprinting = !_isCrouching && Input.GetKey(KeyCode.LeftShift);
-            float currentSpeed = _isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
+            float targetSpeed = _isCrouching ? crouchSpeed : (isSprinting ? sprintSpeed : walkSpeed);
 
-            Vector3 moveDirection = (transform.forward * vertical + transform.right * horizontal).normalized;
+            Vector3 inputDirection = (transform.forward * vertical + transform.right * horizontal);
+            if (inputDirection.sqrMagnitude > 1.0f) inputDirection.Normalize();
 
-            if (_characterController.isGrounded)
+            Vector3 targetPlanarVelocity = inputDirection * targetSpeed;
+
+            // Smooth Kinematic Momentum (Acceleration & Deceleration Inertia)
+            float accelRate = inputDirection.sqrMagnitude > 0.001f ? acceleration : brakingDeceleration;
+            if (!isGrounded) accelRate *= airControl;
+
+            _currentPlanarVelocity = Vector3.Lerp(_currentPlanarVelocity, targetPlanarVelocity, Time.deltaTime * accelRate);
+
+            // Vertical Jump Physics & Gravity
+            if (isGrounded)
             {
-                _verticalVelocity = -0.5f;
+                if (_verticalVelocity < 0f) _verticalVelocity = -1.5f;
+
+                if (Input.GetKeyDown(KeyCode.Space) && !_isCrouching)
+                {
+                    _verticalVelocity = jumpForce;
+                    bool isCarpet = CheckIsOnCarpet();
+                    AudioManager.Instance?.PlayFootstep(true, isCarpet);
+                }
             }
             else
             {
                 _verticalVelocity += gravity * Time.deltaTime;
             }
 
-            Vector3 velocity = moveDirection * currentSpeed;
-            velocity.y = _verticalVelocity;
+            Vector3 fullVelocity = _currentPlanarVelocity;
+            fullVelocity.y = _verticalVelocity;
 
-            _characterController.Move(velocity * Time.deltaTime);
+            _characterController.Move(fullVelocity * Time.deltaTime);
 
-            // Handle Procedural Footstep Sounds based on ground distance moved
+            // Handle Footstep Audio
             Vector3 horizontalMove = transform.position - _lastPosition;
             horizontalMove.y = 0f;
             float distMoved = horizontalMove.magnitude;
 
-            if (_characterController.isGrounded && distMoved > 0.001f)
+            if (isGrounded && distMoved > 0.001f)
             {
                 _footstepDistanceCounter += distMoved;
-                float stepThreshold = _isCrouching ? 2.1f : (isSprinting ? 1.4f : 1.8f);
+                float stepThreshold = _isCrouching ? 2.1f : (isSprinting ? 1.35f : 1.75f);
 
                 if (_footstepDistanceCounter >= stepThreshold)
                 {
@@ -208,6 +267,13 @@ namespace TomorrowsCrime.Player
                     bool isCarpet = CheckIsOnCarpet();
                     AudioManager.Instance?.PlayFootstep(isSprinting, isCarpet);
                 }
+            }
+
+            // Update Viewmodel Animated Hands
+            bool hasMoveInput = inputDirection.sqrMagnitude > 0.01f;
+            if (_viewmodelAnimator != null)
+            {
+                _viewmodelAnimator.UpdateViewmodel(isGrounded, hasMoveInput, isSprinting, _isCrouching, _lastMouseX, _lastMouseY);
             }
 
             _lastPosition = transform.position;
@@ -252,6 +318,24 @@ namespace TomorrowsCrime.Player
             }
         }
 
+        /// <summary>
+        /// Push physical Rigidbody objects upon collision.
+        /// </summary>
+        private void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            var body = hit.collider.attachedRigidbody;
+            if (body == null || body.isKinematic) return;
+
+            // Do not push objects we are standing directly on top of
+            if (hit.moveDirection.y < -0.3f) return;
+
+            Vector3 pushDir = new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z);
+            float speed = _currentPlanarVelocity.magnitude;
+            float force = pushPower * Mathf.Max(speed, 1.0f);
+
+            body.AddForceAtPosition(pushDir * force, hit.point, ForceMode.Impulse);
+        }
+
         private void UpdateRoomDetection()
         {
             Vector3 pos = transform.position;
@@ -262,7 +346,6 @@ namespace TomorrowsCrime.Player
             {
                 foreach (var room in currentInv.Rooms)
                 {
-                    // Check horizontal bounds with generous vertical margin
                     var b = room.Bounds;
                     if (pos.x >= b.min.x && pos.x <= b.max.x &&
                         pos.z >= b.min.z && pos.z <= b.max.z &&
@@ -277,7 +360,6 @@ namespace TomorrowsCrime.Player
             // 2. Spatial bounding classifier across 4 floors
             if (pos.y >= 14.5f)
             {
-                // Floor 3: Penthouses, Observatory & Solarium
                 if (pos.x < -10f && pos.z > 4f) CurrentRoomName = "Meridian House • Presidential Master Bedroom";
                 else if (pos.x < -10f && pos.z < -4f) CurrentRoomName = "Meridian House • Presidential Private Study";
                 else if (pos.x < -10f) CurrentRoomName = "Meridian House • Crown Penthouse Salon";
@@ -290,7 +372,6 @@ namespace TomorrowsCrime.Player
             }
             else if (pos.y >= 9.5f)
             {
-                // Floor 2: Deluxe Suites, Music Salon & Billiards
                 if (pos.x < -10f && pos.z > 4f) CurrentRoomName = "Meridian House • Deluxe Suite 201 - Ambassador";
                 else if (pos.x < -10f && pos.z < -4f) CurrentRoomName = "Meridian House • Deluxe Suite 203 - Professor";
                 else if (pos.x < -10f) CurrentRoomName = "Meridian House • Billiards & Game Hall";
@@ -303,7 +384,6 @@ namespace TomorrowsCrime.Player
             }
             else if (pos.y >= 4.5f)
             {
-                // Floor 1: Guest Suites & Grand Library
                 if (pos.x < -10f && pos.z > 4f) CurrentRoomName = "Meridian House • Guest Suite 101 - Lord Harrington";
                 else if (pos.x < -10f && pos.z < -4f) CurrentRoomName = "Meridian House • Guest Suite 103 - Dr. Sterling";
                 else if (pos.x < -10f) CurrentRoomName = "Meridian House • Meridian Grand Library";
@@ -316,7 +396,6 @@ namespace TomorrowsCrime.Player
             }
             else
             {
-                // Floor 0: Ground Floor & Lobby
                 if (pos.z > 3.0f && pos.z < 8.0f && Mathf.Abs(pos.x) < 5.0f) CurrentRoomName = "Meridian House • Front Reception Desk";
                 else if (pos.z >= 8.0f && Mathf.Abs(pos.x) < 5.0f) CurrentRoomName = "Meridian House • Room 102 Grand Entrance";
                 else if (pos.x < -7f && pos.z > 5f) CurrentRoomName = "Meridian House • Hotel Kitchen & Scullery";
@@ -337,7 +416,7 @@ namespace TomorrowsCrime.Player
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                Cursor.lockState = Cursor.lockState == CursorLockMode.Locked ? CursorLockMode.None : CursorLockMode.Locked;
+                Cursor.lockState = (Cursor.lockState == CursorLockMode.Locked) ? CursorLockMode.None : CursorLockMode.Locked;
                 Cursor.visible = Cursor.lockState != CursorLockMode.Locked;
             }
         }
@@ -349,8 +428,10 @@ namespace TomorrowsCrime.Player
             transform.rotation = _spawnRotation;
             _lastPosition = _spawnPosition;
             _cameraPitch = 0f;
+            _cameraRoll = 0f;
             _isCrouching = false;
             _currentEyeHeight = standingEyeHeight;
+            _currentPlanarVelocity = Vector3.zero;
 
             if (cameraTransform != null)
             {

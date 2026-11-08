@@ -85,9 +85,9 @@ namespace TomorrowsCrime.Procedural.NPCs
                 NPCRoutinePlan routinePlan = null;
                 if (routines != null && routines.TryGetValue(profile.NpcId, out routinePlan) && routinePlan.Activities.Count > 0)
                 {
-                    var waypointsRoot = new GameObject($"Waypoints_{profile.DisplayName.Replace(" ", "")}");
-                    waypointsRoot.transform.SetParent(rosterRoot.transform);
-                    waypointsRoot.transform.position = Vector3.zero;
+                    var waypointsRoot = new GameObject("Waypoints");
+                    waypointsRoot.transform.SetParent(npcGo.transform);
+                    waypointsRoot.transform.localPosition = Vector3.zero;
 
                     for (int i = 0; i < routinePlan.Activities.Count; i++)
                     {
@@ -102,6 +102,9 @@ namespace TomorrowsCrime.Procedural.NPCs
                 }
 
                 controller.InitializeFromProfile(profile, routinePlan);
+
+                // Lifelike Procedural Locomotion Animation (Walking, Running, Breathing, Look-At)
+                npcGo.AddComponent<NPCProceduralAnimator>();
             }
 
             Debug.Log($"[NPCWorldSpawner] Successfully populated hotel with {roster.Count} distinct, living NPCs with 5-minute routines across all floors.");

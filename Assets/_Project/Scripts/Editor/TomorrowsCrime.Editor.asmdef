@@ -4,7 +4,11 @@
     "references": [
         "TomorrowsCrime.Runtime",
         "Unity.AI.Navigation",
-        "Unity.AI.Navigation.Editor"
+        "Unity.AI.Navigation.Editor",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Core.Editor",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.Editor"
     ],
     "includePlatforms": [
         "Editor"

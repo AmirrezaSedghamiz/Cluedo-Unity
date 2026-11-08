@@ -61,16 +61,16 @@ namespace TomorrowsCrime.Investigation
         {
             _currentGroundTruth = new MysteryGroundTruth
             {
-                CaseTitle = "The Cyanide Draught of Madame Valerie",
+                CaseTitle = "The Midnight Key Incident",
                 VictimId = "npc_madame_valerie",
                 VictimName = "Madame Valerie",
                 CulpritId = "npc_concierge_pierre",
                 CulpritName = "Concierge Pierre",
                 Motive = "Blackmail Silence",
-                Method = MurderMethod.PoisonTincture,
-                MurderWeaponObjectId = "obj_poison_vial",
-                CrimeSceneRoomId = "room_guest_102",
-                MurderTimestamp = 180f
+                Method = MurderMethod.SharpCleaver,
+                MurderWeaponObjectId = "evidence_room102_keycard",
+                CrimeSceneRoomId = "Room 102 Suite",
+                MurderTimestamp = 210f
             };
         }
 
@@ -114,6 +114,7 @@ namespace TomorrowsCrime.Investigation
         {
             return new List<string>
             {
+                "Room 102 Suite",
                 "Room 102 VIP Suite",
                 "Room 101 Guest Suite",
                 "Executive Staff Office",
