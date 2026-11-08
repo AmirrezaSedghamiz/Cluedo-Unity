@@ -581,6 +581,61 @@ The previous visual state relied on flat, cartoonish solid colors with no normal
 - **Scene Build**: `PrototypeSceneSetup.BuildPrototypeSceneBatchmode` completed with exit code 0.
 - **Compilation**: Clean compilation on `TomorrowsCrime.Runtime` and `TomorrowsCrime.Editor`.
 
+---
+
+## [2026-11-08] Milestone 9: Architectural Spatial Realism, Locomotion Fixes & Bespoke 3D Prop Polish
+
+### Problems Addressed
+1. **NPC Shoe Separation**: NPC shoes remained stationary on the ground while hips swung the legs above them.
+2. **Player Arm Disconnection**: First-person viewmodel sleeves were short, floating cylinders without upper arm/shoulder anchoring, exposing open rear caps when running or at wide FOVs.
+3. **NPCs Walking Through Solid Walls & Closed Doors**: Absence of runtime NavMesh generation in procedural investigations caused off-mesh fallback straight-line translation through walls, and closed doors lacked NavMeshObstacle carving.
+4. **Architectural Clashes**:
+   - Solid partition wall at X=8 sliced through the central staircase between Floor 0 and Floor 1.
+   - Solid corridor ceiling slabs blocked the 19.5m elevator shaft on Floors 0, 1, and 2.
+5. **Generic Primitive Cubes & Misplaced Ground Clutter**:
+   - Clues (cleavers, bottles, letters, candlesticks) spawned as plain generic grey/colored cubes and some were assigned to floor corners.
+   - Beds and chairs were crude 1-2 block placeholders rather than recognizable furniture.
+
+### Architectural Solutions & Implementations
+
+#### 1. NPC Shoes Locked to Leg Transforms (`NPCWorldSpawner.cs`, `NPCProceduralAnimator.cs`)
+- Reparented `Shoe_L` and `Shoe_R` directly as children of `LeftLeg` and `RightLeg` across all humanoid roles (trousers, skirts, evening gowns).
+- `NPCProceduralAnimator` automatically detects any unparented shoe/foot transforms and binds them to the hip-pivoted leg transforms before gait initialization.
+- Added articulated legs and evening pumps to `SocietyLady` (Madame Valerie) so she no longer glides as a rigid cone.
+
+#### 2. Seamless Off-Screen First-Person Detective Arms (`PlayerViewmodelAnimator.cs`)
+- Added upper arm and shoulder geometry rooted deep behind and below the camera plane (`Z = -0.45m`, `Y = -0.55m`, `X = ±0.42m`), connecting seamlessly through a rounded elbow joint cover into the forearm sleeve.
+- Lengthened the wool coat cylinder sleeve to 0.44m, ensuring the arm bases never enter the viewport even at maximum sprint pitch, bobbing amplitude, or wide 74°+ sprint FOV.
+
+#### 3. Solid Obstacle NavMesh Carving & Collision Checking (`GenerationPipeline.cs`, `InteractableDoor.cs`, `NPCController.cs`)
+- Added runtime `NavMeshSurface` component and automated baking across all 4 hotel floors, corridors, stairs, and rooms upon playable world creation.
+- Added `NavMeshObstacle` with carving to `InteractableDoor.cs`; closed doors dynamically carve impassable barriers in the NavMesh, and uncarve upon opening.
+- Upgraded `NPCController.cs` off-mesh fallback: checks `Physics.SphereCast` and `Physics.Raycast` against architecture and solid colliders before advancing; stops immediately if a wall, closed door, or furniture obstructs the path.
+
+#### 4. Architecture Fixes: Staircase Archway & Open Elevator Shaft (`HotelLayoutTemplate.cs`, `HotelBuilder.cs`)
+- Added open archway connection `conn_lobby_staircase_arch` at `X = 8.0m, Z = -2.0m` between the Grand Lobby and Transport Hub, cutting a 3.4m-wide open portal that eliminates the wall through the staircase steps.
+- Split corridor ceiling slabs on Floors 0, 1, and 2 into perimeter gallery walkways, keeping the 19.5m elevator shaft and stairwell atrium completely open upward.
+
+#### 5. Bespoke 3D Props & Furniture Realism (`HotelBuilder.cs`, `RoomObjectPlacer.cs`, `PrototypeSceneSetup.cs`)
+- **Bespoke 3D Props**: Replaced primitive cubes with compound models:
+  - Meat Cleaver (beveled steel blade, rosewood handle with brass rivets).
+  - Heavy Brass Candlestick (turned brass base, fluted stem, wax candle, and wick).
+  - Apothecary Poison Vial & Wine Bottles (amber/burgundy glass cylinder, narrow neck, cork stopper, poison label).
+  - Pipe Wrench (forged steel handle, knurled brass collar, serrated L-jaw).
+  - Stationery Letters & Memos (crisp paper parchment with ink script and brass fountain pen).
+  - Ledger (leather-bound book with spine ridges, parchment pages, brass clasp).
+  - Crystal Tumblers, Zinc Wash Buckets, and Cigar Humidors.
+- **Physical Surfaces**: Removed `FloorCorner` anchor categories from table/desk items; all clues rest naturally on desks, counters, tables, and nightstands.
+- **Bespoke Chairs & Beds**:
+  - Implemented `BuildDetailedChair`: 4 turned legs, plush cushion seat, tufted backrest, padded armrests (using `HotelLobby_Armchair.obj` where available).
+  - Implemented 4-poster luxury beds: frame base, plush mattress with white linen, folded velvet duvet, 2 fluffy pillows, carved headboard and footboard, turned posts with brass finials, and nightstands with warm glowing lamps.
+
+### Verification & Validation
+- **Unit Tests**: 117 / 117 EditMode tests passed (100% pass rate, 0 failures).
+- **Scene Build**: `PrototypeSceneSetup.BuildPrototypeSceneBatchmode` completed cleanly with exit code 0.
+- **Compilation**: 0 Errors on `TomorrowsCrime.Runtime` and `TomorrowsCrime.Editor`.
+
+
 
 
 
