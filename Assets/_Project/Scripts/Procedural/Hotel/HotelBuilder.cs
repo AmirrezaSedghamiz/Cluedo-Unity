@@ -219,8 +219,12 @@ namespace TomorrowsCrime.Procedural.Hotel
                 floorStairMargin.transform.localScale = new Vector3(7.6f, 0.2f, 0.35f);
                 if (floorStairMargin.GetComponent<Renderer>() != null && floorMat != null) floorStairMargin.GetComponent<Renderer>().sharedMaterial = floorMat;
 
-                // 1H. Protective Art Deco Brass Balustrade Railing along the stair opening edge (Z = 0.05f, X: 3.8 to 11.4)
-                BuildCabinRailing(roomGo.transform, new Vector3(7.6f, yFloor + 0.6f, 0.05f), new Vector3(7.6f, 1.1f, 0.1f), brassMat, "StairAtrium_GuardRailing");
+                // 1H. Protective Art Deco Brass Balustrades along upper corridor voids (Never blocks stair landing entry)
+                BuildMezzanineBalustrade(roomGo.transform, new Vector3(3.8f, yFloor, 0.05f), new Vector3(10.6f, yFloor, 0.05f), wallLowerMat, brassMat, "StairAtrium_GuardRailing");
+                BuildMezzanineBalustrade(roomGo.transform, new Vector3(3.8f, yFloor, -2.65f), new Vector3(3.8f, yFloor, 0.05f), wallLowerMat, brassMat, "StairAtrium_WestRailing");
+                BuildMezzanineBalustrade(roomGo.transform, new Vector3(12.75f, yFloor, 1.35f), new Vector3(15.35f, yFloor, 1.35f), wallLowerMat, brassMat, "ElevatorShaft_NorthRailing");
+                BuildMezzanineBalustrade(roomGo.transform, new Vector3(12.75f, yFloor, -1.35f), new Vector3(15.35f, yFloor, -1.35f), wallLowerMat, brassMat, "ElevatorShaft_SouthRailing");
+                BuildMezzanineBalustrade(roomGo.transform, new Vector3(15.35f, yFloor, -1.35f), new Vector3(15.35f, yFloor, 1.35f), wallLowerMat, brassMat, "ElevatorShaft_EastRailing");
             }
             else
             {
@@ -793,6 +797,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             newelBottom.transform.localScale = new Vector3(0.18f, 1.20f, 0.18f);
             var nbRend = newelBottom.GetComponent<Renderer>();
             if (nbRend != null && brassMat != null) nbRend.sharedMaterial = brassMat;
+            var nbCol = newelBottom.GetComponent<Collider>();
+            if (nbCol != null) Object.DestroyImmediate(nbCol);
 
             // Top Newel Post
             var newelTop = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -802,6 +808,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             newelTop.transform.localScale = new Vector3(0.18f, 1.20f, 0.18f);
             var ntRend = newelTop.GetComponent<Renderer>();
             if (ntRend != null && brassMat != null) ntRend.sharedMaterial = brassMat;
+            var ntCol = newelTop.GetComponent<Collider>();
+            if (ntCol != null) Object.DestroyImmediate(ntCol);
 
             // 5. Silky Smooth Traversable Ramp Collider for CharacterController (slopes up exactly parallel to the stairs)
             var rampGo = new GameObject($"{name}_WalkRamp_Collider");
@@ -906,43 +914,92 @@ namespace TomorrowsCrime.Procedural.Hotel
 
             var cabinTrigger = cabinRoot.AddComponent<BoxCollider>();
             cabinTrigger.isTrigger = true;
-            cabinTrigger.center = new Vector3(0f, 1.6f, 0f);
-            cabinTrigger.size = new Vector3(2.4f, 3.2f, 2.5f);
+            cabinTrigger.center = new Vector3(0f, 1.4f, 0f);
+            cabinTrigger.size = new Vector3(2.4f, 2.8f, 2.5f);
 
             var elevatorComp = cabinRoot.AddComponent<HotelElevator>();
 
-            // Solid Floor Slab with BoxCollider
+            // Solid Floor Slab with BoxCollider (Floor surface at y = 0.0m)
             var cabinFloor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cabinFloor.name = "Cabin_Floor_Slab";
             cabinFloor.transform.SetParent(cabinRoot.transform);
-            cabinFloor.transform.localPosition = new Vector3(0f, -0.10f, 0f);
-            cabinFloor.transform.localScale = new Vector3(2.4f, 0.2f, 2.5f);
+            cabinFloor.transform.localPosition = new Vector3(0f, -0.05f, 0f);
+            cabinFloor.transform.localScale = new Vector3(2.4f, 0.10f, 2.5f);
             var fRend = cabinFloor.GetComponent<Renderer>();
             if (fRend != null && marbleMat != null) fRend.sharedMaterial = marbleMat;
 
-            // Solid Ceiling Slab with Chandelier
+            // Solid Ceiling Slab (Bottom at y = 2.75m, fully connected to walls and corner posts)
             var cabinCeil = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cabinCeil.name = "Cabin_Ceiling_Slab";
             cabinCeil.transform.SetParent(cabinRoot.transform);
-            cabinCeil.transform.localPosition = new Vector3(0f, 3.2f, 0f);
-            cabinCeil.transform.localScale = new Vector3(2.4f, 0.25f, 2.5f);
+            cabinCeil.transform.localPosition = new Vector3(0f, 2.85f, 0f);
+            cabinCeil.transform.localScale = new Vector3(2.4f, 0.20f, 2.5f);
             var cRend = cabinCeil.GetComponent<Renderer>();
             if (cRend != null && woodMat != null) cRend.sharedMaterial = woodMat;
 
             // Interior Crystal Chandelier Light
             var cabinLightGo = new GameObject("Cabin_CrystalLight");
             cabinLightGo.transform.SetParent(cabinRoot.transform);
-            cabinLightGo.transform.localPosition = new Vector3(0f, 2.8f, 0f);
+            cabinLightGo.transform.localPosition = new Vector3(0f, 2.60f, 0f);
             var cLight = cabinLightGo.AddComponent<Light>();
             cLight.type = LightType.Point;
             cLight.color = new Color(1.0f, 0.90f, 0.70f);
             cLight.intensity = 2.4f;
             cLight.range = 8.0f;
 
-            // Panoramic Brass Railing Walls (North, South, East sides - open West entrance facing corridor)
-            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.2f, 1.2f), new Vector3(2.2f, 2.2f, 0.1f), brassMat, "Cabin_Wall_North");
-            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.2f, -1.2f), new Vector3(2.2f, 2.2f, 0.1f), brassMat, "Cabin_Wall_South");
-            BuildCabinRailing(cabinRoot.transform, new Vector3(1.15f, 1.2f, 0f), new Vector3(0.1f, 2.2f, 2.4f), brassMat, "Cabin_Wall_East");
+            // 4 Full-Height Corner Columns connecting floor directly to ceiling
+            float cabinH = 2.75f;
+            float cabinHalfH = cabinH * 0.5f;
+            Vector3[] cabinCorners = {
+                new Vector3(-1.14f, cabinHalfH, -1.18f),
+                new Vector3(1.14f, cabinHalfH, -1.18f),
+                new Vector3(-1.14f, cabinHalfH, 1.18f),
+                new Vector3(1.14f, cabinHalfH, 1.18f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var cornerCol = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cornerCol.name = $"Cabin_CornerPost_{i}";
+                cornerCol.transform.SetParent(cabinRoot.transform);
+                cornerCol.transform.localPosition = cabinCorners[i];
+                cornerCol.transform.localScale = new Vector3(0.14f, cabinH, 0.14f);
+                var r = cornerCol.GetComponent<Renderer>();
+                if (r != null && brassMat != null) r.sharedMaterial = brassMat;
+                var c = cornerCol.GetComponent<Collider>();
+                if (c != null) Object.DestroyImmediate(c);
+            }
+
+            // Solid Full-Height Enclosed Walls (North, South, East) connecting floor seamlessly to ceiling
+            BuildCabinSolidWall(cabinRoot.transform, new Vector3(0f, cabinHalfH, 1.20f), new Vector3(2.4f, cabinH, 0.08f), woodMat, brassMat, "Cabin_Wall_North");
+            BuildCabinSolidWall(cabinRoot.transform, new Vector3(0f, cabinHalfH, -1.20f), new Vector3(2.4f, cabinH, 0.08f), woodMat, brassMat, "Cabin_Wall_South");
+            BuildCabinSolidWall(cabinRoot.transform, new Vector3(1.15f, cabinHalfH, 0f), new Vector3(0.08f, cabinH, 2.4f), woodMat, brassMat, "Cabin_Wall_East");
+
+            // Front West Entrance Portal Frame (Facing corridor with wide, framed opening)
+            var frontJambL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frontJambL.name = "Cabin_Portal_Jamb_L";
+            frontJambL.transform.SetParent(cabinRoot.transform);
+            frontJambL.transform.localPosition = new Vector3(-1.15f, cabinHalfH, -0.92f);
+            frontJambL.transform.localScale = new Vector3(0.08f, cabinH, 0.52f);
+            if (frontJambL.GetComponent<Renderer>() != null && woodMat != null) frontJambL.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            var frontJambR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frontJambR.name = "Cabin_Portal_Jamb_R";
+            frontJambR.transform.SetParent(cabinRoot.transform);
+            frontJambR.transform.localPosition = new Vector3(-1.15f, cabinHalfH, 0.92f);
+            frontJambR.transform.localScale = new Vector3(0.08f, cabinH, 0.52f);
+            if (frontJambR.GetComponent<Renderer>() != null && woodMat != null) frontJambR.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            var frontLintel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frontLintel.name = "Cabin_Portal_Lintel";
+            frontLintel.transform.SetParent(cabinRoot.transform);
+            frontLintel.transform.localPosition = new Vector3(-1.15f, 2.55f, 0f);
+            frontLintel.transform.localScale = new Vector3(0.08f, 0.40f, 1.40f);
+            if (frontLintel.GetComponent<Renderer>() != null && woodMat != null) frontLintel.GetComponent<Renderer>().sharedMaterial = woodMat;
+
+            // Interior Brass Handrails at waist height
+            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.0f, 1.13f), new Vector3(2.2f, 0.05f, 0.05f), brassMat, "Cabin_Handrail_N");
+            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.0f, -1.13f), new Vector3(2.2f, 0.05f, 0.05f), brassMat, "Cabin_Handrail_S");
+            BuildCabinRailing(cabinRoot.transform, new Vector3(1.08f, 1.0f, 0f), new Vector3(0.05f, 0.05f, 2.2f), brassMat, "Cabin_Handrail_E");
 
             // 3. Inside Cabin Interactive Control Panel
             var panelGo = new GameObject("Elevator_ControlPanel");
@@ -1017,6 +1074,190 @@ namespace TomorrowsCrime.Procedural.Hotel
             col.isTrigger = false;
         }
 
+        private static void BuildCabinSolidWall(Transform parent, Vector3 localPos, Vector3 size, Material wallMat, Material trimMat, string name)
+        {
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = name;
+            wall.transform.SetParent(parent);
+            wall.transform.localPosition = localPos;
+            wall.transform.localScale = size;
+
+            var r = wall.GetComponent<Renderer>();
+            if (r != null && wallMat != null) r.sharedMaterial = wallMat;
+
+            var col = wall.GetComponent<BoxCollider>();
+            if (col == null) col = wall.AddComponent<BoxCollider>();
+            col.isTrigger = false;
+
+            // Inward brass accent banding detail
+            var trim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            trim.name = $"{name}_Trim";
+            trim.transform.SetParent(wall.transform);
+            trim.transform.localPosition = Vector3.zero;
+            trim.transform.localScale = new Vector3(1.02f, 0.04f, 1.05f);
+            var trRend = trim.GetComponent<Renderer>();
+            if (trRend != null && trimMat != null) trRend.sharedMaterial = trimMat;
+            var trCol = trim.GetComponent<Collider>();
+            if (trCol != null) Object.DestroyImmediate(trCol);
+        }
+
+        private static void BuildMezzanineBalustrade(Transform parent, Vector3 start, Vector3 end,
+            Material woodMat, Material brassMat, string name)
+        {
+            var balustradeRoot = new GameObject(name);
+            balustradeRoot.transform.SetParent(parent);
+
+            Vector3 delta = end - start;
+            float length = delta.magnitude;
+            if (length < 0.2f) return;
+
+            Vector3 dir = delta.normalized;
+            Vector3 mid = (start + end) * 0.5f;
+            Quaternion rot = Quaternion.LookRotation(dir, Vector3.up);
+
+            // Top Molded Hardwood Handrail (Height = 1.05m)
+            var topRail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            topRail.name = "Balustrade_TopRail";
+            topRail.transform.SetParent(balustradeRoot.transform);
+            topRail.transform.position = new Vector3(mid.x, mid.y + 1.05f, mid.z);
+            topRail.transform.rotation = rot;
+            topRail.transform.localScale = new Vector3(0.10f, 0.08f, length);
+            var trRend = topRail.GetComponent<Renderer>();
+            if (trRend != null && woodMat != null) trRend.sharedMaterial = woodMat;
+            var trCol = topRail.GetComponent<Collider>();
+            if (trCol != null) Object.DestroyImmediate(trCol);
+
+            // Bottom Hardwood Plinth / Base Rail (Height = 0.06m)
+            var baseRail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            baseRail.name = "Balustrade_BaseRail";
+            baseRail.transform.SetParent(balustradeRoot.transform);
+            baseRail.transform.position = new Vector3(mid.x, mid.y + 0.06f, mid.z);
+            baseRail.transform.rotation = rot;
+            baseRail.transform.localScale = new Vector3(0.10f, 0.08f, length);
+            var brRend = baseRail.GetComponent<Renderer>();
+            if (brRend != null && woodMat != null) brRend.sharedMaterial = woodMat;
+            var brCol = baseRail.GetComponent<Collider>();
+            if (brCol != null) Object.DestroyImmediate(brCol);
+
+            // Start Newel Post
+            var newelStart = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            newelStart.name = "Balustrade_Newel_Start";
+            newelStart.transform.SetParent(balustradeRoot.transform);
+            newelStart.transform.position = new Vector3(start.x, start.y + 0.55f, start.z);
+            newelStart.transform.localScale = new Vector3(0.16f, 1.15f, 0.16f);
+            var nsRend = newelStart.GetComponent<Renderer>();
+            if (nsRend != null && brassMat != null) nsRend.sharedMaterial = brassMat;
+            var nsCol = newelStart.GetComponent<Collider>();
+            if (nsCol != null) Object.DestroyImmediate(nsCol);
+
+            // End Newel Post
+            var newelEnd = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            newelEnd.name = "Balustrade_Newel_End";
+            newelEnd.transform.SetParent(balustradeRoot.transform);
+            newelEnd.transform.position = new Vector3(end.x, end.y + 0.55f, end.z);
+            newelEnd.transform.localScale = new Vector3(0.16f, 1.15f, 0.16f);
+            var neRend = newelEnd.GetComponent<Renderer>();
+            if (neRend != null && brassMat != null) neRend.sharedMaterial = brassMat;
+            var neCol = newelEnd.GetComponent<Collider>();
+            if (neCol != null) Object.DestroyImmediate(neCol);
+
+            // Decorative Brass Baluster Spindles (Spaced every ~0.28m)
+            int numSpindles = Mathf.Max(1, Mathf.RoundToInt(length / 0.28f));
+            for (int i = 1; i < numSpindles; i++)
+            {
+                float t = (float)i / numSpindles;
+                Vector3 pos = Vector3.Lerp(start, end, t);
+                var spindle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                spindle.name = $"Balustrade_Spindle_{i:D2}";
+                spindle.transform.SetParent(balustradeRoot.transform);
+                spindle.transform.position = new Vector3(pos.x, pos.y + 0.55f, pos.z);
+                spindle.transform.localScale = new Vector3(0.04f, 0.92f, 0.04f);
+                var spRend = spindle.GetComponent<Renderer>();
+                if (spRend != null && brassMat != null) spRend.sharedMaterial = brassMat;
+                var spCol = spindle.GetComponent<Collider>();
+                if (spCol != null) Object.DestroyImmediate(spCol);
+            }
+
+            // Invisible Safety Box Collider (Prevents player and NPC falls over edge)
+            var colGo = new GameObject("SafetyCollider");
+            colGo.transform.SetParent(balustradeRoot.transform);
+            colGo.transform.position = new Vector3(mid.x, mid.y + 0.60f, mid.z);
+            colGo.transform.rotation = rot;
+            var boxCol = colGo.AddComponent<BoxCollider>();
+            boxCol.size = new Vector3(0.14f, 1.20f, length);
+            boxCol.isTrigger = false;
+        }
+
+        private static void BuildBacklitArchitecturalWindow(Transform parent, Vector3 localPos, Quaternion localRot,
+            Vector2 windowSize, Material frameMat, Material brassMat, string name)
+        {
+            var winRoot = new GameObject(name);
+            winRoot.transform.SetParent(parent);
+            winRoot.transform.localPosition = localPos;
+            winRoot.transform.localRotation = localRot;
+
+            float width = windowSize.x;
+            float height = windowSize.y;
+
+            // Outer Molded Hardwood Window Frame Casing
+            var frame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frame.name = $"{name}_Frame";
+            frame.transform.SetParent(winRoot.transform);
+            frame.transform.localPosition = Vector3.zero;
+            frame.transform.localScale = new Vector3(width + 0.16f, height + 0.16f, 0.12f);
+            var frRend = frame.GetComponent<Renderer>();
+            if (frRend != null && frameMat != null) frRend.sharedMaterial = frameMat;
+            var frCol = frame.GetComponent<Collider>();
+            if (frCol != null) Object.DestroyImmediate(frCol);
+
+            // Frosted Recessed Glass Pane
+            var pane = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            pane.name = $"{name}_GlassPane";
+            pane.transform.SetParent(winRoot.transform);
+            pane.transform.localPosition = new Vector3(0f, 0f, 0.02f);
+            pane.transform.localScale = new Vector3(width, height, 0.02f);
+            var pRend = pane.GetComponent<Renderer>();
+            if (pRend != null && frameMat != null) pRend.sharedMaterial = frameMat;
+            var pCol = pane.GetComponent<Collider>();
+            if (pCol != null) Object.DestroyImmediate(pCol);
+
+            // Center Horizontal Brass Mullion
+            var mullionH = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mullionH.name = $"{name}_Mullion_H";
+            mullionH.transform.SetParent(winRoot.transform);
+            mullionH.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            mullionH.transform.localScale = new Vector3(width, 0.04f, 0.05f);
+            var mhRend = mullionH.GetComponent<Renderer>();
+            if (mhRend != null && brassMat != null) mhRend.sharedMaterial = brassMat;
+            var mhCol = mullionH.GetComponent<Collider>();
+            if (mhCol != null) Object.DestroyImmediate(mhCol);
+
+            // Vertical Brass Mullions (2 vertical dividers -> 6 panes total)
+            for (int i = -1; i <= 1; i += 2)
+            {
+                var mullionV = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                mullionV.name = $"{name}_Mullion_V_{(i < 0 ? "L" : "R")}";
+                mullionV.transform.SetParent(winRoot.transform);
+                mullionV.transform.localPosition = new Vector3(i * width * 0.25f, 0f, -0.01f);
+                mullionV.transform.localScale = new Vector3(0.04f, height, 0.05f);
+                var mvRend = mullionV.GetComponent<Renderer>();
+                if (mvRend != null && brassMat != null) mvRend.sharedMaterial = brassMat;
+                var mvCol = mullionV.GetComponent<Collider>();
+                if (mvCol != null) Object.DestroyImmediate(mvCol);
+            }
+
+            // Window Sill Shelf
+            var sill = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            sill.name = $"{name}_Sill";
+            sill.transform.SetParent(winRoot.transform);
+            sill.transform.localPosition = new Vector3(0f, -height * 0.5f - 0.04f, -0.04f);
+            sill.transform.localScale = new Vector3(width + 0.24f, 0.08f, 0.20f);
+            var sillRend = sill.GetComponent<Renderer>();
+            if (sillRend != null && frameMat != null) sillRend.sharedMaterial = frameMat;
+            var sillCol = sill.GetComponent<Collider>();
+            if (sillCol != null) Object.DestroyImmediate(sillCol);
+        }
+
         private static void BuildDoors(Transform parent, List<RoomDefinition> rooms, Dictionary<string, RoomDefinition> roomMap, Dictionary<string, Material> mats)
         {
             var doorsRoot = new GameObject("Hotel_Doors");
@@ -1039,21 +1280,37 @@ namespace TomorrowsCrime.Procedural.Hotel
                     doorRoot.transform.SetParent(doorsRoot.transform);
                     doorRoot.transform.position = conn.WorldPosition;
 
-                    // Dynamically calculate exact orientation based on room positions:
+                    // Dynamically calculate exact orthogonal orientation based on which wall the doorway is cut into:
                     // Local -Z faces FromRoom (corridor / approach room where plaque is displayed)
                     // Local +Z enters ToRoom (destination room where door swings inward)
+                    // Local X runs parallel along the wall plane
                     Quaternion doorRot;
-                    if (roomMap.TryGetValue(conn.FromRoomId, out var fromRoom) && roomMap.TryGetValue(conn.ToRoomId, out var toRoom))
+                    if (roomMap.TryGetValue(conn.FromRoomId, out var fromRoom))
                     {
-                        Vector3 toRoomDir = toRoom.Bounds.center - fromRoom.Bounds.center;
+                        Vector3 c = fromRoom.Bounds.center;
+                        Vector3 s = fromRoom.Bounds.size;
+                        float distNorth = Mathf.Abs(conn.WorldPosition.z - (c.z + s.z * 0.5f));
+                        float distSouth = Mathf.Abs(conn.WorldPosition.z - (c.z - s.z * 0.5f));
+                        float distEast = Mathf.Abs(conn.WorldPosition.x - (c.x + s.x * 0.5f));
+                        float distWest = Mathf.Abs(conn.WorldPosition.x - (c.x - s.x * 0.5f));
+
+                        float minDist = Mathf.Min(Mathf.Min(distNorth, distSouth), Mathf.Min(distEast, distWest));
                         Vector3 forwardDir;
-                        if (Mathf.Abs(toRoomDir.x) > Mathf.Abs(toRoomDir.z))
+                        if (Mathf.Approximately(minDist, distNorth))
                         {
-                            forwardDir = (toRoomDir.x > 0f) ? Vector3.right : Vector3.left;
+                            forwardDir = Vector3.forward;
+                        }
+                        else if (Mathf.Approximately(minDist, distSouth))
+                        {
+                            forwardDir = Vector3.back;
+                        }
+                        else if (Mathf.Approximately(minDist, distEast))
+                        {
+                            forwardDir = Vector3.right;
                         }
                         else
                         {
-                            forwardDir = (toRoomDir.z > 0f) ? Vector3.forward : Vector3.back;
+                            forwardDir = Vector3.left;
                         }
                         doorRot = Quaternion.LookRotation(forwardDir, Vector3.up);
                     }
@@ -1462,72 +1719,129 @@ namespace TomorrowsCrime.Procedural.Hotel
                         break;
 
                     case RoomType.Library:
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, 6f), new Vector3(8.0f, 3.6f, 0.8f), mahoganyMat, "Library_Bookshelf_North");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, -6f), new Vector3(8.0f, 3.6f, 0.8f), mahoganyMat, "Library_Bookshelf_South");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, 0f), new Vector3(3.0f, 0.85f, 1.6f), walnutMat, "Library_StudyReadingDesk");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, 1.2f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Library_ReadingChair_N");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, -1.2f), Quaternion.Euler(0f, 0f, 0f), walnutMat, greenFeltMat, "Library_ReadingChair_S");
-                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(-8.5f, y, 3.5f), brassMat, "Library_TerrestrialGlobe");
+                        // Bookshelves flush along North and South walls
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, y, 6.4f), new Vector3(10.0f, 3.6f, 0.7f), mahoganyMat, "Library_Bookshelf_North");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, y, -6.4f), new Vector3(10.0f, 3.6f, 0.7f), mahoganyMat, "Library_Bookshelf_South");
+                        // Central study reading desk & chairs
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-11f, y, 0f), new Vector3(3.2f, 0.85f, 1.6f), walnutMat, "Library_StudyReadingDesk");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, 1.2f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Library_ReadingChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, -1.2f), Quaternion.Euler(0f, 0f, 0f), walnutMat, greenFeltMat, "Library_ReadingChair_S");
+                        // Terrestrial globe in NW corner
+                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(-16.5f, y, 4.5f), brassMat, "Library_TerrestrialGlobe");
+                        // Faux backlit architectural windows on West exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, 3.5f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.4f, 1.8f), mahoganyMat, brassMat, "Library_Window_West_N");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, -3.5f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.4f, 1.8f), mahoganyMat, brassMat, "Library_Window_West_S");
                         break;
 
                     case RoomType.CardRoom:
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-6f, y, -13f), new Vector3(2.2f, 0.82f, 2.2f), greenFeltMat, "CardRoom_GameTable");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-6f, y, -11.7f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_N");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-6f, y, -14.3f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_S");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-7.3f, y, -13f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_W");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-4.7f, y, -13f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_E");
+                        // Poker table centered in West half with 4 surrounding chairs
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-14f, y, 10.5f), new Vector3(2.2f, 0.82f, 2.2f), greenFeltMat, "CardRoom_GameTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-14f, y, 11.8f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-14f, y, 9.2f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_S");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-15.3f, y, 10.5f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_W");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-12.7f, y, 10.5f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_E");
 
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-11f, y, 10.5f), new Vector3(1.4f, 0.80f, 1.4f), walnutMat, "CardRoom_ChessTable");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, 11.5f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetGoldMat, "CardRoom_ChessChair_N");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, 9.5f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetGoldMat, "CardRoom_ChessChair_S");
+                        // Chess table centered in East half with 2 chairs
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-8f, y, 10.5f), new Vector3(1.4f, 0.80f, 1.4f), walnutMat, "CardRoom_ChessTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-8f, y, 11.5f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetGoldMat, "CardRoom_ChessChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-8f, y, 9.5f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetGoldMat, "CardRoom_ChessChair_S");
 
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-15f, y, 12f), new Vector3(1.4f, 1.2f, 0.5f), mahoganyMat, "CardRoom_HumidorCredenza");
+                        // Humidor Credenza flush in SW corner against West wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.3f, y, 8.5f), new Vector3(0.6f, 1.5f, 1.8f), mahoganyMat, "CardRoom_HumidorCredenza");
+                        // Faux backlit architectural windows on North exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-14f, y + 2.2f, 13.9f), Quaternion.Euler(0f, 180f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "CardRoom_Window_N1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-8f, y + 2.2f, 13.9f), Quaternion.Euler(0f, 180f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "CardRoom_Window_N2");
                         break;
 
                     case RoomType.MusicSalon:
-                        BuildSolidPiano(furnitureRoot.transform, new Vector3(0f, y, 11f), mats);
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-3f, y, 12f), new Vector3(0.6f, 1.4f, 0.6f), walnutMat, "MusicSalon_CelloStand");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-2.8f, y, 9.5f), Quaternion.Euler(0f, 40f, 0f), walnutMat, velvetGoldMat, "MusicSalon_Armchair_L");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(2.8f, y, 9.5f), Quaternion.Euler(0f, -40f, 0f), walnutMat, velvetGoldMat, "MusicSalon_Armchair_R");
+                        // Grand Piano placed elegantly in East salon area
+                        BuildSolidPiano(furnitureRoot.transform, new Vector3(-8f, y, 10.5f), mats);
+                        // Cello / Music stand in NW corner against North wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16.5f, y, 13.2f), new Vector3(0.6f, 1.4f, 0.6f), walnutMat, "MusicSalon_CelloStand");
+                        // Tea table & conversation armchairs in West salon area
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-14f, y, 10.5f), new Vector3(1.4f, 0.65f, 1.4f), mahoganyMat, "MusicSalon_TeaTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-15.3f, y, 10.5f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "MusicSalon_Armchair_L");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-12.7f, y, 10.5f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "MusicSalon_Armchair_R");
+                        // Sheet music cabinet flush against West wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.3f, y, 10.5f), new Vector3(0.6f, 1.8f, 2.4f), walnutMat, "MusicSalon_MusicCabinet");
+                        // Faux backlit architectural windows on North exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-14f, y + 2.2f, 13.9f), Quaternion.Euler(0f, 180f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "MusicSalon_Window_N1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-8f, y + 2.2f, 13.9f), Quaternion.Euler(0f, 180f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "MusicSalon_Window_N2");
                         break;
 
                     case RoomType.BilliardsRoom:
-                        BuildSolidBilliardsTable(furnitureRoot.transform, new Vector3(-16f, y, 0f), mats);
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-21f, y, 0f), new Vector3(0.4f, 2.0f, 2.4f), mahoganyMat, "Billiards_CueRack");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, -5.5f), new Vector3(3.0f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench");
+                        // Billiards table in center of room
+                        BuildSolidBilliardsTable(furnitureRoot.transform, new Vector3(-11f, y, 0f), mats);
+                        // Cue rack flush against West wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.5f, y, 0f), new Vector3(0.4f, 2.0f, 2.4f), mahoganyMat, "Billiards_CueRack");
+                        // Spectator benches along North and South walls
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, y, 6.2f), new Vector3(3.2f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench_N");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, y, -6.2f), new Vector3(3.2f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench");
+                        // Faux backlit architectural windows on West exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, 3.5f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.4f, 1.8f), mahoganyMat, brassMat, "Billiards_Window_W1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, -3.5f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.4f, 1.8f), mahoganyMat, brassMat, "Billiards_Window_W2");
                         break;
 
                     case RoomType.CigarLounge:
-                        BuildSolidFireplace(furnitureRoot.transform, new Vector3(-6f, y, -15f), mats, "CigarLounge_Fireplace");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-6f, y, -12f), new Vector3(2.0f, 0.55f, 1.2f), mahoganyMat, "CigarLounge_CoffeeTable");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-7.5f, y, -12f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_W");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-4.5f, y, -12f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_E");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-15f, y, -11f), new Vector3(1.8f, 2.2f, 0.6f), walnutMat, "CigarLounge_HumidorCabinet");
+                        // Fireplace centered on South exterior wall
+                        BuildSolidFireplace(furnitureRoot.transform, new Vector3(-11f, y, -13.5f), mats, "CigarLounge_Fireplace");
+                        // Central conversation coffee table and 4 armchairs
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-11f, y, -10.5f), new Vector3(2.2f, 0.55f, 1.4f), mahoganyMat, "CigarLounge_CoffeeTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, -9.2f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, -11.8f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_S");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-12.6f, y, -10.5f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_W");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-9.4f, y, -10.5f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_E");
+                        // Humidor cabinet in SW corner flush against West wall (NOT floating in the middle!)
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.2f, y, -12.5f), new Vector3(0.7f, 2.4f, 1.8f), walnutMat, "CigarLounge_HumidorCabinet");
+                        // Cognac bar in NW corner flush against West wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.2f, y, -8.5f), new Vector3(0.7f, 1.6f, 1.8f), walnutMat, "CigarLounge_CognacBar");
+                        // Faux backlit architectural windows on South exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-14.5f, y + 2.2f, -13.9f), Quaternion.Euler(0f, 0f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "CigarLounge_Window_S1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-7.5f, y + 2.2f, -13.9f), Quaternion.Euler(0f, 0f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "CigarLounge_Window_S2");
                         break;
 
                     case RoomType.CrownPenthouse:
-                        BuildSolidFireplace(furnitureRoot.transform, new Vector3(-21f, y, 0f), mats, "Penthouse_GrandFireplace");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, 0f), new Vector3(4.0f, 1.15f, 1.2f), walnutMat, "Penthouse_PrivateBar");
-                        BuildBarStool(furnitureRoot.transform, new Vector3(-17.0f, y, 1.0f), walnutMat, brassMat, velvetGoldMat, "Penthouse_BarStool_1");
-                        BuildBarStool(furnitureRoot.transform, new Vector3(-15.0f, y, 1.0f), walnutMat, brassMat, velvetGoldMat, "Penthouse_BarStool_2");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, 4f), new Vector3(2.4f, 0.50f, 1.4f), mahoganyMat, "Penthouse_LoungeTable");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, 5.5f), new Vector3(2.8f, 0.85f, 0.9f), velvetGoldMat, "Penthouse_VelvetSofa");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-18f, y, 4f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "Penthouse_Armchair_W");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-14f, y, 4f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "Penthouse_Armchair_E");
+                        // Grand fireplace flush against West exterior wall
+                        BuildSolidFireplace(furnitureRoot.transform, new Vector3(-17.4f, y, 0f), mats, "Penthouse_GrandFireplace");
+                        // Private penthouse bar in NE corner with 2 barstools
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-7.5f, y, 4.5f), new Vector3(3.2f, 1.15f, 1.0f), walnutMat, "Penthouse_PrivateBar");
+                        BuildBarStool(furnitureRoot.transform, new Vector3(-8.2f, y, 3.5f), walnutMat, brassMat, velvetGoldMat, "Penthouse_BarStool_1");
+                        BuildBarStool(furnitureRoot.transform, new Vector3(-6.8f, y, 3.5f), walnutMat, brassMat, velvetGoldMat, "Penthouse_BarStool_2");
+                        // Central luxury lounge seating with velvet sofa, coffee table, and armchairs
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-13.5f, y, 0f), new Vector3(2.4f, 0.50f, 1.4f), mahoganyMat, "Penthouse_LoungeTable");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-13.5f, y, 1.5f), new Vector3(2.8f, 0.85f, 0.9f), velvetGoldMat, "Penthouse_VelvetSofa");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-15.5f, y, 0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "Penthouse_Armchair_W");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11.5f, y, 0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "Penthouse_Armchair_E");
+                        // Faux backlit architectural windows on West exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, 4.0f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.6f, 2.0f), mahoganyMat, brassMat, "Penthouse_Window_W1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, -4.0f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.6f, 2.0f), mahoganyMat, brassMat, "Penthouse_Window_W2");
                         break;
 
                     case RoomType.Observatory:
-                        BuildAstronomicalTelescope(furnitureRoot.transform, new Vector3(0f, y, 11f), brassMat, mahoganyMat, "Observatory_Telescope");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-3f, y, 9f), new Vector3(1.8f, 0.85f, 1.0f), walnutMat, "Observatory_StarChartDesk");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-3f, y, 9.8f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Observatory_AstronomerChair");
-                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(2f, y, 9f), brassMat, "Observatory_ArmillaryGlobe");
+                        // Telescope in center pointing toward sky/north
+                        BuildAstronomicalTelescope(furnitureRoot.transform, new Vector3(1f, y, 8.5f), brassMat, mahoganyMat, "Observatory_Telescope");
+                        // Star chart desk along West wall
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-2.6f, y, 7.0f), new Vector3(1.8f, 0.85f, 1.0f), walnutMat, "Observatory_StarChartDesk");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-2.6f, y, 7.8f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Observatory_AstronomerChair");
+                        // Armillary globe in NE corner
+                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(4.5f, y, 9.5f), brassMat, "Observatory_ArmillaryGlobe");
+                        // Faux observation skylight windows on North wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(1.0f, y + 2.2f, 10.9f), Quaternion.Euler(0f, 180f, 0f), new Vector2(3.0f, 2.0f), walnutMat, brassMat, "Observatory_SkyWindow");
                         break;
 
                     case RoomType.Solarium:
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-6f, y, -14f), new Vector3(2.2f, 1.2f, 2.2f), marbleIvoryMat, "Solarium_StoneFountain");
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-3f, y, -10f), new Vector3(1.6f, 0.70f, 1.0f), brassMat, "Solarium_LoungerTable");
-                        BuildSunLounger(furnitureRoot.transform, new Vector3(-1.6f, y, -10f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetEmeraldMat, "Solarium_SunLounger_1");
-                        BuildSunLounger(furnitureRoot.transform, new Vector3(-4.4f, y, -10f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetEmeraldMat, "Solarium_SunLounger_2");
+                        // Central carved stone fountain
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(1f, y, -7f), new Vector3(2.2f, 1.2f, 2.2f), marbleIvoryMat, "Solarium_StoneFountain");
+                        // Sun loungers & bistro table along East side
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(3.5f, y, -7f), new Vector3(1.2f, 0.70f, 1.0f), brassMat, "Solarium_LoungerTable");
+                        BuildSunLounger(furnitureRoot.transform, new Vector3(3.5f, y, -5.6f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetEmeraldMat, "Solarium_SunLounger_1");
+                        BuildSunLounger(furnitureRoot.transform, new Vector3(3.5f, y, -8.4f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetEmeraldMat, "Solarium_SunLounger_2");
+                        // Stone planters in corners
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-2.8f, y, -10f), new Vector3(1.2f, 1.0f, 1.2f), marbleIvoryMat, "Solarium_Planter_SW");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-2.8f, y, -4f), new Vector3(1.2f, 1.0f, 1.2f), marbleIvoryMat, "Solarium_Planter_NW");
+                        // Faux terrace windows along South wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-1.5f, y + 2.2f, -10.9f), Quaternion.Euler(0f, 0f, 0f), new Vector2(2.4f, 1.8f), marbleIvoryMat, brassMat, "Solarium_Window_S1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(3.5f, y + 2.2f, -10.9f), Quaternion.Euler(0f, 0f, 0f), new Vector2(2.4f, 1.8f), marbleIvoryMat, brassMat, "Solarium_Window_S2");
                         break;
 
                     case RoomType.PresidentialBedroom:
@@ -1548,12 +1862,20 @@ namespace TomorrowsCrime.Procedural.Hotel
                         break;
 
                     case RoomType.PresidentialStudy:
-                        BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, -11f), new Vector3(2.6f, 0.85f, 1.4f), walnutMat, "Presidential_StudyDesk");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, -10.1f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Presidential_ExecutiveChair");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-17.2f, y, -12.3f), Quaternion.Euler(0f, 20f, 0f), walnutMat, velvetGoldMat, "Presidential_VisitorChair_L");
-                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-14.8f, y, -12.3f), Quaternion.Euler(0f, -20f, 0f), walnutMat, velvetGoldMat, "Presidential_VisitorChair_R");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-19f, y, -11f), new Vector3(1.2f, 1.6f, 0.9f), marbleBlackMat, "Presidential_FloorSafe");
-                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(-13f, y, -11f), brassMat, "Presidential_Globe");
+                        // Executive partner desk centered in room
+                        BuildSolidTable(furnitureRoot.transform, new Vector3(-11f, y, -10.5f), new Vector3(2.8f, 0.85f, 1.5f), walnutMat, "Presidential_StudyDesk");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, -9.4f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Presidential_ExecutiveChair");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-12.4f, y, -11.8f), Quaternion.Euler(0f, 20f, 0f), walnutMat, velvetGoldMat, "Presidential_VisitorChair_L");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-9.6f, y, -11.8f), Quaternion.Euler(0f, -20f, 0f), walnutMat, velvetGoldMat, "Presidential_VisitorChair_R");
+                        // Heavy floor safe in SW corner against West wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.2f, y, -12.5f), new Vector3(1.1f, 1.6f, 1.1f), marbleBlackMat, "Presidential_FloorSafe");
+                        // Bookcase in NW corner against West wall
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.2f, y, -8.5f), new Vector3(0.6f, 2.4f, 2.0f), walnutMat, "Presidential_Bookcase");
+                        // Terrestrial globe near east corner
+                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(-6.5f, y, -12.0f), brassMat, "Presidential_Globe");
+                        // Faux backlit windows on South exterior wall
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-14.5f, y + 2.2f, -13.9f), Quaternion.Euler(0f, 0f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "Presidential_Window_S1");
+                        BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-7.5f, y + 2.2f, -13.9f), Quaternion.Euler(0f, 0f, 0f), new Vector2(2.4f, 1.8f), walnutMat, brassMat, "Presidential_Window_S2");
                         break;
 
                     case RoomType.HousekeepingStorage:
@@ -1716,6 +2038,13 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                 BuildEnSuiteBathroom(suiteRoot.transform, showerPos, vanityPos, toiletPos, towelPos, yFloor, mats, room.RoomId);
             }
+
+            // Faux Backlit Architectural Window on exterior wall
+            bool isNorth = center.z > 0;
+            float winZ = isNorth ? (center.z + size.z * 0.5f - 0.10f) : (center.z - size.z * 0.5f + 0.10f);
+            Quaternion winRot = isNorth ? Quaternion.Euler(0f, 180f, 0f) : Quaternion.identity;
+            BuildBacklitArchitecturalWindow(suiteRoot.transform, new Vector3(center.x, yFloor + 2.2f, winZ), winRot,
+                new Vector2(2.4f, 1.8f), walnutMat, brassMat, $"{room.RoomId}_Window");
         }
 
         /// <summary>

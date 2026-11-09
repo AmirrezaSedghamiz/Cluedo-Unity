@@ -149,7 +149,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room101", "room_upper_corridor", "room_guest_101", new Vector3(1f, 5f, 3f), Vector3.zero, true, "key_room_101", "Room 101 Door"));
             upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room102", "room_upper_corridor", "room_guest_102", new Vector3(10f, 5f, 3f), Vector3.zero, true, "key_room_102", "Room 102 VIP Suite Door"));
             upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room103", "room_upper_corridor", "room_guest_103", new Vector3(1f, 5f, -3f), new Vector3(0f, 180f, 0f), true, "key_room_103", "Room 103 Door"));
-            upperCorridor.AddConnection(new DoorwayConnection("conn_upper_housekeeping", "room_upper_corridor", "room_housekeeping", new Vector3(10f, 5f, -3f), new Vector3(0f, 180f, 0f), true, "key_housekeeping", "Housekeeping Storage Door"));
+            upperCorridor.AddConnection(new DoorwayConnection("conn_upper_housekeeping", "room_upper_corridor", "room_housekeeping", new Vector3(14.5f, 5f, -3f), new Vector3(0f, 180f, 0f), true, "key_housekeeping", "Housekeeping Storage Door"));
             rooms.Add(upperCorridor);
 
             // 12. Grand Library & Archive
@@ -257,7 +257,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room201", "room_floor2_promenade", "room_guest_201", new Vector3(1f, 10f, 3f), Vector3.zero, true, "key_room_201", "Deluxe Suite 201 Door"));
             floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room202", "room_floor2_promenade", "room_guest_202", new Vector3(10f, 10f, 3f), Vector3.zero, true, "key_room_202", "Deluxe Suite 202 Door"));
             floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room203", "room_floor2_promenade", "room_guest_203", new Vector3(1f, 10f, -3f), new Vector3(0f, 180f, 0f), true, "key_room_203", "Deluxe Suite 203 Door"));
-            floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_service", "room_floor2_promenade", "room_service_floor2", new Vector3(10f, 10f, -3f), new Vector3(0f, 180f, 0f), false, null, "Floor 2 Service Annex Door"));
+            floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_service", "room_floor2_promenade", "room_service_floor2", new Vector3(14.5f, 10f, -3f), new Vector3(0f, 180f, 0f), false, null, "Floor 2 Service Annex Door"));
             rooms.Add(floor2Promenade);
 
             // 22. Billiards Hall & Game Room
@@ -363,7 +363,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             skyFoyer.AddConnection(new DoorwayConnection("conn_sky_observatory", "room_floor3_sky_foyer", "room_observatory", new Vector3(1f, 15f, 3f), Vector3.zero, true, "key_observatory", "Clock Tower Observatory Door"));
             skyFoyer.AddConnection(new DoorwayConnection("conn_sky_vip301", "room_floor3_sky_foyer", "room_vip_301", new Vector3(10f, 15f, 3f), Vector3.zero, true, "key_vip_301", "Royal Penthouse 301 Door"));
             skyFoyer.AddConnection(new DoorwayConnection("conn_sky_solarium", "room_floor3_sky_foyer", "room_solarium", new Vector3(1f, 15f, -3f), new Vector3(0f, 180f, 0f), false, null, "Rooftop Solarium French Doors"));
-            skyFoyer.AddConnection(new DoorwayConnection("conn_sky_vip302", "room_floor3_sky_foyer", "room_vip_302", new Vector3(10f, 15f, -3f), new Vector3(0f, 180f, 0f), true, "key_vip_302", "Royal Penthouse 302 Door"));
+            skyFoyer.AddConnection(new DoorwayConnection("conn_sky_vip302", "room_floor3_sky_foyer", "room_vip_302", new Vector3(14.5f, 15f, -3f), new Vector3(0f, 180f, 0f), true, "key_vip_302", "Royal Penthouse 302 Door"));
             rooms.Add(skyFoyer);
 
             // 32. Crown Penthouse Grand Salon
