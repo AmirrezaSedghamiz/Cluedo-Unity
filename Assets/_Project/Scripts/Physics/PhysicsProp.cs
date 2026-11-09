@@ -75,6 +75,7 @@ namespace TomorrowsCrime.PhysicsEngine
             _isHeld = held;
             if (_rigidbody != null)
             {
+                _rigidbody.isKinematic = false;
                 _rigidbody.useGravity = !held;
                 _rigidbody.linearDamping = held ? 6.0f : 0.15f;
                 _rigidbody.angularDamping = held ? 6.0f : 0.5f;
@@ -101,6 +102,12 @@ namespace TomorrowsCrime.PhysicsEngine
 
         private void OnCollisionEnter(Collision collision)
         {
+            // Activate dynamic physics if impacted by moving character or projectile
+            if (_rigidbody != null && _rigidbody.isKinematic && collision.relativeVelocity.sqrMagnitude > 1.0f)
+            {
+                _rigidbody.isKinematic = false;
+            }
+
             if (_isHeld) return;
 
             float impactSpeed = collision.relativeVelocity.magnitude;

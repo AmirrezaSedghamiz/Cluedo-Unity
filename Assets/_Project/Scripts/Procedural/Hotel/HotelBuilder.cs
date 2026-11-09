@@ -158,38 +158,70 @@ namespace TomorrowsCrime.Procedural.Hotel
 
             if (isUpperCorridor)
             {
-                // Leave open stairwell atrium at X in [4.5, 12.5], Z in [-3.0, 0.2]
-                // 1A. North walkway floor (Z in [0.2, 3.0], X in [-4, 16])
-                float northFloorCenterZ = 1.6f;
-                float northFloorDepth = 2.8f;
+                // Exact architectural floor framing leaving stairwell (X: 3.8-11.4, Z: -2.65-0.05)
+                // and elevator shaft (X: 12.75-15.35, Z: -1.35-1.35) 100% unobstructed
+
+                // 1A. North walkway floor (X: -4 to 12.75, Z: 0.05 to 3.0)
                 var floorNorth = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 floorNorth.name = "Floor_Slab_NorthWalkway";
                 floorNorth.transform.SetParent(roomGo.transform);
-                floorNorth.transform.position = new Vector3(center.x, yFloor - 0.10f, northFloorCenterZ);
-                floorNorth.transform.localScale = new Vector3(size.x, 0.2f, northFloorDepth);
+                floorNorth.transform.position = new Vector3(4.375f, yFloor - 0.10f, 1.525f);
+                floorNorth.transform.localScale = new Vector3(16.75f, 0.2f, 2.95f);
                 var fRendN = floorNorth.GetComponent<Renderer>();
                 if (fRendN != null && floorMat != null) fRendN.sharedMaterial = floorMat;
 
-                // 1B. West floor slab (X in [-4.0, 4.5], Z in [-3.0, 0.2])
+                // 1B. West floor slab (X: -4 to 3.8, Z: -3.0 to 0.05)
                 var floorWest = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 floorWest.name = "Floor_Slab_WestLanding";
                 floorWest.transform.SetParent(roomGo.transform);
-                floorWest.transform.position = new Vector3(0.25f, yFloor - 0.10f, -1.4f);
-                floorWest.transform.localScale = new Vector3(8.5f, 0.2f, 3.2f);
+                floorWest.transform.position = new Vector3(-0.1f, yFloor - 0.10f, -1.475f);
+                floorWest.transform.localScale = new Vector3(7.8f, 0.2f, 3.05f);
                 var fRendW = floorWest.GetComponent<Renderer>();
                 if (fRendW != null && floorMat != null) fRendW.sharedMaterial = floorMat;
 
-                // 1C. East landing floor slab south of elevator shaft (X in [12.5, 16.0], Z in [-3.0, -1.55])
+                // 1C. East landing floor in front of elevator (X: 11.4 to 12.75, Z: -3.0 to 0.05)
                 var floorEast = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 floorEast.name = "Floor_Slab_EastLanding";
                 floorEast.transform.SetParent(roomGo.transform);
-                floorEast.transform.position = new Vector3(14.25f, yFloor - 0.10f, -2.25f);
-                floorEast.transform.localScale = new Vector3(3.5f, 0.2f, 1.5f);
+                floorEast.transform.position = new Vector3(12.075f, yFloor - 0.10f, -1.475f);
+                floorEast.transform.localScale = new Vector3(1.35f, 0.2f, 3.05f);
                 var fRendE = floorEast.GetComponent<Renderer>();
                 if (fRendE != null && floorMat != null) fRendE.sharedMaterial = floorMat;
 
-                // 1D. Protective Art Deco Brass Balustrade Railing along the stair opening edge (Z = 0.2f, X in [4.5, 12.5])
-                BuildCabinRailing(roomGo.transform, new Vector3(8.5f, yFloor + 0.6f, 0.2f), new Vector3(8.0f, 1.1f, 0.1f), brassMat, "StairAtrium_GuardRailing");
+                // 1D. North perimeter walkway alongside elevator (X: 12.75 to 16.0, Z: 1.35 to 3.0)
+                var floorElevN = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                floorElevN.name = "Floor_Slab_NorthElevatorSide";
+                floorElevN.transform.SetParent(roomGo.transform);
+                floorElevN.transform.position = new Vector3(14.375f, yFloor - 0.10f, 2.175f);
+                floorElevN.transform.localScale = new Vector3(3.25f, 0.2f, 1.65f);
+                if (floorElevN.GetComponent<Renderer>() != null && floorMat != null) floorElevN.GetComponent<Renderer>().sharedMaterial = floorMat;
+
+                // 1E. South perimeter walkway alongside elevator (X: 12.75 to 16.0, Z: -3.0 to -1.35)
+                var floorElevS = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                floorElevS.name = "Floor_Slab_SouthElevatorSide";
+                floorElevS.transform.SetParent(roomGo.transform);
+                floorElevS.transform.position = new Vector3(14.375f, yFloor - 0.10f, -2.175f);
+                floorElevS.transform.localScale = new Vector3(3.25f, 0.2f, 1.65f);
+                if (floorElevS.GetComponent<Renderer>() != null && floorMat != null) floorElevS.GetComponent<Renderer>().sharedMaterial = floorMat;
+
+                // 1F. East shaft perimeter border (X: 15.35 to 16.0, Z: -1.35 to 1.35)
+                var floorShaftE = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                floorShaftE.name = "Floor_Slab_EastShaftPerimeter";
+                floorShaftE.transform.SetParent(roomGo.transform);
+                floorShaftE.transform.position = new Vector3(15.675f, yFloor - 0.10f, 0f);
+                floorShaftE.transform.localScale = new Vector3(0.65f, 0.2f, 2.7f);
+                if (floorShaftE.GetComponent<Renderer>() != null && floorMat != null) floorShaftE.GetComponent<Renderer>().sharedMaterial = floorMat;
+
+                // 1G. South stair margin border under south wall (X: 3.8 to 11.4, Z: -3.0 to -2.65)
+                var floorStairMargin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                floorStairMargin.name = "Floor_Slab_SouthStairMargin";
+                floorStairMargin.transform.SetParent(roomGo.transform);
+                floorStairMargin.transform.position = new Vector3(7.6f, yFloor - 0.10f, -2.825f);
+                floorStairMargin.transform.localScale = new Vector3(7.6f, 0.2f, 0.35f);
+                if (floorStairMargin.GetComponent<Renderer>() != null && floorMat != null) floorStairMargin.GetComponent<Renderer>().sharedMaterial = floorMat;
+
+                // 1H. Protective Art Deco Brass Balustrade Railing along the stair opening edge (Z = 0.05f, X: 3.8 to 11.4)
+                BuildCabinRailing(roomGo.transform, new Vector3(7.6f, yFloor + 0.6f, 0.05f), new Vector3(7.6f, 1.1f, 0.1f), brassMat, "StairAtrium_GuardRailing");
             }
             else
             {
@@ -203,49 +235,130 @@ namespace TomorrowsCrime.Procedural.Hotel
             }
 
             // 2. Room Ceiling Slab (With precise open shafts for Elevator and Central Staircase)
-            if (room.Type == RoomType.GroundCorridor)
+            if (room.Type == RoomType.Lobby)
             {
-                // Floor 0: Leave vertical transport shafts completely unobstructed!
-                // North gallery ceiling (Z in [1.6, 6.0])
+                // Floor 0 Lobby: Cutout for Stair Flight 0 rising into Floor 1 (X: 3.8 to 8.0, Z: -2.65 to 0.05)
                 var ceilN = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 ceilN.name = "Ceiling_Slab_North";
                 ceilN.transform.SetParent(roomGo.transform);
-                ceilN.transform.position = new Vector3(center.x, yFloor + height + 0.25f, 3.8f);
-                ceilN.transform.localScale = new Vector3(size.x, 0.5f, 4.4f);
+                ceilN.transform.position = new Vector3(0f, yFloor + height + 0.25f, 3.025f);
+                ceilN.transform.localScale = new Vector3(16f, 0.5f, 5.95f);
                 if (ceilN.GetComponent<Renderer>() != null && ceilingMat != null) ceilN.GetComponent<Renderer>().sharedMaterial = ceilingMat;
 
-                // South gallery ceiling (Z in [-6.0, -3.0])
-                var ceilS = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                ceilS.name = "Ceiling_Slab_South";
-                ceilS.transform.SetParent(roomGo.transform);
-                ceilS.transform.position = new Vector3(center.x, yFloor + height + 0.25f, -4.5f);
-                ceilS.transform.localScale = new Vector3(size.x, 0.5f, 3.0f);
-                if (ceilS.GetComponent<Renderer>() != null && ceilingMat != null) ceilS.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+                var ceilSW = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilSW.name = "Ceiling_Slab_SouthWest";
+                ceilSW.transform.SetParent(roomGo.transform);
+                ceilSW.transform.position = new Vector3(-2.1f, yFloor + height + 0.25f, -2.975f);
+                ceilSW.transform.localScale = new Vector3(11.8f, 0.5f, 6.05f);
+                if (ceilSW.GetComponent<Renderer>() != null && ceilingMat != null) ceilSW.GetComponent<Renderer>().sharedMaterial = ceilingMat;
 
-                // West corridor transition ceiling between reception archway and stairs (X in [8.0, 11.5], Z in [-1.6, 1.6])
+                var ceilSMargin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilSMargin.name = "Ceiling_Slab_SouthMargin";
+                ceilSMargin.transform.SetParent(roomGo.transform);
+                ceilSMargin.transform.position = new Vector3(5.9f, yFloor + height + 0.25f, -4.325f);
+                ceilSMargin.transform.localScale = new Vector3(4.2f, 0.5f, 3.35f);
+                if (ceilSMargin.GetComponent<Renderer>() != null && ceilingMat != null) ceilSMargin.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+            }
+            else if (room.Type == RoomType.GroundCorridor)
+            {
+                // Floor 0 Corridor: Stair Opening (X: 8.0-11.4, Z: -2.65-0.05) & Elevator Shaft (X: 12.75-15.35, Z: -1.35-1.35)
+                var ceilN = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilN.name = "Ceiling_Slab_North";
+                ceilN.transform.SetParent(roomGo.transform);
+                ceilN.transform.position = new Vector3(12f, yFloor + height + 0.25f, 3.675f);
+                ceilN.transform.localScale = new Vector3(8f, 0.5f, 4.65f);
+                if (ceilN.GetComponent<Renderer>() != null && ceilingMat != null) ceilN.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
                 var ceilW = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 ceilW.name = "Ceiling_Slab_West";
                 ceilW.transform.SetParent(roomGo.transform);
-                ceilW.transform.position = new Vector3(9.75f, yFloor + height + 0.25f, 0f);
-                ceilW.transform.localScale = new Vector3(3.5f, 0.5f, 3.2f);
+                ceilW.transform.position = new Vector3(10.375f, yFloor + height + 0.25f, 0.7f);
+                ceilW.transform.localScale = new Vector3(4.75f, 0.5f, 1.3f);
                 if (ceilW.GetComponent<Renderer>() != null && ceilingMat != null) ceilW.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilS = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilS.name = "Ceiling_Slab_South";
+                ceilS.transform.SetParent(roomGo.transform);
+                ceilS.transform.position = new Vector3(12f, yFloor + height + 0.25f, -4.325f);
+                ceilS.transform.localScale = new Vector3(8f, 0.5f, 3.35f);
+                if (ceilS.GetComponent<Renderer>() != null && ceilingMat != null) ceilS.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilElevN = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilElevN.name = "Ceiling_Slab_ElevatorN";
+                ceilElevN.transform.SetParent(roomGo.transform);
+                ceilElevN.transform.position = new Vector3(14.375f, yFloor + height + 0.25f, 2.175f);
+                ceilElevN.transform.localScale = new Vector3(3.25f, 0.5f, 1.65f);
+                if (ceilElevN.GetComponent<Renderer>() != null && ceilingMat != null) ceilElevN.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilElevS = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilElevS.name = "Ceiling_Slab_ElevatorS";
+                ceilElevS.transform.SetParent(roomGo.transform);
+                ceilElevS.transform.position = new Vector3(14.375f, yFloor + height + 0.25f, -2.175f);
+                ceilElevS.transform.localScale = new Vector3(3.25f, 0.5f, 1.65f);
+                if (ceilElevS.GetComponent<Renderer>() != null && ceilingMat != null) ceilElevS.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilShaftE = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilShaftE.name = "Ceiling_Slab_ShaftE";
+                ceilShaftE.transform.SetParent(roomGo.transform);
+                ceilShaftE.transform.position = new Vector3(15.675f, yFloor + height + 0.25f, 0f);
+                ceilShaftE.transform.localScale = new Vector3(0.65f, 0.5f, 2.7f);
+                if (ceilShaftE.GetComponent<Renderer>() != null && ceilingMat != null) ceilShaftE.GetComponent<Renderer>().sharedMaterial = ceilingMat;
             }
-            else if (isUpperCorridor && room.FloorIndex < 3)
+            else if (isUpperCorridor)
             {
-                // Floor 1 & 2: Keep central stairwell and elevator shaft unobstructed
+                // Floors 1, 2, 3 Upper Corridors: Keep central stairwell and elevator shaft unobstructed
                 var ceilWalkway = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 ceilWalkway.name = "Ceiling_Slab_Walkway";
                 ceilWalkway.transform.SetParent(roomGo.transform);
-                ceilWalkway.transform.position = new Vector3(center.x, yFloor + height + 0.25f, 1.6f);
-                ceilWalkway.transform.localScale = new Vector3(size.x, 0.5f, 2.8f);
+                ceilWalkway.transform.position = new Vector3(4.375f, yFloor + height + 0.25f, 1.525f);
+                ceilWalkway.transform.localScale = new Vector3(16.75f, 0.5f, 2.95f);
                 if (ceilWalkway.GetComponent<Renderer>() != null && ceilingMat != null) ceilWalkway.GetComponent<Renderer>().sharedMaterial = ceilingMat;
 
                 var ceilWest = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 ceilWest.name = "Ceiling_Slab_WestLanding";
                 ceilWest.transform.SetParent(roomGo.transform);
-                ceilWest.transform.position = new Vector3(0.25f, yFloor + height + 0.25f, -1.4f);
-                ceilWest.transform.localScale = new Vector3(8.5f, 0.5f, 3.2f);
+                ceilWest.transform.position = new Vector3(-0.1f, yFloor + height + 0.25f, -1.475f);
+                ceilWest.transform.localScale = new Vector3(7.8f, 0.5f, 3.05f);
                 if (ceilWest.GetComponent<Renderer>() != null && ceilingMat != null) ceilWest.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilEast = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilEast.name = "Ceiling_Slab_EastVestibule";
+                ceilEast.transform.SetParent(roomGo.transform);
+                ceilEast.transform.position = new Vector3(12.075f, yFloor + height + 0.25f, -1.475f);
+                ceilEast.transform.localScale = new Vector3(1.35f, 0.5f, 3.05f);
+                if (ceilEast.GetComponent<Renderer>() != null && ceilingMat != null) ceilEast.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilElevN = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilElevN.name = "Ceiling_Slab_ElevatorN";
+                ceilElevN.transform.SetParent(roomGo.transform);
+                ceilElevN.transform.position = new Vector3(14.375f, yFloor + height + 0.25f, 2.175f);
+                ceilElevN.transform.localScale = new Vector3(3.25f, 0.5f, 1.65f);
+                if (ceilElevN.GetComponent<Renderer>() != null && ceilingMat != null) ceilElevN.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilElevS = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilElevS.name = "Ceiling_Slab_ElevatorS";
+                ceilElevS.transform.SetParent(roomGo.transform);
+                ceilElevS.transform.position = new Vector3(14.375f, yFloor + height + 0.25f, -2.175f);
+                ceilElevS.transform.localScale = new Vector3(3.25f, 0.5f, 1.65f);
+                if (ceilElevS.GetComponent<Renderer>() != null && ceilingMat != null) ceilElevS.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                var ceilShaftE = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceilShaftE.name = "Ceiling_Slab_ShaftE";
+                ceilShaftE.transform.SetParent(roomGo.transform);
+                ceilShaftE.transform.position = new Vector3(15.675f, yFloor + height + 0.25f, 0f);
+                ceilShaftE.transform.localScale = new Vector3(0.65f, 0.5f, 2.7f);
+                if (ceilShaftE.GetComponent<Renderer>() != null && ceilingMat != null) ceilShaftE.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+
+                if (room.FloorIndex == 3)
+                {
+                    // Floor 3 Roof: Decorative Art Deco Atrium Stained-Glass Skylight directly above stairwell
+                    var skylight = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    skylight.name = "Atrium_Skylight_RoofFrame";
+                    skylight.transform.SetParent(roomGo.transform);
+                    skylight.transform.position = new Vector3(7.6f, yFloor + height + 0.45f, -1.30f);
+                    skylight.transform.localScale = new Vector3(7.6f, 0.15f, 2.7f);
+                    if (skylight.GetComponent<Renderer>() != null && brassMat != null) skylight.GetComponent<Renderer>().sharedMaterial = brassMat;
+                }
             }
             else
             {
@@ -308,8 +421,6 @@ namespace TomorrowsCrime.Procedural.Hotel
             }
 
             string sideName = $"Wall_{side}";
-            float doorOpeningHeight = 2.8f;
-            float lintelHeight = height - doorOpeningHeight;
 
             if (side == WallSide.North || side == WallSide.South)
             {
@@ -334,6 +445,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                 for (int i = 0; i < wallConns.Count; i++)
                 {
                     var conn = wallConns[i];
+                    bool isStairArch = conn.DoorDisplayName.Contains("Grand Staircase Open Archway");
+                    float doorOpeningHeight = isStairArch ? height : 2.8f;
+                    float lintelHeight = height - doorOpeningHeight;
                     float doorX = conn.WorldPosition.x;
                     float doorWidth = (conn.DoorDisplayName.Contains("Archway") || conn.DoorDisplayName.Contains("Double")) ? 3.4f : 2.2f;
                     float doorLeft = doorX - doorWidth * 0.5f;
@@ -351,11 +465,14 @@ namespace TomorrowsCrime.Procedural.Hotel
                     }
 
                     // Overhead lintel header
-                    string lintelName = wallConns.Count == 1 ? $"{sideName}_DoorLintel" : $"{sideName}_DoorLintel_{i}";
-                    BuildSolidWallSection(parent,
-                        new Vector3(doorX, yFloor + doorOpeningHeight + lintelHeight * 0.5f, wallZ),
-                        new Vector3(doorWidth, lintelHeight, wallThickness),
-                        lowerMat, upperMat, trimMat, lintelName);
+                    if (lintelHeight > 0.1f)
+                    {
+                        string lintelName = wallConns.Count == 1 ? $"{sideName}_DoorLintel" : $"{sideName}_DoorLintel_{i}";
+                        BuildSolidWallSection(parent,
+                            new Vector3(doorX, yFloor + doorOpeningHeight + lintelHeight * 0.5f, wallZ),
+                            new Vector3(doorWidth, lintelHeight, wallThickness),
+                            lowerMat, upperMat, trimMat, lintelName);
+                    }
 
                     currX = doorRight;
                 }
@@ -394,6 +511,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                 for (int i = 0; i < wallConns.Count; i++)
                 {
                     var conn = wallConns[i];
+                    bool isStairArch = conn.DoorDisplayName.Contains("Grand Staircase Open Archway");
+                    float doorOpeningHeight = isStairArch ? height : 2.8f;
+                    float lintelHeight = height - doorOpeningHeight;
                     float doorZ = conn.WorldPosition.z;
                     float doorWidth = (conn.DoorDisplayName.Contains("Archway") || conn.DoorDisplayName.Contains("Double")) ? 3.4f : 2.2f;
                     float doorSouth = doorZ - doorWidth * 0.5f;
@@ -411,11 +531,14 @@ namespace TomorrowsCrime.Procedural.Hotel
                     }
 
                     // Overhead lintel header
-                    string lintelName = wallConns.Count == 1 ? $"{sideName}_DoorLintel" : $"{sideName}_DoorLintel_{i}";
-                    BuildSolidWallSection(parent,
-                        new Vector3(wallX, yFloor + doorOpeningHeight + lintelHeight * 0.5f, doorZ),
-                        new Vector3(wallThickness, lintelHeight, doorWidth),
-                        lowerMat, upperMat, trimMat, lintelName);
+                    if (lintelHeight > 0.1f)
+                    {
+                        string lintelName = wallConns.Count == 1 ? $"{sideName}_DoorLintel" : $"{sideName}_DoorLintel_{i}";
+                        BuildSolidWallSection(parent,
+                            new Vector3(wallX, yFloor + doorOpeningHeight + lintelHeight * 0.5f, doorZ),
+                            new Vector3(wallThickness, lintelHeight, doorWidth),
+                            lowerMat, upperMat, trimMat, lintelName);
+                    }
 
                     currZ = doorNorth;
                 }
@@ -489,29 +612,30 @@ namespace TomorrowsCrime.Procedural.Hotel
             if (mats != null) mats.TryGetValue("WoodMahogany", out woodMat);
 
             // Grand Switchback Staircase connecting all 4 floors:
-            // Track A at Z = -2.0m (width 1.8m), Track B at Z = -0.5m (width 1.8m)
-            // Walkway at Z in [0.5m, 3.0m] is clear and unobstructed on all 4 floors!
+            // Track A at Z = -1.9m (width 1.3m, Z in [-2.55, -1.25])
+            // Track B at Z = -0.6m (width 1.3m, Z in [-1.25, 0.05])
+            // Walkway at Z in [0.05m, 3.0m] is clear and unobstructed on all 4 floors!
 
-            // Flight 0: Floor 0 -> Floor 1 (Track A: X = 5.0 -> 12.0m, Y = 0.0 -> 5.0m, Z = -2.0m)
-            BuildStairFlightX(stairsRoot.transform, 5.0f, 0.0f, -2.0f, 5.0f, 7.0f, 16, 1.8f, woodMat, "Flight_Floor0_to_1");
+            // Flight 0: Floor 0 -> Floor 1 (Track A: X = 5.0 -> 11.0m, Y = 0.0 -> 5.0m, Z = -1.9m)
+            BuildStairFlightX(stairsRoot.transform, 5.0f, 0.0f, -1.9f, 5.0f, 6.0f, 16, 1.3f, woodMat, "Flight_Floor0_to_1");
 
-            // Landing 1 at Floor 1 connecting Track A and Track B (X in [12.0, 14.5], Z in [-2.9, 0.4])
-            BuildStairLanding(stairsRoot.transform, new Vector3(13.25f, 4.85f, -1.25f), new Vector3(2.5f, 0.3f, 3.2f), woodMat, "Landing_Floor1");
-            BuildLandingLight(stairsRoot.transform, new Vector3(13.25f, 8.5f, -1.25f), "StairLight_Floor1");
+            // Landing 1 at Floor 1 connecting Track A and Track B (X in [10.6, 12.2], Z in [-2.55, 0.05])
+            BuildStairLanding(stairsRoot.transform, new Vector3(11.4f, 4.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, "Landing_Floor1");
+            BuildLandingLight(stairsRoot.transform, new Vector3(11.4f, 8.5f, -1.25f), "StairLight_Floor1");
 
-            // Flight 1: Floor 1 -> Floor 2 (Track B: X = 12.0 -> 5.0m, Y = 5.0 -> 10.0m, Z = -0.5m)
-            BuildStairFlightX(stairsRoot.transform, 12.0f, 5.0f, -0.5f, 5.0f, -7.0f, 16, 1.8f, woodMat, "Flight_Floor1_to_2");
+            // Flight 1: Floor 1 -> Floor 2 (Track B: X = 11.0 -> 5.0m, Y = 5.0 -> 10.0m, Z = -0.6f)
+            BuildStairFlightX(stairsRoot.transform, 11.0f, 5.0f, -0.6f, 5.0f, -6.0f, 16, 1.3f, woodMat, "Flight_Floor1_to_2");
 
-            // Landing 2 at Floor 2 connecting Track B and Track A (X in [3.0, 5.5], Z in [-2.9, 0.4])
-            BuildStairLanding(stairsRoot.transform, new Vector3(4.25f, 9.85f, -1.25f), new Vector3(2.5f, 0.3f, 3.2f), woodMat, "Landing_Floor2");
-            BuildLandingLight(stairsRoot.transform, new Vector3(4.25f, 13.5f, -1.25f), "StairLight_Floor2");
+            // Landing 2 at Floor 2 connecting Track B and Track A (X in [3.8, 5.4], Z in [-2.55, 0.05])
+            BuildStairLanding(stairsRoot.transform, new Vector3(4.6f, 9.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, "Landing_Floor2");
+            BuildLandingLight(stairsRoot.transform, new Vector3(4.6f, 13.5f, -1.25f), "StairLight_Floor2");
 
-            // Flight 2: Floor 2 -> Floor 3 (Track A: X = 5.0 -> 12.0m, Y = 10.0 -> 15.0m, Z = -2.0f)
-            BuildStairFlightX(stairsRoot.transform, 5.0f, 10.0f, -2.0f, 5.0f, 7.0f, 16, 1.8f, woodMat, "Flight_Floor2_to_3");
+            // Flight 2: Floor 2 -> Floor 3 (Track A: X = 5.0 -> 11.0m, Y = 10.0 -> 15.0m, Z = -1.9f)
+            BuildStairFlightX(stairsRoot.transform, 5.0f, 10.0f, -1.9f, 5.0f, 6.0f, 16, 1.3f, woodMat, "Flight_Floor2_to_3");
 
-            // Landing 3 at Floor 3 (X in [12.0, 14.5], Z in [-2.9, 0.4])
-            BuildStairLanding(stairsRoot.transform, new Vector3(13.25f, 14.85f, -1.25f), new Vector3(2.5f, 0.3f, 3.2f), woodMat, "Landing_Floor3");
-            BuildLandingLight(stairsRoot.transform, new Vector3(13.25f, 18.5f, -1.25f), "StairLight_Floor3");
+            // Landing 3 at Floor 3 (X in [10.6, 12.2], Z in [-2.55, 0.05])
+            BuildStairLanding(stairsRoot.transform, new Vector3(11.4f, 14.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, "Landing_Floor3");
+            BuildLandingLight(stairsRoot.transform, new Vector3(11.4f, 18.5f, -1.25f), "StairLight_Floor3");
         }
 
         private static void BuildLandingLight(Transform parent, Vector3 position, string name)
@@ -606,7 +730,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             shaftRoot.transform.position = elevatorPos;
 
             float shaftHeight = 19.5f;
-            float halfW = 1.55f;
+            float halfW = 1.35f;
             Vector3[] colOffsets = {
                 new Vector3(-halfW, shaftHeight * 0.5f, -halfW),
                 new Vector3(halfW, shaftHeight * 0.5f, -halfW),
@@ -637,7 +761,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             cabinFloor.name = "Cabin_Floor_Slab";
             cabinFloor.transform.SetParent(cabinRoot.transform);
             cabinFloor.transform.localPosition = new Vector3(0f, -0.10f, 0f);
-            cabinFloor.transform.localScale = new Vector3(2.8f, 0.2f, 2.8f);
+            cabinFloor.transform.localScale = new Vector3(2.4f, 0.2f, 2.5f);
             var fRend = cabinFloor.GetComponent<Renderer>();
             if (fRend != null && marbleMat != null) fRend.sharedMaterial = marbleMat;
 
@@ -646,7 +770,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             cabinCeil.name = "Cabin_Ceiling_Slab";
             cabinCeil.transform.SetParent(cabinRoot.transform);
             cabinCeil.transform.localPosition = new Vector3(0f, 3.2f, 0f);
-            cabinCeil.transform.localScale = new Vector3(2.8f, 0.25f, 2.8f);
+            cabinCeil.transform.localScale = new Vector3(2.4f, 0.25f, 2.5f);
             var cRend = cabinCeil.GetComponent<Renderer>();
             if (cRend != null && woodMat != null) cRend.sharedMaterial = woodMat;
 
@@ -661,20 +785,20 @@ namespace TomorrowsCrime.Procedural.Hotel
             cLight.range = 8.0f;
 
             // Panoramic Brass Railing Walls (North, South, East sides - open West entrance facing corridor)
-            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.2f, 1.35f), new Vector3(2.6f, 2.2f, 0.1f), brassMat, "Cabin_Wall_North");
-            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.2f, -1.35f), new Vector3(2.6f, 2.2f, 0.1f), brassMat, "Cabin_Wall_South");
-            BuildCabinRailing(cabinRoot.transform, new Vector3(1.35f, 1.2f, 0f), new Vector3(0.1f, 2.2f, 2.6f), brassMat, "Cabin_Wall_East");
+            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.2f, 1.2f), new Vector3(2.2f, 2.2f, 0.1f), brassMat, "Cabin_Wall_North");
+            BuildCabinRailing(cabinRoot.transform, new Vector3(0f, 1.2f, -1.2f), new Vector3(2.2f, 2.2f, 0.1f), brassMat, "Cabin_Wall_South");
+            BuildCabinRailing(cabinRoot.transform, new Vector3(1.15f, 1.2f, 0f), new Vector3(0.1f, 2.2f, 2.4f), brassMat, "Cabin_Wall_East");
 
             // 3. Inside Cabin Interactive Control Panel
             var panelGo = new GameObject("Elevator_ControlPanel");
             panelGo.transform.SetParent(cabinRoot.transform);
-            panelGo.transform.localPosition = new Vector3(1.15f, 1.4f, 0.5f);
+            panelGo.transform.localPosition = new Vector3(0f, 1.4f, 1.12f);
 
             var panelPlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
             panelPlate.name = "Panel_Backplate";
             panelPlate.transform.SetParent(panelGo.transform);
             panelPlate.transform.localPosition = Vector3.zero;
-            panelPlate.transform.localScale = new Vector3(0.08f, 1.2f, 0.45f);
+            panelPlate.transform.localScale = new Vector3(0.45f, 1.2f, 0.08f);
             var pRend = panelPlate.GetComponent<Renderer>();
             if (pRend != null && blackMarbleMat != null) pRend.sharedMaterial = blackMarbleMat;
 
@@ -684,8 +808,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                 var btnGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 btnGo.name = $"Button_Floor_{f}";
                 btnGo.transform.SetParent(panelGo.transform);
-                btnGo.transform.localPosition = new Vector3(-0.06f, 0.42f - f * 0.26f, 0f);
-                btnGo.transform.localScale = new Vector3(0.08f, 0.16f, 0.32f);
+                btnGo.transform.localPosition = new Vector3(0f, 0.42f - f * 0.26f, -0.06f);
+                btnGo.transform.localScale = new Vector3(0.32f, 0.16f, 0.08f);
                 var bRend = btnGo.GetComponent<Renderer>();
                 if (bRend != null && brassMat != null) bRend.sharedMaterial = brassMat;
 
@@ -696,19 +820,19 @@ namespace TomorrowsCrime.Procedural.Hotel
                 btnInteract.IsCallButton = false;
             }
 
-            // 4. Outside Call Buttons on Each Floor Landing (Floors 0, 1, 2, 3)
+            // 4. Outside Call Buttons on Each Floor Landing (Floors 0, 1, 2, 3) facing WEST towards corridor
             for (int f = 0; f < 4; f++)
             {
                 float y = f * 5.0f;
                 var callStationGo = new GameObject($"Elevator_CallStation_Floor_{f}");
                 callStationGo.transform.SetParent(elevatorRoot.transform);
-                callStationGo.transform.position = new Vector3(12.0f, y + 1.2f, 1.8f);
+                callStationGo.transform.position = new Vector3(12.7f, y + 1.2f, 1.45f);
 
                 var callPedestal = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 callPedestal.name = "Call_Pedestal";
                 callPedestal.transform.SetParent(callStationGo.transform);
                 callPedestal.transform.localPosition = Vector3.zero;
-                callPedestal.transform.localScale = new Vector3(0.15f, 0.35f, 0.25f);
+                callPedestal.transform.localScale = new Vector3(0.12f, 0.35f, 0.25f);
                 var callRend = callPedestal.GetComponent<Renderer>();
                 if (callRend != null && brassMat != null) callRend.sharedMaterial = brassMat;
 
@@ -2251,6 +2375,13 @@ namespace TomorrowsCrime.Procedural.Hotel
 
             // Grand Art Deco Center Table (World 0, 0, 0)
             BuildSolidTable(lobbyRoot.transform, center, new Vector3(2.2f, 0.85f, 2.2f), blackMarble, "Lobby_CenterMarbleTable");
+            BuildDetailedChair(lobbyRoot.transform, center + new Vector3(0f, 0f, 1.6f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetEmerald, "Lobby_CenterChair_N");
+            BuildDetailedChair(lobbyRoot.transform, center + new Vector3(0f, 0f, -1.6f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetEmerald, "Lobby_CenterChair_S");
+            BuildDetailedChair(lobbyRoot.transform, center + new Vector3(-1.6f, 0f, 0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetEmerald, "Lobby_CenterChair_W");
+            BuildDetailedChair(lobbyRoot.transform, center + new Vector3(1.6f, 0f, 0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetEmerald, "Lobby_CenterChair_E");
+
+            // Display Console Table (World 0, 0, 3) for display anchor
+            BuildSolidTable(lobbyRoot.transform, center + new Vector3(0f, 0f, 3.0f), new Vector3(2.0f, 0.85f, 0.8f), walnutMat, "Lobby_DisplayConsoleTable");
 
             // West Lounge: Velvet Sofas & Coffee Table at World (-4.8m, 0m, -2.5m)
             BuildSolidTable(lobbyRoot.transform, center + new Vector3(-4.8f, 0f, -2.5f),
@@ -2267,11 +2398,11 @@ namespace TomorrowsCrime.Procedural.Hotel
             BuildDetailedChair(lobbyRoot.transform, center + new Vector3(4.5f, 0f, -1.6f),
                 Quaternion.Euler(0f, 55f, 0f), walnutMat, carpetBurgundy, "Lobby_WingbackChair_North");
 
-            // Grandfather Clock in Lobby Corner
-            BuildGrandfatherClock(lobbyRoot.transform, center + new Vector3(-6.5f, 0f, 12.5f), walnutMat, brassMat, whiteMat, "Lobby_GrandfatherClock");
+            // Grandfather Clock in Lobby Corner (Inside lobby bounds Z in [-6, 6])
+            BuildGrandfatherClock(lobbyRoot.transform, center + new Vector3(-6.5f, 0f, 4.5f), walnutMat, brassMat, whiteMat, "Lobby_GrandfatherClock");
 
-            // Bellhop Luggage Trolley Cart in Lobby Entrance
-            BuildBellhopLuggageCart(lobbyRoot.transform, center + new Vector3(5.5f, 0f, 12.5f), brassMat, walnutMat, "Lobby_LuggageTrolley");
+            // Bellhop Luggage Trolley Cart in Lobby Entrance (Inside lobby bounds Z in [-6, 6])
+            BuildBellhopLuggageCart(lobbyRoot.transform, center + new Vector3(5.5f, 0f, 4.5f), brassMat, walnutMat, "Lobby_LuggageTrolley");
         }
 
         private static void BuildDiningFurnishings(Transform parent, Vector3 center, Dictionary<string, Material> mats)

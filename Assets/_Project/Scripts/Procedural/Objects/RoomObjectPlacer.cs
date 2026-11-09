@@ -424,6 +424,8 @@ namespace TomorrowsCrime.Procedural.Objects
                 rb.angularDamping = 0.5f;
                 rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             }
+            // Anchor-placed props start kinematic so they remain pristinely positioned on furniture surfaces without spontaneous physics popping
+            rb.isKinematic = true;
             if (objGo.GetComponent<TomorrowsCrime.PhysicsEngine.PhysicsProp>() == null)
             {
                 var pp = objGo.AddComponent<TomorrowsCrime.PhysicsEngine.PhysicsProp>();
