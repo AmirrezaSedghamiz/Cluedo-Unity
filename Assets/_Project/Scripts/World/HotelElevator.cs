@@ -33,7 +33,9 @@ namespace TomorrowsCrime.World
 
         private Transform _cabinTransform;
         private CharacterController _playerCharacterController;
+        private PlayerController _playerController;
         private bool _isPlayerInside = false;
+        private bool _isPlayerRiding = false;
 
         public int CurrentFloor => currentFloor;
         public int TargetFloor => targetFloor;
@@ -59,9 +61,11 @@ namespace TomorrowsCrime.World
 
         private void Update()
         {
-            CheckPlayerInsideCabin();
-
-            if (!isMoving) return;
+            if (!isMoving)
+            {
+                CheckPlayerInsideCabin();
+                return;
+            }
 
             float targetY = _floorElevations[targetFloor];
             float currentY = _cabinTransform.position.y;
@@ -71,10 +75,44 @@ namespace TomorrowsCrime.World
             // Move elevator cabin
             _cabinTransform.position = new Vector3(_cabinTransform.position.x, newY, _cabinTransform.position.z);
 
-            // Synchronize player CharacterController vertical displacement
-            if (_isPlayerInside && _playerCharacterController != null && _playerCharacterController.enabled)
+            // Synchronously carry the player CharacterController up or down with the cabin
+            if (_playerCharacterController == null)
             {
-                _playerCharacterController.Move(Vector3.up * deltaY);
+                var player = GameObject.FindWithTag("Player");
+                if (player != null)
+                {
+                    _playerCharacterController = player.GetComponent<CharacterController>();
+                    _playerController = player.GetComponent<PlayerController>();
+                }
+            }
+
+            if (_playerController == null && _playerCharacterController != null)
+            {
+                _playerController = _playerCharacterController.GetComponent<PlayerController>();
+            }
+
+            if (_isPlayerRiding && _playerCharacterController != null)
+            {
+                if (_playerController != null)
+                {
+                    _playerController.IsRidingElevator = true;
+                }
+
+                // Directly displace player transform to avoid character controller sweep jamming against rising floor
+                bool wasCCEnabled = _playerCharacterController.enabled;
+                _playerCharacterController.enabled = false;
+                Vector3 pPos = _playerCharacterController.transform.position;
+                pPos.y += deltaY;
+
+                // Clamp to top of floor slab so player never sinks below the cabin floor
+                float minFloorSurfaceY = newY;
+                if (pPos.y < minFloorSurfaceY)
+                {
+                    pPos.y = minFloorSurfaceY;
+                }
+
+                _playerCharacterController.transform.position = pPos;
+                _playerCharacterController.enabled = wasCCEnabled;
             }
 
             // Check if reached destination
@@ -83,6 +121,13 @@ namespace TomorrowsCrime.World
                 _cabinTransform.position = new Vector3(_cabinTransform.position.x, targetY, _cabinTransform.position.z);
                 currentFloor = targetFloor;
                 isMoving = false;
+
+                if (_playerController != null)
+                {
+                    _playerController.IsRidingElevator = false;
+                }
+                _isPlayerRiding = false;
+
                 HandleArrival();
             }
         }
@@ -91,6 +136,12 @@ namespace TomorrowsCrime.World
         {
             if (floorIndex < 0 || floorIndex >= _floorElevations.Length) return;
             if (isMoving && targetFloor == floorIndex) return;
+
+            CheckPlayerInsideCabin();
+            if (_isPlayerInside)
+            {
+                _isPlayerRiding = true;
+            }
 
             targetFloor = floorIndex;
             isMoving = true;
@@ -130,6 +181,7 @@ namespace TomorrowsCrime.World
                 if (player != null)
                 {
                     _playerCharacterController = player.GetComponent<CharacterController>();
+                    _playerController = player.GetComponent<PlayerController>();
                 }
             }
 
@@ -142,12 +194,16 @@ namespace TomorrowsCrime.World
             Vector3 cabinPos = _cabinTransform.position;
             Vector3 playerPos = _playerCharacterController.transform.position;
 
-            // Check if player is within the 2.8m x 2.8m x 3.5m elevator cabin bounds
-            bool inX = Mathf.Abs(playerPos.x - cabinPos.x) < 1.6f;
-            bool inZ = Mathf.Abs(playerPos.z - cabinPos.z) < 1.6f;
+            // Check if player is within the elevator cabin bounds
+            bool inX = Mathf.Abs(playerPos.x - cabinPos.x) < 1.4f;
+            bool inZ = Mathf.Abs(playerPos.z - cabinPos.z) < 1.4f;
             bool inY = playerPos.y >= (cabinPos.y - 0.5f) && playerPos.y <= (cabinPos.y + 3.5f);
 
             _isPlayerInside = inX && inZ && inY;
+            if (_isPlayerInside && isMoving)
+            {
+                _isPlayerRiding = true;
+            }
         }
 
         private void OnTriggerEnter(Collider other)
@@ -156,14 +212,24 @@ namespace TomorrowsCrime.World
             {
                 _isPlayerInside = true;
                 _playerCharacterController = other.GetComponent<CharacterController>();
+                _playerController = other.GetComponent<PlayerController>();
+                if (isMoving)
+                {
+                    _isPlayerRiding = true;
+                }
             }
         }
 
         private void OnTriggerExit(Collider other)
         {
-            if (other.CompareTag("Player"))
+            if (other.CompareTag("Player") && !isMoving)
             {
                 _isPlayerInside = false;
+                _isPlayerRiding = false;
+                if (_playerController != null)
+                {
+                    _playerController.IsRidingElevator = false;
+                }
             }
         }
     }

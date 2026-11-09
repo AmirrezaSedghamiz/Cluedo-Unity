@@ -754,6 +754,15 @@ namespace TomorrowsCrime.Procedural.Hotel
             cabinRoot.transform.SetParent(elevatorRoot.transform);
             cabinRoot.transform.position = elevatorPos;
 
+            var cabinRb = cabinRoot.AddComponent<Rigidbody>();
+            cabinRb.isKinematic = true;
+            cabinRb.useGravity = false;
+
+            var cabinTrigger = cabinRoot.AddComponent<BoxCollider>();
+            cabinTrigger.isTrigger = true;
+            cabinTrigger.center = new Vector3(0f, 1.6f, 0f);
+            cabinTrigger.size = new Vector3(2.4f, 3.2f, 2.5f);
+
             var elevatorComp = cabinRoot.AddComponent<HotelElevator>();
 
             // Solid Floor Slab with BoxCollider
@@ -867,13 +876,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             var doorsRoot = new GameObject("Hotel_Doors");
             doorsRoot.transform.SetParent(parent);
 
-#if UNITY_EDITOR
-            var doorObjPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Art/Models/HotelLobby_Door102.obj");
-#else
-            GameObject doorObjPrefab = null;
-#endif
-            Material mahoganyMat = null;
-            if (mats != null) mats.TryGetValue("WoodMahogany", out mahoganyMat);
+            Material mahoganyMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
 
             var createdDoors = new HashSet<string>();
 
@@ -892,7 +897,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     bool isArchway = conn.DoorDisplayName.Contains("Archway");
                     if (isArchway)
                     {
-                        // Open Archway: decorative framing pillars and lintel beam, NO door leaf, completely open and walkable
+                        // Open Archway: permanent architectural pilasters and lintel header with zero door leaf
                         var archCasing = new GameObject("Archway_Casing");
                         archCasing.transform.SetParent(doorRoot.transform);
                         archCasing.transform.localPosition = Vector3.zero;
@@ -924,46 +929,186 @@ namespace TomorrowsCrime.Procedural.Hotel
                         var tRend = topArch.GetComponent<Renderer>();
                         if (tRend != null && mahoganyMat != null) tRend.sharedMaterial = mahoganyMat;
 
+                        // Brass architrave inlay
+                        var archTrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        archTrim.name = "Arch_Brass_Inlay";
+                        archTrim.transform.SetParent(archCasing.transform);
+                        archTrim.transform.localPosition = new Vector3(0f, 2.84f, 0f);
+                        archTrim.transform.localScale = new Vector3(3.55f, 0.05f, 0.47f);
+                        var trimRend = archTrim.GetComponent<Renderer>();
+                        if (trimRend != null && brassMat != null) trimRend.sharedMaterial = brassMat;
+
                         continue;
                     }
 
+                    // 1. Stationary Door Casing (Frames the 2.2m wall opening permanently with authentic jambs, header, sill, and plaque)
+                    var doorCasing = new GameObject("Door_Casing");
+                    doorCasing.transform.SetParent(doorRoot.transform);
+                    doorCasing.transform.localPosition = Vector3.zero;
+
+                    // Left Jamb Post
+                    var jambLeft = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    jambLeft.name = "Casing_Jamb_Left";
+                    jambLeft.transform.SetParent(doorCasing.transform);
+                    jambLeft.transform.localPosition = new Vector3(-0.925f, 1.375f, 0f);
+                    jambLeft.transform.localScale = new Vector3(0.35f, 2.75f, 0.44f);
+                    var jLCol = jambLeft.GetComponent<BoxCollider>();
+                    if (jLCol != null) jLCol.isTrigger = false;
+                    var jLRend = jambLeft.GetComponent<Renderer>();
+                    if (jLRend != null) jLRend.sharedMaterial = mahoganyMat;
+
+                    // Right Jamb Post
+                    var jambRight = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    jambRight.name = "Casing_Jamb_Right";
+                    jambRight.transform.SetParent(doorCasing.transform);
+                    jambRight.transform.localPosition = new Vector3(0.925f, 1.375f, 0f);
+                    jambRight.transform.localScale = new Vector3(0.35f, 2.75f, 0.44f);
+                    var jRCol = jambRight.GetComponent<BoxCollider>();
+                    if (jRCol != null) jRCol.isTrigger = false;
+                    var jRRend = jambRight.GetComponent<Renderer>();
+                    if (jRRend != null) jRRend.sharedMaterial = mahoganyMat;
+
+                    // Inner Brass Reveal Trims
+                    var revealL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    revealL.name = "Casing_Reveal_Left";
+                    revealL.transform.SetParent(doorCasing.transform);
+                    revealL.transform.localPosition = new Vector3(-0.75f, 1.375f, 0f);
+                    revealL.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
+                    var rLRend = revealL.GetComponent<Renderer>();
+                    if (rLRend != null) rLRend.sharedMaterial = brassMat;
+
+                    var revealR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    revealR.name = "Casing_Reveal_Right";
+                    revealR.transform.SetParent(doorCasing.transform);
+                    revealR.transform.localPosition = new Vector3(0.75f, 1.375f, 0f);
+                    revealR.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
+                    var rRRend = revealR.GetComponent<Renderer>();
+                    if (rRRend != null) rRRend.sharedMaterial = brassMat;
+
+                    // Overhead Lintel Header Beam
+                    var lintelHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    lintelHead.name = "Casing_Lintel_Header";
+                    lintelHead.transform.SetParent(doorCasing.transform);
+                    lintelHead.transform.localPosition = new Vector3(0f, 2.65f, 0f);
+                    lintelHead.transform.localScale = new Vector3(2.25f, 0.28f, 0.46f);
+                    var lCol = lintelHead.GetComponent<BoxCollider>();
+                    if (lCol != null) lCol.isTrigger = false;
+                    var lhRend = lintelHead.GetComponent<Renderer>();
+                    if (lhRend != null) lhRend.sharedMaterial = mahoganyMat;
+
+                    // Stepped Cornice Crown
+                    var crownCornice = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    crownCornice.name = "Casing_Crown_Cornice";
+                    crownCornice.transform.SetParent(doorCasing.transform);
+                    crownCornice.transform.localPosition = new Vector3(0f, 2.82f, 0f);
+                    crownCornice.transform.localScale = new Vector3(2.35f, 0.10f, 0.50f);
+                    var crRend = crownCornice.GetComponent<Renderer>();
+                    if (crRend != null) crRend.sharedMaterial = walnutMat;
+
+                    // Polished Brass Floor Sill Threshold
+                    var threshold = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    threshold.name = "Casing_Threshold";
+                    threshold.transform.SetParent(doorCasing.transform);
+                    threshold.transform.localPosition = new Vector3(0f, 0.02f, 0f);
+                    threshold.transform.localScale = new Vector3(1.50f, 0.04f, 0.40f);
+                    var thRend = threshold.GetComponent<Renderer>();
+                    if (thRend != null) thRend.sharedMaterial = brassMat;
+
+                    // Polished Brass Identification Plaque
+                    var plaque = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    plaque.name = "Casing_Suite_Plaque";
+                    plaque.transform.SetParent(doorCasing.transform);
+                    plaque.transform.localPosition = new Vector3(0f, 2.62f, -0.235f);
+                    plaque.transform.localScale = new Vector3(0.50f, 0.12f, 0.02f);
+                    var plqRend = plaque.GetComponent<Renderer>();
+                    if (plqRend != null) plqRend.sharedMaterial = brassMat;
+
+                    // 2. Dynamic Door Leaf on Hinge
                     var hinge = new GameObject("Hinge");
                     hinge.transform.SetParent(doorRoot.transform);
-                    hinge.transform.localPosition = new Vector3(-0.65f, 0f, 0f);
+                    hinge.transform.localPosition = new Vector3(-0.73f, 0f, 0f);
 
-                    // Door Leaf
-                    GameObject doorLeaf;
-                    if (doorObjPrefab != null)
-                    {
-                        doorLeaf = Object.Instantiate(doorObjPrefab, hinge.transform);
-                        doorLeaf.name = "Door_Leaf";
-                        doorLeaf.transform.localPosition = new Vector3(0.65f, 0f, 0f);
-                        doorLeaf.transform.localRotation = Quaternion.identity;
-                        doorLeaf.transform.localScale = Vector3.one;
+                    // Solid Wood Door Leaf with Beveled Profiling
+                    var doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    doorLeaf.name = "Door_Leaf";
+                    doorLeaf.transform.SetParent(hinge.transform);
+                    doorLeaf.transform.localPosition = new Vector3(0.73f, 1.25f, 0f);
+                    doorLeaf.transform.localScale = new Vector3(1.46f, 2.50f, 0.08f);
 
-                        var leafCol = doorLeaf.GetComponent<BoxCollider>();
-                        if (leafCol == null) leafCol = doorLeaf.AddComponent<BoxCollider>();
-                        leafCol.center = new Vector3(0f, 1.4f, 0f);
-                        leafCol.size = new Vector3(1.3f, 2.8f, 0.15f);
-                        leafCol.isTrigger = false;
-                    }
-                    else
-                    {
-                        doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                        doorLeaf.name = "Door_Leaf";
-                        doorLeaf.transform.SetParent(hinge.transform);
-                        doorLeaf.transform.localPosition = new Vector3(0.65f, 1.4f, 0f);
-                        doorLeaf.transform.localScale = new Vector3(1.3f, 2.8f, 0.15f);
+                    var leafRend = doorLeaf.GetComponent<Renderer>();
+                    if (leafRend != null) leafRend.sharedMaterial = walnutMat;
 
-                        var leafRend = doorLeaf.GetComponent<Renderer>();
-                        if (leafRend != null && mahoganyMat != null) leafRend.sharedMaterial = mahoganyMat;
+                    var leafCol = doorLeaf.GetComponent<BoxCollider>();
+                    if (leafCol == null) leafCol = doorLeaf.AddComponent<BoxCollider>();
+                    leafCol.center = Vector3.zero;
+                    leafCol.size = Vector3.one;
+                    leafCol.isTrigger = false;
 
-                        var leafCol = doorLeaf.GetComponent<BoxCollider>();
-                        if (leafCol == null) leafCol = doorLeaf.AddComponent<BoxCollider>();
-                        leafCol.center = Vector3.zero;
-                        leafCol.size = Vector3.one;
-                        leafCol.isTrigger = false;
-                    }
+                    // Upper Recessed Panel Detail
+                    var upperPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    upperPanel.name = "Door_Panel_Upper";
+                    upperPanel.transform.SetParent(doorLeaf.transform);
+                    upperPanel.transform.localPosition = new Vector3(0f, 0.48f, 0f);
+                    upperPanel.transform.localScale = new Vector3(0.78f, 0.38f, 1.25f);
+                    var upRend = upperPanel.GetComponent<Renderer>();
+                    if (upRend != null) upRend.sharedMaterial = mahoganyMat;
+                    var upCol = upperPanel.GetComponent<Collider>();
+                    if (upCol != null) Object.DestroyImmediate(upCol);
+
+                    // Lower Recessed Panel Detail
+                    var lowerPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    lowerPanel.name = "Door_Panel_Lower";
+                    lowerPanel.transform.SetParent(doorLeaf.transform);
+                    lowerPanel.transform.localPosition = new Vector3(0f, -0.55f, 0f);
+                    lowerPanel.transform.localScale = new Vector3(0.78f, 0.28f, 1.25f);
+                    var lpRend = lowerPanel.GetComponent<Renderer>();
+                    if (lpRend != null) lpRend.sharedMaterial = mahoganyMat;
+                    var lpCol = lowerPanel.GetComponent<Collider>();
+                    if (lpCol != null) Object.DestroyImmediate(lpCol);
+
+                    // Brass Kickplate at Base of Door
+                    var kickplate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    kickplate.name = "Door_Brass_Kickplate";
+                    kickplate.transform.SetParent(doorLeaf.transform);
+                    kickplate.transform.localPosition = new Vector3(0f, -0.88f, 0f);
+                    kickplate.transform.localScale = new Vector3(0.98f, 0.16f, 1.20f);
+                    var kpRend = kickplate.GetComponent<Renderer>();
+                    if (kpRend != null) kpRend.sharedMaterial = brassMat;
+                    var kpCol = kickplate.GetComponent<Collider>();
+                    if (kpCol != null) Object.DestroyImmediate(kpCol);
+
+                    // Polished Brass Door Lever Handle Plate
+                    var handleEscutcheon = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    handleEscutcheon.name = "Door_Handle_Escutcheon";
+                    handleEscutcheon.transform.SetParent(doorLeaf.transform);
+                    handleEscutcheon.transform.localPosition = new Vector3(0.38f, -0.18f, 0f);
+                    handleEscutcheon.transform.localScale = new Vector3(0.08f, 0.14f, 1.45f);
+                    var hRend = handleEscutcheon.GetComponent<Renderer>();
+                    if (hRend != null) hRend.sharedMaterial = brassMat;
+                    var hCol = handleEscutcheon.GetComponent<Collider>();
+                    if (hCol != null) Object.DestroyImmediate(hCol);
+
+                    // Brass Lever Handle (Front)
+                    var handleLeverFront = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    handleLeverFront.name = "Door_Handle_Lever_Front";
+                    handleLeverFront.transform.SetParent(handleEscutcheon.transform);
+                    handleLeverFront.transform.localPosition = new Vector3(-0.35f, 0.18f, 0.55f);
+                    handleLeverFront.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
+                    var hlfRend = handleLeverFront.GetComponent<Renderer>();
+                    if (hlfRend != null) hlfRend.sharedMaterial = brassMat;
+                    var hlfCol = handleLeverFront.GetComponent<Collider>();
+                    if (hlfCol != null) Object.DestroyImmediate(hlfCol);
+
+                    // Brass Lever Handle (Back)
+                    var handleLeverBack = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    handleLeverBack.name = "Door_Handle_Lever_Back";
+                    handleLeverBack.transform.SetParent(handleEscutcheon.transform);
+                    handleLeverBack.transform.localPosition = new Vector3(-0.35f, 0.18f, -0.55f);
+                    handleLeverBack.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
+                    var hlbRend = handleLeverBack.GetComponent<Renderer>();
+                    if (hlbRend != null) hlbRend.sharedMaterial = brassMat;
+                    var hlbCol = handleLeverBack.GetComponent<Collider>();
+                    if (hlbCol != null) Object.DestroyImmediate(hlbCol);
 
                     // Calculate Inward Swing Angle so door ALWAYS swings into the destination room's open space
                     float openAngle = -90f;

@@ -75,6 +75,7 @@ namespace TomorrowsCrime.Player
         public bool IsCrouching => _isCrouching;
         public bool IsGrounded => _characterController != null && _characterController.isGrounded;
         public Vector3 Velocity => _characterController != null ? _characterController.velocity : Vector3.zero;
+        public bool IsRidingElevator { get; set; }
 
         private void Awake()
         {
@@ -230,7 +231,11 @@ namespace TomorrowsCrime.Player
             _currentPlanarVelocity = Vector3.Lerp(_currentPlanarVelocity, targetPlanarVelocity, Time.deltaTime * accelRate);
 
             // Vertical Jump Physics & Gravity
-            if (isGrounded)
+            if (IsRidingElevator)
+            {
+                _verticalVelocity = 0f;
+            }
+            else if (isGrounded)
             {
                 if (_verticalVelocity < 0f) _verticalVelocity = -1.5f;
 
@@ -247,7 +252,7 @@ namespace TomorrowsCrime.Player
             }
 
             Vector3 fullVelocity = _currentPlanarVelocity;
-            fullVelocity.y = _verticalVelocity;
+            fullVelocity.y = IsRidingElevator ? 0f : _verticalVelocity;
 
             _characterController.Move(fullVelocity * Time.deltaTime);
 
