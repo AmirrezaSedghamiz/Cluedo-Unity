@@ -98,13 +98,12 @@ namespace TomorrowsCrime.Procedural.Hotel
 
             for (int f = 0; f < 4; f++)
             {
-                float yFloor = f * 5.0f;
                 var plinth = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 plinth.name = $"FoundationPlinth_Floor_{f}";
                 plinth.transform.SetParent(plinthsRoot.transform);
-                // Positioned subterranean: top face at yFloor - 0.25f (strictly below floor slab top at yFloor)
-                plinth.transform.position = new Vector3(3.0f, yFloor - 0.50f, 0.0f);
-                plinth.transform.localScale = new Vector3(60.0f, 0.5f, 44.0f);
+                // Subterranean bedrock shields positioned strictly below ground level Y = 0 to prevent void fall while leaving all upper vertical atriums 100% open
+                plinth.transform.position = new Vector3(3.0f, -0.60f - f * 0.40f, 0.0f);
+                plinth.transform.localScale = new Vector3(60.0f, 0.4f, 44.0f);
 
                 var col = plinth.GetComponent<BoxCollider>();
                 if (col == null) col = plinth.AddComponent<BoxCollider>();
@@ -608,33 +607,36 @@ namespace TomorrowsCrime.Procedural.Hotel
             var stairsRoot = new GameObject("Staircase_CentralHub_4Floors");
             stairsRoot.transform.SetParent(parent);
 
-            Material woodMat = null;
-            if (mats != null) mats.TryGetValue("WoodMahogany", out woodMat);
+            Material woodMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
+            Material carpetMat = GetMaterial(mats, "VelvetGold", new Color(0.65f, 0.12f, 0.15f)); // Rich ruby crimson runner
+            Material marbleMat = GetMaterial(mats, "FloorCheckerMarble", new Color(0.92f, 0.90f, 0.85f));
 
             // Grand Switchback Staircase connecting all 4 floors:
-            // Track A at Z = -1.9m (width 1.3m, Z in [-2.55, -1.25])
-            // Track B at Z = -0.6m (width 1.3m, Z in [-1.25, 0.05])
-            // Walkway at Z in [0.05m, 3.0m] is clear and unobstructed on all 4 floors!
+            // Track A at Z = -1.9m (width 1.35m, Z in [-2.57, -1.23])
+            // Track B at Z = -0.6m (width 1.35m, Z in [-1.27, 0.07])
+            // Walkway at Z in [0.07m, 3.0m] is clear and unobstructed on all 4 floors!
 
             // Flight 0: Floor 0 -> Floor 1 (Track A: X = 5.0 -> 11.0m, Y = 0.0 -> 5.0m, Z = -1.9m)
-            BuildStairFlightX(stairsRoot.transform, 5.0f, 0.0f, -1.9f, 5.0f, 6.0f, 16, 1.3f, woodMat, "Flight_Floor0_to_1");
+            BuildStairFlightX(stairsRoot.transform, 5.0f, 0.0f, -1.9f, 5.0f, 6.0f, 20, 1.35f, woodMat, walnutMat, brassMat, carpetMat, "Flight_Floor0_to_1");
 
             // Landing 1 at Floor 1 connecting Track A and Track B (X in [10.6, 12.2], Z in [-2.55, 0.05])
-            BuildStairLanding(stairsRoot.transform, new Vector3(11.4f, 4.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, "Landing_Floor1");
+            BuildStairLanding(stairsRoot.transform, new Vector3(11.4f, 4.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, walnutMat, brassMat, marbleMat, "Landing_Floor1");
             BuildLandingLight(stairsRoot.transform, new Vector3(11.4f, 8.5f, -1.25f), "StairLight_Floor1");
 
             // Flight 1: Floor 1 -> Floor 2 (Track B: X = 11.0 -> 5.0m, Y = 5.0 -> 10.0m, Z = -0.6f)
-            BuildStairFlightX(stairsRoot.transform, 11.0f, 5.0f, -0.6f, 5.0f, -6.0f, 16, 1.3f, woodMat, "Flight_Floor1_to_2");
+            BuildStairFlightX(stairsRoot.transform, 11.0f, 5.0f, -0.6f, 5.0f, -6.0f, 20, 1.35f, woodMat, walnutMat, brassMat, carpetMat, "Flight_Floor1_to_2");
 
             // Landing 2 at Floor 2 connecting Track B and Track A (X in [3.8, 5.4], Z in [-2.55, 0.05])
-            BuildStairLanding(stairsRoot.transform, new Vector3(4.6f, 9.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, "Landing_Floor2");
+            BuildStairLanding(stairsRoot.transform, new Vector3(4.6f, 9.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, walnutMat, brassMat, marbleMat, "Landing_Floor2");
             BuildLandingLight(stairsRoot.transform, new Vector3(4.6f, 13.5f, -1.25f), "StairLight_Floor2");
 
             // Flight 2: Floor 2 -> Floor 3 (Track A: X = 5.0 -> 11.0m, Y = 10.0 -> 15.0m, Z = -1.9f)
-            BuildStairFlightX(stairsRoot.transform, 5.0f, 10.0f, -1.9f, 5.0f, 6.0f, 16, 1.3f, woodMat, "Flight_Floor2_to_3");
+            BuildStairFlightX(stairsRoot.transform, 5.0f, 10.0f, -1.9f, 5.0f, 6.0f, 20, 1.35f, woodMat, walnutMat, brassMat, carpetMat, "Flight_Floor2_to_3");
 
             // Landing 3 at Floor 3 (X in [10.6, 12.2], Z in [-2.55, 0.05])
-            BuildStairLanding(stairsRoot.transform, new Vector3(11.4f, 14.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, "Landing_Floor3");
+            BuildStairLanding(stairsRoot.transform, new Vector3(11.4f, 14.85f, -1.25f), new Vector3(1.6f, 0.3f, 2.6f), woodMat, walnutMat, brassMat, marbleMat, "Landing_Floor3");
             BuildLandingLight(stairsRoot.transform, new Vector3(11.4f, 18.5f, -1.25f), "StairLight_Floor3");
         }
 
@@ -651,49 +653,170 @@ namespace TomorrowsCrime.Procedural.Hotel
         }
 
         private static void BuildStairFlightX(Transform parent, float startX, float startY, float posZ,
-            float rise, float run, int steps, float width, Material mat, string name)
+            float rise, float run, int steps, float width, Material woodMat, Material walnutMat, Material brassMat, Material carpetMat, string name)
         {
             var flightRoot = new GameObject(name);
             flightRoot.transform.SetParent(parent);
 
             float stepRise = rise / steps;
             float stepRun = run / steps;
+            float absRun = Mathf.Abs(stepRun);
+            float angle = Mathf.Atan2(rise, Mathf.Abs(run)) * Mathf.Rad2Deg;
+            float rotZ = run > 0f ? angle : -angle;
+            float midX = startX + run * 0.5f;
+            float midY = startY + rise * 0.5f;
+            float totalLength = Mathf.Sqrt(rise * rise + run * run);
 
+            // 1. Individual Architectural Steps with Treads, Brass Nosing, and Velvet Carpet Runner
             for (int i = 0; i < steps; i++)
             {
+                float x = startX + (i + 0.5f) * stepRun;
+                float y = startY + (i + 0.5f) * stepRise;
+
+                // Base Step Block
                 var step = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 step.name = $"{name}_Step_{i:D2}";
                 step.transform.SetParent(flightRoot.transform);
-
-                float x = startX + (i + 0.5f) * stepRun;
-                float y = startY + (i + 0.5f) * stepRise;
                 step.transform.position = new Vector3(x, y, posZ);
-                step.transform.localScale = new Vector3(Mathf.Abs(stepRun), stepRise, width);
-
+                step.transform.localScale = new Vector3(absRun, stepRise, width);
                 var rend = step.GetComponent<Renderer>();
-                if (rend != null && mat != null) rend.sharedMaterial = mat;
+                if (rend != null && woodMat != null) rend.sharedMaterial = woodMat;
+
+                // Walnut Step Tread Nosing Lip (slight overhang)
+                var tread = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                tread.name = $"{name}_Tread_{i:D2}";
+                tread.transform.SetParent(step.transform);
+                tread.transform.localPosition = new Vector3(0f, 0.5f - 0.015f / stepRise, 0f);
+                tread.transform.localScale = new Vector3(1.10f, 0.035f / stepRise, 1.02f);
+                var tRend = tread.GetComponent<Renderer>();
+                if (tRend != null && walnutMat != null) tRend.sharedMaterial = walnutMat;
+                var tCol = tread.GetComponent<Collider>();
+                if (tCol != null) Object.DestroyImmediate(tCol);
+
+                // Polished Brass Front Edge Nosing Strip
+                var nosing = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                nosing.name = $"{name}_BrassNosing_{i:D2}";
+                nosing.transform.SetParent(step.transform);
+                float nosingX = (run > 0f ? 0.5f : -0.5f);
+                nosing.transform.localPosition = new Vector3(nosingX, 0.5f - 0.02f / stepRise, 0f);
+                nosing.transform.localScale = new Vector3(0.12f, 0.045f / stepRise, 1.02f);
+                var nRend = nosing.GetComponent<Renderer>();
+                if (nRend != null && brassMat != null) nRend.sharedMaterial = brassMat;
+                var nCol = nosing.GetComponent<Collider>();
+                if (nCol != null) Object.DestroyImmediate(nCol);
+
+                // Center Plush Carpet Runner
+                var runner = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                runner.name = $"{name}_Runner_{i:D2}";
+                runner.transform.SetParent(step.transform);
+                runner.transform.localPosition = new Vector3(0f, 0.5f + 0.008f / stepRise, 0f);
+                runner.transform.localScale = new Vector3(1.08f, 0.02f / stepRise, 0.65f);
+                var runRend = runner.GetComponent<Renderer>();
+                if (runRend != null && carpetMat != null) runRend.sharedMaterial = carpetMat;
+                var runCol = runner.GetComponent<Collider>();
+                if (runCol != null) Object.DestroyImmediate(runCol);
             }
 
-            // Smooth traversable ramp collider for CharacterController
+            // 2. Solid Hardwood Side Stringers (encloses the stair flight)
+            var strLeft = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            strLeft.name = $"{name}_Stringer_Left";
+            strLeft.transform.SetParent(flightRoot.transform);
+            strLeft.transform.position = new Vector3(midX, midY - 0.10f, posZ - width * 0.5f - 0.04f);
+            strLeft.transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
+            strLeft.transform.localScale = new Vector3(totalLength + 0.25f, 0.35f, 0.08f);
+            var slRend = strLeft.GetComponent<Renderer>();
+            if (slRend != null && walnutMat != null) slRend.sharedMaterial = walnutMat;
+            var slCol = strLeft.GetComponent<Collider>();
+            if (slCol != null) Object.DestroyImmediate(slCol);
+
+            var strRight = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            strRight.name = $"{name}_Stringer_Right";
+            strRight.transform.SetParent(flightRoot.transform);
+            strRight.transform.position = new Vector3(midX, midY - 0.10f, posZ + width * 0.5f + 0.04f);
+            strRight.transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
+            strRight.transform.localScale = new Vector3(totalLength + 0.25f, 0.35f, 0.08f);
+            var srRend = strRight.GetComponent<Renderer>();
+            if (srRend != null && walnutMat != null) srRend.sharedMaterial = walnutMat;
+            var srCol = strRight.GetComponent<Collider>();
+            if (srCol != null) Object.DestroyImmediate(srCol);
+
+            // 3. Finished Architectural Underside Soffit Ceiling
+            var soffit = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            soffit.name = $"{name}_Underside_Soffit";
+            soffit.transform.SetParent(flightRoot.transform);
+            soffit.transform.position = new Vector3(midX, midY - stepRise * 0.5f - 0.05f, posZ);
+            soffit.transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
+            soffit.transform.localScale = new Vector3(totalLength, 0.06f, width + 0.16f);
+            var sofRend = soffit.GetComponent<Renderer>();
+            if (sofRend != null && woodMat != null) sofRend.sharedMaterial = woodMat;
+            var sofCol = soffit.GetComponent<Collider>();
+            if (sofCol != null) Object.DestroyImmediate(sofCol);
+
+            // 4. Art Deco Balustrade & Polished Handrail along the inner open side (facing atrium)
+            float railZ = name.Contains("Floor1_to_2") ? (posZ - width * 0.5f - 0.04f) : (posZ + width * 0.5f + 0.04f);
+
+            var handrail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            handrail.name = $"{name}_Handrail";
+            handrail.transform.SetParent(flightRoot.transform);
+            handrail.transform.position = new Vector3(midX, midY + 1.05f, railZ);
+            handrail.transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
+            handrail.transform.localScale = new Vector3(totalLength + 0.1f, 0.09f, 0.10f);
+            var hrRend = handrail.GetComponent<Renderer>();
+            if (hrRend != null && walnutMat != null) hrRend.sharedMaterial = walnutMat;
+            var hrCol = handrail.GetComponent<Collider>();
+            if (hrCol != null) Object.DestroyImmediate(hrCol);
+
+            // Decorative Brass Baluster Spindles along the flight
+            int spindleCount = 8;
+            for (int s = 0; s <= spindleCount; s++)
+            {
+                float t = (float)s / spindleCount;
+                float sx = startX + t * run;
+                float sy = startY + t * rise + 0.52f;
+                var spindle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                spindle.name = $"{name}_Baluster_{s:D2}";
+                spindle.transform.SetParent(flightRoot.transform);
+                spindle.transform.position = new Vector3(sx, sy, railZ);
+                spindle.transform.localScale = new Vector3(0.04f, 0.96f, 0.04f);
+                var spRend = spindle.GetComponent<Renderer>();
+                if (spRend != null && brassMat != null) spRend.sharedMaterial = brassMat;
+                var spCol = spindle.GetComponent<Collider>();
+                if (spCol != null) Object.DestroyImmediate(spCol);
+            }
+
+            // Bottom Newel Post
+            var newelBottom = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            newelBottom.name = $"{name}_Newel_Bottom";
+            newelBottom.transform.SetParent(flightRoot.transform);
+            newelBottom.transform.position = new Vector3(startX, startY + 0.60f, railZ);
+            newelBottom.transform.localScale = new Vector3(0.18f, 1.20f, 0.18f);
+            var nbRend = newelBottom.GetComponent<Renderer>();
+            if (nbRend != null && brassMat != null) nbRend.sharedMaterial = brassMat;
+
+            // Top Newel Post
+            var newelTop = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            newelTop.name = $"{name}_Newel_Top";
+            newelTop.transform.SetParent(flightRoot.transform);
+            newelTop.transform.position = new Vector3(startX + run, startY + rise + 0.60f, railZ);
+            newelTop.transform.localScale = new Vector3(0.18f, 1.20f, 0.18f);
+            var ntRend = newelTop.GetComponent<Renderer>();
+            if (ntRend != null && brassMat != null) ntRend.sharedMaterial = brassMat;
+
+            // 5. Silky Smooth Traversable Ramp Collider for CharacterController (slopes up exactly parallel to the stairs)
             var rampGo = new GameObject($"{name}_WalkRamp_Collider");
             rampGo.transform.SetParent(flightRoot.transform);
-            float midX = startX + run * 0.5f;
-            float midY = startY + rise * 0.5f;
-            rampGo.transform.position = new Vector3(midX, midY, posZ);
-
-            float angle = Mathf.Atan2(rise, Mathf.Abs(run)) * Mathf.Rad2Deg;
-            rampGo.transform.rotation = Quaternion.Euler(0f, 0f, (run > 0f ? -angle : angle));
+            rampGo.transform.position = new Vector3(midX, midY + 0.03f, posZ);
+            rampGo.transform.rotation = Quaternion.Euler(0f, 0f, rotZ);
 
             var rampCol = rampGo.AddComponent<BoxCollider>();
-            float totalLength = Mathf.Sqrt(rise * rise + run * run);
-            rampCol.size = new Vector3(totalLength, 0.2f, width);
+            rampCol.size = new Vector3(totalLength + 0.2f, 0.12f, width);
             rampCol.isTrigger = false;
 
             var r = rampGo.GetComponent<Renderer>();
             if (r != null) Object.DestroyImmediate(r);
         }
 
-        private static void BuildStairLanding(Transform parent, Vector3 center, Vector3 size, Material mat, string name)
+        private static void BuildStairLanding(Transform parent, Vector3 center, Vector3 size, Material woodMat, Material walnutMat, Material brassMat, Material marbleMat, string name)
         {
             var landing = GameObject.CreatePrimitive(PrimitiveType.Cube);
             landing.name = name;
@@ -701,7 +824,29 @@ namespace TomorrowsCrime.Procedural.Hotel
             landing.transform.position = center;
             landing.transform.localScale = size;
             var rend = landing.GetComponent<Renderer>();
-            if (rend != null && mat != null) rend.sharedMaterial = mat;
+            if (rend != null && marbleMat != null) rend.sharedMaterial = marbleMat;
+
+            // Polished Brass Perimeter Border Trim
+            var trim = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            trim.name = $"{name}_Brass_Trim";
+            trim.transform.SetParent(landing.transform);
+            trim.transform.localPosition = new Vector3(0f, 0.5f + 0.01f / size.y, 0f);
+            trim.transform.localScale = new Vector3(1.02f, 0.02f / size.y, 1.02f);
+            var trRend = trim.GetComponent<Renderer>();
+            if (trRend != null && brassMat != null) trRend.sharedMaterial = brassMat;
+            var trCol = trim.GetComponent<Collider>();
+            if (trCol != null) Object.DestroyImmediate(trCol);
+
+            // Structural Support Column beneath the landing
+            var column = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            column.name = $"{name}_Support_Column";
+            column.transform.SetParent(landing.transform);
+            column.transform.localPosition = new Vector3(0f, -0.5f - 1.25f / size.y, 0f);
+            column.transform.localScale = new Vector3(0.40f / size.x, 2.50f / size.y, 0.40f / size.z);
+            var colRend = column.GetComponent<Renderer>();
+            if (colRend != null && walnutMat != null) colRend.sharedMaterial = walnutMat;
+            var colCol = column.GetComponent<Collider>();
+            if (colCol != null) Object.DestroyImmediate(colCol);
         }
 
         private static void BuildHotelElevator(Transform parent, Dictionary<string, Material> mats)
@@ -902,12 +1047,18 @@ namespace TomorrowsCrime.Procedural.Hotel
                         archCasing.transform.SetParent(doorRoot.transform);
                         archCasing.transform.localPosition = Vector3.zero;
 
+                        bool isStairArch = conn.DoorDisplayName.Contains("Grand Staircase");
+                        float pillarHeight = isStairArch ? 4.5f : 2.8f;
+                        float pillarCenterY = pillarHeight * 0.5f;
+                        float lintelY = isStairArch ? 4.625f : 2.7f;
+                        float trimY = isStairArch ? 4.775f : 2.84f;
+
                         // Left decorative column
                         var leftCol = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         leftCol.name = "Arch_Pillar_Left";
                         leftCol.transform.SetParent(archCasing.transform);
-                        leftCol.transform.localPosition = new Vector3(-1.6f, 1.4f, 0f);
-                        leftCol.transform.localScale = new Vector3(0.3f, 2.8f, 0.45f);
+                        leftCol.transform.localPosition = new Vector3(-1.6f, pillarCenterY, 0f);
+                        leftCol.transform.localScale = new Vector3(0.3f, pillarHeight, 0.45f);
                         var lRend = leftCol.GetComponent<Renderer>();
                         if (lRend != null && mahoganyMat != null) lRend.sharedMaterial = mahoganyMat;
 
@@ -915,8 +1066,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                         var rightCol = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         rightCol.name = "Arch_Pillar_Right";
                         rightCol.transform.SetParent(archCasing.transform);
-                        rightCol.transform.localPosition = new Vector3(1.6f, 1.4f, 0f);
-                        rightCol.transform.localScale = new Vector3(0.3f, 2.8f, 0.45f);
+                        rightCol.transform.localPosition = new Vector3(1.6f, pillarCenterY, 0f);
+                        rightCol.transform.localScale = new Vector3(0.3f, pillarHeight, 0.45f);
                         var rRend = rightCol.GetComponent<Renderer>();
                         if (rRend != null && mahoganyMat != null) rRend.sharedMaterial = mahoganyMat;
 
@@ -924,7 +1075,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                         var topArch = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         topArch.name = "Arch_Lintel_Beam";
                         topArch.transform.SetParent(archCasing.transform);
-                        topArch.transform.localPosition = new Vector3(0f, 2.7f, 0f);
+                        topArch.transform.localPosition = new Vector3(0f, lintelY, 0f);
                         topArch.transform.localScale = new Vector3(3.5f, 0.25f, 0.45f);
                         var tRend = topArch.GetComponent<Renderer>();
                         if (tRend != null && mahoganyMat != null) tRend.sharedMaterial = mahoganyMat;
@@ -933,7 +1084,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                         var archTrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         archTrim.name = "Arch_Brass_Inlay";
                         archTrim.transform.SetParent(archCasing.transform);
-                        archTrim.transform.localPosition = new Vector3(0f, 2.84f, 0f);
+                        archTrim.transform.localPosition = new Vector3(0f, trimY, 0f);
                         archTrim.transform.localScale = new Vector3(3.55f, 0.05f, 0.47f);
                         var trimRend = archTrim.GetComponent<Renderer>();
                         if (trimRend != null && brassMat != null) trimRend.sharedMaterial = brassMat;
