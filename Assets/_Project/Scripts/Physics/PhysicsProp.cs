@@ -63,11 +63,12 @@ namespace TomorrowsCrime.PhysicsEngine
                 _audioSource.playOnAwake = false;
             }
 
-            // Default physical mass and damping
+            // Default physical mass, damping, and continuous collision interpolation
             if (_rigidbody.mass <= 0.001f) _rigidbody.mass = 1.5f;
             _rigidbody.linearDamping = 0.15f;
             _rigidbody.angularDamping = 0.5f;
-            _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
         }
 
         public void SetHeld(bool held)

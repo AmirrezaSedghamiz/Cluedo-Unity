@@ -185,6 +185,26 @@ namespace TomorrowsCrime.EditorTools
             dict["EmeraldGreen"] = GetOrCreateMaterial("M_EmeraldGreen", shader,
                 new Color(0.10f, 0.42f, 0.16f), smoothness: 0.90f, metallic: 0.15f);
 
+            // 18. Photorealistic Eyes, Facial Features & Anatomical Materials
+            dict["EyeSclera"] = GetOrCreateMaterial("M_EyeSclera", shader,
+                new Color(0.97f, 0.97f, 0.98f), smoothness: 0.96f, metallic: 0.0f);
+            dict["EyePupil"] = GetOrCreateMaterial("M_EyePupil", shader,
+                new Color(0.02f, 0.02f, 0.02f), smoothness: 0.98f, metallic: 0.0f);
+            dict["EyeIrisHazel"] = GetOrCreateMaterial("M_EyeIrisHazel", shader,
+                new Color(0.42f, 0.28f, 0.14f), smoothness: 0.94f, metallic: 0.0f);
+            dict["EyeIrisBlue"] = GetOrCreateMaterial("M_EyeIrisBlue", shader,
+                new Color(0.14f, 0.32f, 0.58f), smoothness: 0.94f, metallic: 0.0f);
+            dict["EyeIrisGreen"] = GetOrCreateMaterial("M_EyeIrisGreen", shader,
+                new Color(0.12f, 0.38f, 0.20f), smoothness: 0.94f, metallic: 0.0f);
+            dict["EyeIrisBrown"] = GetOrCreateMaterial("M_EyeIrisBrown", shader,
+                new Color(0.18f, 0.12f, 0.08f), smoothness: 0.94f, metallic: 0.0f);
+            dict["LipsRealistic"] = GetOrCreateMaterial("M_LipsRealistic", shader,
+                new Color(0.78f, 0.46f, 0.44f), smoothness: 0.65f, metallic: 0.0f);
+            dict["SkinRealistic"] = GetOrCreateMaterial("M_SkinRealistic", shader,
+                new Color(0.92f, 0.76f, 0.68f), smoothness: 0.46f, metallic: 0.0f);
+            dict["MirrorGlass"] = GetOrCreateMaterial("M_MirrorGlass", shader,
+                new Color(0.95f, 0.95f, 0.98f), smoothness: 0.98f, metallic: 0.95f);
+
             return dict;
         }
 

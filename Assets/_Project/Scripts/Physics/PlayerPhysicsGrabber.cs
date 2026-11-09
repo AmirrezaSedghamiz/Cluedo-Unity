@@ -90,7 +90,18 @@ namespace TomorrowsCrime.PhysicsEngine
             if (_heldProp == null || playerCamera == null) return;
 
             Transform camTransform = playerCamera.transform;
-            Vector3 targetPosition = camTransform.position + camTransform.forward * holdDistance;
+            float desiredDist = holdDistance;
+
+            // Obstacle sweep: prevent pushing held object inside walls or obstacles
+            if (UnityEngine.Physics.SphereCast(camTransform.position, 0.18f, camTransform.forward, out RaycastHit wallHit, holdDistance, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (wallHit.collider.gameObject != _heldProp.gameObject && !wallHit.collider.transform.IsChildOf(_heldProp.transform))
+                {
+                    desiredDist = Mathf.Clamp(wallHit.distance - 0.22f, 0.55f, holdDistance);
+                }
+            }
+
+            Vector3 targetPosition = camTransform.position + camTransform.forward * desiredDist;
 
             // Check if object is pulled too far (e.g. caught on wall)
             float distFromCam = Vector3.Distance(camTransform.position, _heldProp.transform.position);

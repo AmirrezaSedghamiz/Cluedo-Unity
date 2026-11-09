@@ -42,27 +42,7 @@ namespace TomorrowsCrime.Procedural.NPCs
                 npcGo.transform.rotation = Quaternion.Euler(profile.BaselineRotation);
 
                 // Build Distinct 3D Visual Model
-                GameObject visual = null;
-                if (profile.Role == NPCRole.Concierge && pierrePrefab != null)
-                {
-                    visual = Object.Instantiate(pierrePrefab, npcGo.transform);
-                    visual.name = "Model_Concierge_Pierre";
-                    visual.transform.localPosition = Vector3.zero;
-                    visual.transform.localRotation = Quaternion.identity;
-                    visual.transform.localScale = Vector3.one;
-
-                    if (mats != null && mats.TryGetValue("UniformNavy", out var navyMat))
-                    {
-                        foreach (var r in visual.GetComponentsInChildren<Renderer>(true))
-                        {
-                            r.sharedMaterial = navyMat;
-                        }
-                    }
-                }
-                else
-                {
-                    visual = CreateDistinctStylizedCharacter(npcGo.transform, profile, mats);
-                }
+                GameObject visual = CreateDistinctStylizedCharacter(npcGo.transform, profile, mats);
 
                 // Physical Capsule Collider for Movement Blocking & Raycasts
                 var col = npcGo.AddComponent<CapsuleCollider>();
@@ -123,7 +103,10 @@ namespace TomorrowsCrime.Procedural.NPCs
             charRoot.transform.localRotation = Quaternion.identity;
 
             // Resolve Palette
-            Material skinMat = GetMat(mats, "MarbleIvory", new Color(0.94f, 0.82f, 0.72f));
+            Material skinMat = GetMat(mats, "SkinRealistic", new Color(0.92f, 0.78f, 0.70f));
+            Material eyeWhiteMat = GetMat(mats, "EyeSclera", new Color(0.97f, 0.97f, 0.98f));
+            Material pupilMat = GetMat(mats, "EyePupil", new Color(0.02f, 0.02f, 0.02f));
+            Material lipMat = GetMat(mats, "LipsRealistic", new Color(0.78f, 0.46f, 0.44f));
             Material suitNavy = GetMat(mats, "UniformNavy", new Color(0.12f, 0.16f, 0.28f));
             Material shirtWhite = GetMat(mats, "ShirtWhite", new Color(0.96f, 0.96f, 0.98f));
             Material tieBurgundy = GetMat(mats, "TieBurgundy", new Color(0.55f, 0.12f, 0.16f));
@@ -134,6 +117,16 @@ namespace TomorrowsCrime.Procedural.NPCs
             Material woodWalnut = GetMat(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
             Material brassGold = GetMat(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
             Material slateBlack = GetMat(mats, "FloorSlate", new Color(0.10f, 0.10f, 0.12f));
+            Material hairDark = GetMat(mats, "HairDark", new Color(0.09f, 0.07f, 0.06f));
+
+            Material irisMat = GetMat(mats, "EyeIrisHazel", new Color(0.42f, 0.28f, 0.14f));
+            if (profile.Role == NPCRole.SocietyLady) irisMat = GetMat(mats, "EyeIrisGreen", new Color(0.12f, 0.38f, 0.20f));
+            else if (profile.Role == NPCRole.JournalistGuest || profile.Role == NPCRole.DoctorGuest) irisMat = GetMat(mats, "EyeIrisBlue", new Color(0.14f, 0.32f, 0.58f));
+            else if (profile.Role == NPCRole.HeadChef || profile.Role == NPCRole.HotelManager) irisMat = GetMat(mats, "EyeIrisBrown", new Color(0.18f, 0.12f, 0.08f));
+
+            Material hairMat = hairDark;
+            if (profile.Role == NPCRole.SocietyLady || profile.Role == NPCRole.JournalistGuest) hairMat = woodWalnut;
+            else if (profile.Role == NPCRole.DoctorGuest) hairMat = GetMat(mats, "ShirtWhite", new Color(0.85f, 0.85f, 0.88f));
 
             bool isFemale = profile.Role == NPCRole.Receptionist || profile.Role == NPCRole.HousekeepingMaid ||
                             profile.Role == NPCRole.SocietyLady || profile.Role == NPCRole.JournalistGuest;
@@ -150,7 +143,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             // 1. Torso & Upper Clothing
             Material jacketMat = trousersCharcoal;
-            if (profile.Role == NPCRole.Receptionist) jacketMat = suitNavy;
+            if (profile.Role == NPCRole.Receptionist || profile.Role == NPCRole.Concierge) jacketMat = suitNavy;
             else if (profile.Role == NPCRole.HeadChef) jacketMat = shirtWhite;
             else if (profile.Role == NPCRole.HousekeepingMaid) jacketMat = slateBlack;
             else if (profile.Role == NPCRole.MaintenanceEngineer) jacketMat = suitNavy; // Denim
@@ -178,7 +171,7 @@ namespace TomorrowsCrime.Procedural.NPCs
                     new Vector3(0.08f, 0.38f, 0.04f), tieMat);
             }
 
-            // 2. Neck & Head
+            // 2. Neck & Anatomically Sculpted Realistic Head
             CreatePart(charRoot.transform, PrimitiveType.Cylinder, "Neck",
                 new Vector3(0f, 1.50f * heightScale, 0f),
                 new Vector3(0.14f, 0.10f * heightScale, 0.14f), skinMat);
@@ -187,10 +180,8 @@ namespace TomorrowsCrime.Procedural.NPCs
                 new Vector3(0f, 1.68f * heightScale, 0f),
                 new Vector3(0.30f, 0.34f, 0.30f), skinMat);
 
-            // Nose
-            CreatePart(head.transform, PrimitiveType.Cube, "Nose",
-                new Vector3(0f, 0f, 0.52f),
-                new Vector3(0.06f, 0.09f, 0.10f), skinMat);
+            // Realistic facial anatomy: jaw, cheekbones, eyes, sclera, irises, pupils, eyelids, eyebrows, nose, lips, ears, hair
+            BuildRealisticFace(head, profile.Role, isFemale, skinMat, hairMat, eyeWhiteMat, pupilMat, irisMat, lipMat, brassGold);
 
             // 3. Lower Body (Legs or Full Skirt)
             if (profile.Role == NPCRole.SocietyLady)
@@ -209,12 +200,8 @@ namespace TomorrowsCrime.Procedural.NPCs
                     new Vector3(0.12f, 0.32f * heightScale, 0.14f), slateBlack);
 
                 // Satin Evening Pumps parented to legs
-                CreatePart(leftLeg.transform, PrimitiveType.Cube, "Shoe_L",
-                    new Vector3(0f, -0.46f, 0.18f),
-                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
-                CreatePart(rightLeg.transform, PrimitiveType.Cube, "Shoe_R",
-                    new Vector3(0f, -0.46f, 0.18f),
-                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
+                BuildEveningPumpShoe(leftLeg.transform, true, slateBlack, woodWalnut);
+                BuildEveningPumpShoe(rightLeg.transform, false, slateBlack, woodWalnut);
             }
             else if (profile.Role == NPCRole.HousekeepingMaid || profile.Role == NPCRole.Receptionist)
             {
@@ -240,12 +227,8 @@ namespace TomorrowsCrime.Procedural.NPCs
                     new Vector3(0.14f, 0.45f * heightScale, 0.16f), slateBlack);
 
                 // Polished Leather Shoes parented directly to legs
-                CreatePart(leftLeg.transform, PrimitiveType.Cube, "Shoe_L",
-                    new Vector3(0f, -0.46f, 0.18f),
-                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
-                CreatePart(rightLeg.transform, PrimitiveType.Cube, "Shoe_R",
-                    new Vector3(0f, -0.46f, 0.18f),
-                    new Vector3(1.10f, 0.22f, 1.45f), slateBlack);
+                BuildWeltedOxfordShoe(leftLeg.transform, true, slateBlack, woodWalnut);
+                BuildWeltedOxfordShoe(rightLeg.transform, false, slateBlack, woodWalnut);
             }
             else
             {
@@ -258,16 +241,12 @@ namespace TomorrowsCrime.Procedural.NPCs
                     new Vector3(0.14f * (shoulderWidth / 0.52f), 0.45f * heightScale, 0f),
                     new Vector3(0.18f, 0.85f * heightScale, 0.22f), pantsMat);
 
-                // Polished Leather Shoes parented directly to legs so they walk in lockstep
-                CreatePart(leftLeg.transform, PrimitiveType.Cube, "Shoe_L",
-                    new Vector3(0f, -0.46f, 0.18f),
-                    new Vector3(1.08f, 0.14f, 1.35f), slateBlack);
-                CreatePart(rightLeg.transform, PrimitiveType.Cube, "Shoe_R",
-                    new Vector3(0f, -0.46f, 0.18f),
-                    new Vector3(1.08f, 0.14f, 1.35f), slateBlack);
+                // Polished Welted Leather Shoes parented directly to legs so they walk in lockstep
+                BuildWeltedOxfordShoe(leftLeg.transform, true, slateBlack, woodWalnut);
+                BuildWeltedOxfordShoe(rightLeg.transform, false, slateBlack, woodWalnut);
             }
 
-            // 4. Arms
+            // 4. Arms & Articulated Hands
             float armSpacing = shoulderWidth * 0.56f;
             var leftArm = CreatePart(charRoot.transform, PrimitiveType.Cube, "Arm_L",
                 new Vector3(-armSpacing, 1.08f * heightScale, 0f),
@@ -276,15 +255,11 @@ namespace TomorrowsCrime.Procedural.NPCs
                 new Vector3(armSpacing, 1.08f * heightScale, 0f),
                 new Vector3(0.14f, 0.65f * heightScale, 0.16f), jacketMat);
 
-            // Hands
-            CreatePart(leftArm.transform, PrimitiveType.Sphere, "Hand_L",
-                new Vector3(0f, -0.52f, 0f),
-                new Vector3(0.90f, 0.35f, 0.90f), skinMat);
-            var rightHand = CreatePart(rightArm.transform, PrimitiveType.Sphere, "Hand_R",
-                new Vector3(0f, -0.52f, 0f),
-                new Vector3(0.90f, 0.35f, 0.90f), skinMat);
+            // Articulated Hands with fingers & thumb
+            var leftHand = BuildArticulatedHand(leftArm.transform, true, skinMat, shirtWhite);
+            var rightHand = BuildArticulatedHand(rightArm.transform, false, skinMat, shirtWhite);
 
-            // 5. Distinct Headwear, Hair & Accessories Per Role
+            // 5. Distinct Headwear, Accessories & Signature Handheld Props Per Role
             BuildRoleHeadwearAndProps(charRoot, head, rightHand, profile.Role, heightScale, mats);
 
             // Clean up child primitive colliders (the root CapsuleCollider handles physics)
@@ -453,6 +428,273 @@ namespace TomorrowsCrime.Procedural.NPCs
                         new Vector3(0.55f, 0f, 0f), new Vector3(0.05f, 0.85f, 0.85f), shirtWhite);
                     break;
             }
+        }
+
+        private static void BuildRealisticFace(GameObject head, NPCRole role, bool isFemale,
+            Material skinMat, Material hairMat, Material eyeWhiteMat, Material pupilMat,
+            Material irisMat, Material lipMat, Material brassMat)
+        {
+            // 1. Defined Jawline & Chin Contour
+            var jaw = CreatePart(head.transform, PrimitiveType.Cube, "Jaw_Chin",
+                new Vector3(0f, -0.34f, 0.12f),
+                new Vector3(isFemale ? 0.58f : 0.68f, 0.38f, 0.55f), skinMat);
+            jaw.transform.localRotation = Quaternion.Euler(18f, 0f, 0f);
+
+            // Left & Right Cheekbones
+            CreatePart(head.transform, PrimitiveType.Sphere, "Cheekbone_L",
+                new Vector3(-0.36f, -0.06f, 0.32f),
+                new Vector3(0.38f, 0.30f, 0.38f), skinMat);
+            CreatePart(head.transform, PrimitiveType.Sphere, "Cheekbone_R",
+                new Vector3(0.36f, -0.06f, 0.32f),
+                new Vector3(0.38f, 0.30f, 0.38f), skinMat);
+
+            // 2. Eyes, Sclera, Iris, Pupils & Eyelids (Left & Right)
+            float eyeSpacing = 0.22f;
+            float eyeY = 0.12f;
+            float eyeZ = 0.44f;
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                bool isLeft = side < 0;
+                string suffix = isLeft ? "L" : "R";
+                float ex = side * eyeSpacing;
+
+                // Eyeball / Sclera
+                var eye = CreatePart(head.transform, PrimitiveType.Sphere, $"Eye_Sclera_{suffix}",
+                    new Vector3(ex, eyeY, eyeZ),
+                    new Vector3(0.16f, 0.14f, 0.15f), eyeWhiteMat);
+
+                // Colored Iris
+                var iris = CreatePart(eye.transform, PrimitiveType.Sphere, $"Iris_{suffix}",
+                    new Vector3(0f, 0f, 0.40f),
+                    new Vector3(0.60f, 0.60f, 0.25f), irisMat);
+
+                // Pupil
+                CreatePart(iris.transform, PrimitiveType.Sphere, $"Pupil_{suffix}",
+                    new Vector3(0f, 0f, 0.45f),
+                    new Vector3(0.50f, 0.50f, 0.30f), pupilMat);
+
+                // Upper Eyelid crease
+                CreatePart(head.transform, PrimitiveType.Cube, $"Eyelid_{suffix}",
+                    new Vector3(ex, eyeY + 0.08f, eyeZ + 0.02f),
+                    new Vector3(0.18f, 0.04f, 0.12f), skinMat);
+
+                // Expressive Sculpted 3D Eyebrow
+                var brow = CreatePart(head.transform, PrimitiveType.Cube, $"Eyebrow_{suffix}",
+                    new Vector3(ex, eyeY + 0.15f, eyeZ + 0.04f),
+                    new Vector3(0.20f, 0.045f, 0.08f), hairMat);
+                brow.transform.localRotation = Quaternion.Euler(0f, 0f, isLeft ? -8f : 8f);
+            }
+
+            // 3. Anatomical Nose (Bridge, Tip, Nostrils)
+            var bridge = CreatePart(head.transform, PrimitiveType.Cube, "Nose_Bridge",
+                new Vector3(0f, 0.10f, 0.48f),
+                new Vector3(0.09f, 0.24f, 0.12f), skinMat);
+            bridge.transform.localRotation = Quaternion.Euler(15f, 0f, 0f);
+
+            var tip = CreatePart(head.transform, PrimitiveType.Sphere, "Nose_Tip",
+                new Vector3(0f, -0.04f, 0.54f),
+                new Vector3(0.12f, 0.11f, 0.14f), skinMat);
+
+            CreatePart(head.transform, PrimitiveType.Sphere, "Nose_Nostril_L",
+                new Vector3(-0.07f, -0.06f, 0.51f),
+                new Vector3(0.07f, 0.06f, 0.08f), skinMat);
+            CreatePart(head.transform, PrimitiveType.Sphere, "Nose_Nostril_R",
+                new Vector3(0.07f, -0.06f, 0.51f),
+                new Vector3(0.07f, 0.06f, 0.08f), skinMat);
+
+            // 4. Natural Lips & Philtrum
+            CreatePart(head.transform, PrimitiveType.Cube, "Philtrum",
+                new Vector3(0f, -0.15f, 0.49f),
+                new Vector3(0.06f, 0.08f, 0.06f), skinMat);
+
+            // Upper Vermilion Lip with Cupid's Bow
+            var lipUpper = CreatePart(head.transform, PrimitiveType.Cube, "Lip_Upper",
+                new Vector3(0f, -0.22f, 0.50f),
+                new Vector3(0.22f, 0.055f, 0.08f), lipMat);
+
+            // Lower Lip (Fuller natural contour)
+            var lipLower = CreatePart(head.transform, PrimitiveType.Cube, "Lip_Lower",
+                new Vector3(0f, -0.29f, 0.48f),
+                new Vector3(0.20f, 0.065f, 0.085f), lipMat);
+
+            // 5. Anatomical Ears (Left & Right)
+            for (int side = -1; side <= 1; side += 2)
+            {
+                bool isLeft = side < 0;
+                string suffix = isLeft ? "L" : "R";
+                float earX = side * 0.52f;
+                var ear = CreatePart(head.transform, PrimitiveType.Cylinder, $"Ear_{suffix}",
+                    new Vector3(earX, 0.02f, -0.05f),
+                    new Vector3(0.08f, 0.26f, 0.16f), skinMat);
+                ear.transform.localRotation = Quaternion.Euler(isLeft ? 10f : -10f, 0f, isLeft ? 15f : -15f);
+
+                // Inner helix ridge
+                CreatePart(ear.transform, PrimitiveType.Cylinder, $"EarHelix_{suffix}",
+                    new Vector3(0f, 0f, 0.1f),
+                    new Vector3(0.6f, 0.7f, 0.6f), skinMat);
+            }
+
+            // 6. Volumetric Hair Styles & Sideburns
+            var hairCrown = CreatePart(head.transform, PrimitiveType.Sphere, "Hair_Crown",
+                new Vector3(0f, 0.22f, -0.08f),
+                new Vector3(1.04f, 0.90f, 1.05f), hairMat);
+
+            // Sideburns
+            CreatePart(head.transform, PrimitiveType.Cube, "Sideburn_L",
+                new Vector3(-0.50f, 0.05f, 0.12f),
+                new Vector3(0.08f, 0.28f, 0.18f), hairMat);
+            CreatePart(head.transform, PrimitiveType.Cube, "Sideburn_R",
+                new Vector3(0.50f, 0.05f, 0.12f),
+                new Vector3(0.08f, 0.28f, 0.18f), hairMat);
+
+            if (isFemale)
+            {
+                // Elegant 1930s Curled Waves & Chignon Bun
+                CreatePart(head.transform, PrimitiveType.Sphere, "Hair_Chignon",
+                    new Vector3(0f, -0.08f, -0.48f),
+                    new Vector3(0.55f, 0.45f, 0.40f), hairMat);
+                CreatePart(head.transform, PrimitiveType.Cube, "Hair_FingerWaves_Front",
+                    new Vector3(0f, 0.42f, 0.26f),
+                    new Vector3(0.72f, 0.22f, 0.35f), hairMat);
+            }
+            else
+            {
+                // Sophisticated Parted Pompadour
+                var pompadour = CreatePart(head.transform, PrimitiveType.Cube, "Hair_Pompadour",
+                    new Vector3(0.04f, 0.45f, 0.15f),
+                    new Vector3(0.78f, 0.26f, 0.65f), hairMat);
+                pompadour.transform.localRotation = Quaternion.Euler(-12f, 8f, -4f);
+            }
+
+            // 7. Signature Vintage Facial Hair
+            if (role == NPCRole.Concierge)
+            {
+                // Magnificent French Waxed Handlebar Mustache
+                var stacheL = CreatePart(head.transform, PrimitiveType.Cube, "Mustache_Handlebar_L",
+                    new Vector3(-0.15f, -0.16f, 0.54f),
+                    new Vector3(0.18f, 0.06f, 0.08f), hairMat);
+                stacheL.transform.localRotation = Quaternion.Euler(0f, 20f, -25f);
+
+                var stacheR = CreatePart(head.transform, PrimitiveType.Cube, "Mustache_Handlebar_R",
+                    new Vector3(0.15f, -0.16f, 0.54f),
+                    new Vector3(0.18f, 0.06f, 0.08f), hairMat);
+                stacheR.transform.localRotation = Quaternion.Euler(0f, -20f, 25f);
+            }
+            else if (role == NPCRole.HeadChef)
+            {
+                // Classic French Chef Mustache
+                CreatePart(head.transform, PrimitiveType.Cube, "Chef_Mustache",
+                    new Vector3(0f, -0.17f, 0.54f),
+                    new Vector3(0.30f, 0.08f, 0.09f), hairMat);
+            }
+            else if (role == NPCRole.DoctorGuest)
+            {
+                // Distinguished Van Dyke Mustache & Goatee
+                CreatePart(head.transform, PrimitiveType.Cube, "Doctor_Mustache",
+                    new Vector3(0f, -0.17f, 0.54f),
+                    new Vector3(0.24f, 0.065f, 0.08f), hairMat);
+                CreatePart(head.transform, PrimitiveType.Cube, "Doctor_Goatee",
+                    new Vector3(0f, -0.38f, 0.48f),
+                    new Vector3(0.12f, 0.16f, 0.10f), hairMat);
+            }
+            else if (role == NPCRole.WealthyGuest)
+            {
+                // Aristocratic Thin Pencil Mustache
+                CreatePart(head.transform, PrimitiveType.Cube, "Pencil_Mustache",
+                    new Vector3(0f, -0.17f, 0.54f),
+                    new Vector3(0.26f, 0.035f, 0.06f), hairMat);
+            }
+            else if (role == NPCRole.MaintenanceEngineer)
+            {
+                // Masculine Shadow Stubble Contour
+                CreatePart(head.transform, PrimitiveType.Cube, "Engineer_Stubble",
+                    new Vector3(0f, -0.28f, 0.42f),
+                    new Vector3(0.55f, 0.28f, 0.35f), hairMat);
+            }
+        }
+
+        private static GameObject BuildArticulatedHand(Transform arm, bool isLeft, Material skinMat, Material cuffMat)
+        {
+            string handName = isLeft ? "Hand_L" : "Hand_R";
+            float side = isLeft ? -1f : 1f;
+
+            var hand = CreatePart(arm, PrimitiveType.Cube, handName,
+                new Vector3(0f, -0.52f, 0f),
+                new Vector3(0.80f, 0.28f, 0.85f), skinMat);
+
+            // Wrist Cuff
+            CreatePart(hand.transform, PrimitiveType.Cylinder, "Wrist_Cuff",
+                new Vector3(0f, 0.52f, 0f),
+                new Vector3(1.05f, 0.18f, 1.05f), cuffMat);
+
+            // 4 Articulated Fingers
+            float[] lengths = { 0.40f, 0.48f, 0.44f, 0.35f };
+            for (int i = 0; i < 4; i++)
+            {
+                float fx = -0.34f + (i * 0.23f);
+                var finger = CreatePart(hand.transform, PrimitiveType.Cube, $"Finger_{i}",
+                    new Vector3(fx, -0.55f, 0.20f),
+                    new Vector3(0.18f, lengths[i], 0.22f), skinMat);
+                finger.transform.localRotation = Quaternion.Euler(15f, 0f, 0f);
+            }
+
+            // Opposable Thumb
+            var thumb = CreatePart(hand.transform, PrimitiveType.Cube, "Thumb",
+                new Vector3(side * -0.48f, -0.15f, 0.15f),
+                new Vector3(0.22f, 0.42f, 0.25f), skinMat);
+            thumb.transform.localRotation = Quaternion.Euler(20f, side * -35f, side * 22f);
+
+            return hand;
+        }
+
+        private static void BuildWeltedOxfordShoe(Transform leg, bool isLeft, Material leatherMat, Material weltMat)
+        {
+            string name = isLeft ? "Shoe_L" : "Shoe_R";
+
+            // Base Shoe Body (parented to leg, named Shoe_L / Shoe_R as required by unit tests)
+            var shoe = CreatePart(leg, PrimitiveType.Cube, name,
+                new Vector3(0f, -0.46f, 0.18f),
+                new Vector3(1.10f, 0.16f, 1.40f), leatherMat);
+
+            // Elevated Stacked Heel
+            CreatePart(shoe.transform, PrimitiveType.Cube, "Shoe_Heel",
+                new Vector3(0f, -0.45f, -0.32f),
+                new Vector3(0.96f, 0.45f, 0.38f), weltMat);
+
+            // Welted Outsole Rim
+            CreatePart(shoe.transform, PrimitiveType.Cube, "Shoe_WeltRim",
+                new Vector3(0f, -0.50f, 0.05f),
+                new Vector3(1.08f, 0.18f, 1.05f), weltMat);
+
+            // Front Toe Cap (Curved finish)
+            CreatePart(shoe.transform, PrimitiveType.Sphere, "Shoe_ToeCap",
+                new Vector3(0f, 0.15f, 0.38f),
+                new Vector3(0.92f, 0.75f, 0.55f), leatherMat);
+
+            // Shoe Lacing / Buckle
+            CreatePart(shoe.transform, PrimitiveType.Cube, "Shoe_Laces",
+                new Vector3(0f, 0.52f, 0.05f),
+                new Vector3(0.45f, 0.12f, 0.40f), weltMat);
+        }
+
+        private static void BuildEveningPumpShoe(Transform leg, bool isLeft, Material satinMat, Material soleMat)
+        {
+            string name = isLeft ? "Shoe_L" : "Shoe_R";
+
+            var shoe = CreatePart(leg, PrimitiveType.Cube, name,
+                new Vector3(0f, -0.46f, 0.18f),
+                new Vector3(1.10f, 0.20f, 1.45f), satinMat);
+
+            // Stiletto / Kitten Heel
+            CreatePart(shoe.transform, PrimitiveType.Cylinder, "Shoe_Heel",
+                new Vector3(0f, -0.55f, -0.35f),
+                new Vector3(0.25f, 0.60f, 0.25f), soleMat);
+
+            // Tapered Almond Toe
+            CreatePart(shoe.transform, PrimitiveType.Sphere, "Shoe_Toe",
+                new Vector3(0f, 0.10f, 0.42f),
+                new Vector3(0.85f, 0.75f, 0.55f), satinMat);
         }
 
         private static GameObject CreatePart(Transform parent, PrimitiveType type, string name,

@@ -134,12 +134,44 @@ namespace TomorrowsCrime.EditorTools
 
             // Shadow Distance & Cascades
             var propShadowDistance = so.FindProperty("m_ShadowDistance");
-            if (propShadowDistance != null) propShadowDistance.floatValue = 45f;
+            if (propShadowDistance != null) propShadowDistance.floatValue = 50f;
 
             var propShadowCascades = so.FindProperty("m_ShadowCascadeCount");
             if (propShadowCascades != null) propShadowCascades.intValue = 4;
 
+            // Soft Shadow High Quality
+            var propSoftQuality = so.FindProperty("m_SoftShadowQuality");
+            if (propSoftQuality != null) propSoftQuality.intValue = 2;
+
+            // Additional Lights Limit & Reflection Probes
+            var propAddLimit = so.FindProperty("m_AdditionalLightsPerObjectLimit");
+            if (propAddLimit != null) propAddLimit.intValue = 8;
+
+            var propReflBlending = so.FindProperty("m_ReflectionProbeBlending");
+            if (propReflBlending != null) propReflBlending.boolValue = true;
+
+            var propReflBox = so.FindProperty("m_ReflectionProbeBoxProjection");
+            if (propReflBox != null) propReflBox.boolValue = true;
+
+            var propColorGrading = so.FindProperty("m_ColorGradingMode");
+            if (propColorGrading != null) propColorGrading.intValue = 1; // HighDynamicRange
+
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static T GetOrAddVolumeComponent<T>(VolumeProfile profile) where T : VolumeComponent
+        {
+            if (!profile.TryGet<T>(out var comp))
+            {
+                comp = profile.Add<T>(true);
+#if UNITY_EDITOR
+                if (comp != null && !AssetDatabase.Contains(comp))
+                {
+                    AssetDatabase.AddObjectToAsset(comp, profile);
+                }
+#endif
+            }
+            return comp;
         }
 
         public static VolumeProfile SetupCinematicVolumeProfile()
@@ -152,54 +184,41 @@ namespace TomorrowsCrime.EditorTools
             }
 
             // 1. Tonemapping (ACES Filmic)
-            if (!profile.TryGet<Tonemapping>(out var tonemapping))
-            {
-                tonemapping = profile.Add<Tonemapping>(true);
-            }
+            var tonemapping = GetOrAddVolumeComponent<Tonemapping>(profile);
             tonemapping.mode.Override(TonemappingMode.ACES);
 
             // 2. Bloom (Subtle warm tungsten bloom)
-            if (!profile.TryGet<Bloom>(out var bloom))
-            {
-                bloom = profile.Add<Bloom>(true);
-            }
+            var bloom = GetOrAddVolumeComponent<Bloom>(profile);
             bloom.threshold.Override(0.85f);
             bloom.intensity.Override(0.65f);
             bloom.scatter.Override(0.70f);
             bloom.tint.Override(new Color(1.0f, 0.92f, 0.80f));
 
             // 3. Vignette (Cinematic mystery darkening at frame edges)
-            if (!profile.TryGet<Vignette>(out var vignette))
-            {
-                vignette = profile.Add<Vignette>(true);
-            }
-            vignette.intensity.Override(0.28f);
+            var vignette = GetOrAddVolumeComponent<Vignette>(profile);
+            vignette.intensity.Override(0.24f);
             vignette.smoothness.Override(0.35f);
             vignette.color.Override(new Color(0.02f, 0.02f, 0.04f));
 
             // 4. Color Adjustments (Rich film contrast and subtle saturation)
-            if (!profile.TryGet<ColorAdjustments>(out var colorAdjustments))
-            {
-                colorAdjustments = profile.Add<ColorAdjustments>(true);
-            }
+            var colorAdjustments = GetOrAddVolumeComponent<ColorAdjustments>(profile);
             colorAdjustments.contrast.Override(16f);
-            colorAdjustments.saturation.Override(5f);
+            colorAdjustments.saturation.Override(6f);
             colorAdjustments.postExposure.Override(0.12f);
 
-            // 5. Film Grain (Analog noir texture)
-            if (!profile.TryGet<FilmGrain>(out var grain))
-            {
-                grain = profile.Add<FilmGrain>(true);
-            }
-            grain.type.Override(FilmGrainLookup.Medium1);
-            grain.intensity.Override(0.12f);
+            // 5. White Balance (Warm inviting hotel interior)
+            var whiteBalance = GetOrAddVolumeComponent<WhiteBalance>(profile);
+            whiteBalance.temperature.Override(6f);
+            whiteBalance.tint.Override(1.5f);
 
-            // 6. Motion Blur (Cinematic camera motion fluidity)
-            if (!profile.TryGet<MotionBlur>(out var motionBlur))
-            {
-                motionBlur = profile.Add<MotionBlur>(true);
-            }
-            motionBlur.intensity.Override(0.22f);
+            // 6. Film Grain (Analog noir texture)
+            var grain = GetOrAddVolumeComponent<FilmGrain>(profile);
+            grain.type.Override(FilmGrainLookup.Medium1);
+            grain.intensity.Override(0.09f);
+
+            // 7. Motion Blur (Cinematic camera motion fluidity)
+            var motionBlur = GetOrAddVolumeComponent<MotionBlur>(profile);
+            motionBlur.intensity.Override(0.20f);
 
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();

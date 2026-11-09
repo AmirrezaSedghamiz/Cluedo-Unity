@@ -74,6 +74,7 @@ namespace TomorrowsCrime.EditorTools
             // 3b. Cinematic Atmospheric Dust Motes & Global Post-Processing Volume
             AtmosphericVFX.EnsureGlobalPostProcessingVolume(envRoot.transform);
             AtmosphericVFX.CreateDustMotes(envRoot.transform, new Vector3(0f, 2.5f, 0f), new Vector3(14f, 4f, 18f));
+            SetupHighFidelityReflectionProbes(envRoot.transform);
 
             // Floor Base (Checker Italian Marble)
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -950,6 +951,36 @@ namespace TomorrowsCrime.EditorTools
             }
 
             return asset;
+        }
+
+        private static void SetupHighFidelityReflectionProbes(Transform parent)
+        {
+            var probesRoot = new GameObject("Environment_ReflectionProbes");
+            probesRoot.transform.SetParent(parent);
+
+            // 1. Grand Lobby Reflection Probe (Box projection covers full lobby)
+            var lobbyProbeGo = new GameObject("ReflectionProbe_GrandLobby");
+            lobbyProbeGo.transform.SetParent(probesRoot.transform);
+            lobbyProbeGo.transform.position = new Vector3(0f, 2.5f, 0f);
+            var lobbyProbe = lobbyProbeGo.AddComponent<ReflectionProbe>();
+            lobbyProbe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            lobbyProbe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.OnAwake;
+            lobbyProbe.boxProjection = true;
+            lobbyProbe.size = new Vector3(26f, 6.5f, 32f);
+            lobbyProbe.center = Vector3.zero;
+            lobbyProbe.intensity = 1.15f;
+
+            // 2. Room 102 Luxury Suite Reflection Probe
+            var suiteProbeGo = new GameObject("ReflectionProbe_Room102Suite");
+            suiteProbeGo.transform.SetParent(probesRoot.transform);
+            suiteProbeGo.transform.position = new Vector3(0f, 6.5f, 15f);
+            var suiteProbe = suiteProbeGo.AddComponent<ReflectionProbe>();
+            suiteProbe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            suiteProbe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.OnAwake;
+            suiteProbe.boxProjection = true;
+            suiteProbe.size = new Vector3(16f, 5.5f, 16f);
+            suiteProbe.center = Vector3.zero;
+            suiteProbe.intensity = 1.1f;
         }
     }
 
