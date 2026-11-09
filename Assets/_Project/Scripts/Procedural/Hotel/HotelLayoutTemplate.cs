@@ -38,8 +38,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             lobby.AddConnection(new DoorwayConnection("conn_lobby_dining", "room_lobby", "room_dining", new Vector3(-8f, 0f, 0f), new Vector3(0f, 90f, 0f), false, null, "Dining Hall Grand Archway"));
             lobby.AddConnection(new DoorwayConnection("conn_lobby_corridor", "room_lobby", "room_corridor_ground", new Vector3(8f, 0f, 0f), new Vector3(0f, 90f, 0f), false, null, "East Wing Transport Archway"));
             lobby.AddConnection(new DoorwayConnection("conn_lobby_staircase_arch", "room_lobby", "room_corridor_ground", new Vector3(8f, 0f, -2f), new Vector3(0f, 90f, 0f), false, null, "Grand Staircase Open Archway"));
-            lobby.AddConnection(new DoorwayConnection("conn_lobby_bar", "room_lobby", "room_bar_lounge", new Vector3(-3f, 0f, -6f), Vector3.zero, false, null, "Bar Lounge Entrance"));
-            lobby.AddConnection(new DoorwayConnection("conn_lobby_luggage", "room_lobby", "room_luggage_storage", new Vector3(5f, 0f, -6f), Vector3.zero, false, null, "Luggage Room Door"));
+            lobby.AddConnection(new DoorwayConnection("conn_lobby_bar", "room_lobby", "room_bar_lounge", new Vector3(-3f, 0f, -6f), new Vector3(0f, 180f, 0f), false, null, "Bar Lounge Entrance"));
+            lobby.AddConnection(new DoorwayConnection("conn_lobby_luggage", "room_lobby", "room_luggage_storage", new Vector3(5f, 0f, -6f), new Vector3(0f, 180f, 0f), false, null, "Luggage Room Door"));
             rooms.Add(lobby);
 
             // 2. Front Reception & Key Desk
@@ -62,7 +62,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             dining.AddAnchor("anchor_dining_table_south", AnchorCategory.Tabletop, new Vector3(-16f, 0.85f, -3.0f));
             dining.AddAnchor("anchor_dining_sideboard", AnchorCategory.Counter, new Vector3(-20.5f, 1.15f, 0f));
             dining.AddConnection(new DoorwayConnection("conn_dining_kitchen", "room_dining", "room_kitchen", new Vector3(-15f, 0f, 6f), Vector3.zero, false, null, "Kitchen Service Door"));
-            dining.AddConnection(new DoorwayConnection("conn_dining_conservatory", "room_dining", "room_conservatory", new Vector3(-15f, 0f, -6f), Vector3.zero, false, null, "Conservatory Glass Door"));
+            dining.AddConnection(new DoorwayConnection("conn_dining_conservatory", "room_dining", "room_conservatory", new Vector3(-15f, 0f, -6f), new Vector3(0f, 180f, 0f), false, null, "Conservatory Glass Door"));
             rooms.Add(dining);
 
             // 4. Kitchen & Scullery
@@ -148,8 +148,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             upperCorridor.AddConnection(new DoorwayConnection("conn_upper_library", "room_upper_corridor", "room_library", new Vector3(-4f, 5f, 0f), new Vector3(0f, 90f, 0f), false, null, "Grand Library Archway"));
             upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room101", "room_upper_corridor", "room_guest_101", new Vector3(1f, 5f, 3f), Vector3.zero, true, "key_room_101", "Room 101 Door"));
             upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room102", "room_upper_corridor", "room_guest_102", new Vector3(10f, 5f, 3f), Vector3.zero, true, "key_room_102", "Room 102 VIP Suite Door"));
-            upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room103", "room_upper_corridor", "room_guest_103", new Vector3(1f, 5f, -3f), Vector3.zero, true, "key_room_103", "Room 103 Door"));
-            upperCorridor.AddConnection(new DoorwayConnection("conn_upper_housekeeping", "room_upper_corridor", "room_housekeeping", new Vector3(10f, 5f, -3f), Vector3.zero, true, "key_housekeeping", "Housekeeping Storage Door"));
+            upperCorridor.AddConnection(new DoorwayConnection("conn_upper_room103", "room_upper_corridor", "room_guest_103", new Vector3(1f, 5f, -3f), new Vector3(0f, 180f, 0f), true, "key_room_103", "Room 103 Door"));
+            upperCorridor.AddConnection(new DoorwayConnection("conn_upper_housekeeping", "room_upper_corridor", "room_housekeeping", new Vector3(10f, 5f, -3f), new Vector3(0f, 180f, 0f), true, "key_housekeeping", "Housekeeping Storage Door"));
             rooms.Add(upperCorridor);
 
             // 12. Grand Library & Archive
@@ -161,7 +161,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             library.AddAnchor("anchor_library_bookshelf_north", AnchorCategory.Shelf, new Vector3(-16f, 6.25f, 5.5f));
             library.AddAnchor("anchor_library_bookshelf_south", AnchorCategory.Shelf, new Vector3(-16f, 6.25f, -5.5f));
             library.AddConnection(new DoorwayConnection("conn_upper_card", "room_library", "room_card_room", new Vector3(-11f, 5f, 7f), Vector3.zero, false, null, "Card Room Door"));
-            library.AddConnection(new DoorwayConnection("conn_upper_linen", "room_library", "room_linen_storage", new Vector3(-11f, 5f, -7f), Vector3.zero, false, null, "Linen Annex Door"));
+            library.AddConnection(new DoorwayConnection("conn_upper_linen", "room_library", "room_linen_storage", new Vector3(-11f, 5f, -7f), new Vector3(0f, 180f, 0f), false, null, "Linen Annex Door"));
             rooms.Add(library);
 
             // 13. Gentleman's Card Room
@@ -256,8 +256,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_billiards", "room_floor2_promenade", "room_billiards", new Vector3(-4f, 10f, 0f), new Vector3(0f, 90f, 0f), false, null, "Billiards Hall Grand Archway"));
             floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room201", "room_floor2_promenade", "room_guest_201", new Vector3(1f, 10f, 3f), Vector3.zero, true, "key_room_201", "Deluxe Suite 201 Door"));
             floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room202", "room_floor2_promenade", "room_guest_202", new Vector3(10f, 10f, 3f), Vector3.zero, true, "key_room_202", "Deluxe Suite 202 Door"));
-            floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room203", "room_floor2_promenade", "room_guest_203", new Vector3(1f, 10f, -3f), Vector3.zero, true, "key_room_203", "Deluxe Suite 203 Door"));
-            floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_service", "room_floor2_promenade", "room_service_floor2", new Vector3(10f, 10f, -3f), Vector3.zero, false, null, "Floor 2 Service Annex Door"));
+            floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_room203", "room_floor2_promenade", "room_guest_203", new Vector3(1f, 10f, -3f), new Vector3(0f, 180f, 0f), true, "key_room_203", "Deluxe Suite 203 Door"));
+            floor2Promenade.AddConnection(new DoorwayConnection("conn_floor2_service", "room_floor2_promenade", "room_service_floor2", new Vector3(10f, 10f, -3f), new Vector3(0f, 180f, 0f), false, null, "Floor 2 Service Annex Door"));
             rooms.Add(floor2Promenade);
 
             // 22. Billiards Hall & Game Room
@@ -268,7 +268,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             billiards.AddAnchor("anchor_billiards_table", AnchorCategory.Tabletop, new Vector3(-16f, 10.85f, 0f));
             billiards.AddAnchor("anchor_billiards_cue_rack", AnchorCategory.Wall, new Vector3(-21f, 11.5f, 0f));
             billiards.AddConnection(new DoorwayConnection("conn_floor2_salon", "room_billiards", "room_music_salon", new Vector3(-11f, 10f, 7f), Vector3.zero, false, null, "Music Salon Double Door"));
-            billiards.AddConnection(new DoorwayConnection("conn_floor2_cigar", "room_billiards", "room_cigar_lounge", new Vector3(-11f, 10f, -7f), Vector3.zero, false, null, "Cigar Lounge Door"));
+            billiards.AddConnection(new DoorwayConnection("conn_floor2_cigar", "room_billiards", "room_cigar_lounge", new Vector3(-11f, 10f, -7f), new Vector3(0f, 180f, 0f), false, null, "Cigar Lounge Door"));
             rooms.Add(billiards);
 
             // 23. Music Salon
@@ -362,8 +362,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             skyFoyer.AddConnection(new DoorwayConnection("conn_sky_penthouse", "room_floor3_sky_foyer", "room_crown_penthouse", new Vector3(-4f, 15f, 0f), new Vector3(0f, 90f, 0f), true, "key_penthouse", "Crown Penthouse Gilded Double Door"));
             skyFoyer.AddConnection(new DoorwayConnection("conn_sky_observatory", "room_floor3_sky_foyer", "room_observatory", new Vector3(1f, 15f, 3f), Vector3.zero, true, "key_observatory", "Clock Tower Observatory Door"));
             skyFoyer.AddConnection(new DoorwayConnection("conn_sky_vip301", "room_floor3_sky_foyer", "room_vip_301", new Vector3(10f, 15f, 3f), Vector3.zero, true, "key_vip_301", "Royal Penthouse 301 Door"));
-            skyFoyer.AddConnection(new DoorwayConnection("conn_sky_solarium", "room_floor3_sky_foyer", "room_solarium", new Vector3(1f, 15f, -3f), Vector3.zero, false, null, "Rooftop Solarium French Doors"));
-            skyFoyer.AddConnection(new DoorwayConnection("conn_sky_vip302", "room_floor3_sky_foyer", "room_vip_302", new Vector3(10f, 15f, -3f), Vector3.zero, true, "key_vip_302", "Royal Penthouse 302 Door"));
+            skyFoyer.AddConnection(new DoorwayConnection("conn_sky_solarium", "room_floor3_sky_foyer", "room_solarium", new Vector3(1f, 15f, -3f), new Vector3(0f, 180f, 0f), false, null, "Rooftop Solarium French Doors"));
+            skyFoyer.AddConnection(new DoorwayConnection("conn_sky_vip302", "room_floor3_sky_foyer", "room_vip_302", new Vector3(10f, 15f, -3f), new Vector3(0f, 180f, 0f), true, "key_vip_302", "Royal Penthouse 302 Door"));
             rooms.Add(skyFoyer);
 
             // 32. Crown Penthouse Grand Salon
@@ -374,7 +374,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             penthouse.AddAnchor("anchor_penthouse_bar", AnchorCategory.Counter, new Vector3(-16f, 16.15f, 0f));
             penthouse.AddAnchor("anchor_penthouse_fireplace", AnchorCategory.FloorCorner, new Vector3(-21f, 15.02f, 0f));
             penthouse.AddConnection(new DoorwayConnection("conn_penthouse_bed", "room_crown_penthouse", "room_presidential_bed", new Vector3(-11f, 15f, 7f), Vector3.zero, false, null, "Presidential Bedroom Door"));
-            penthouse.AddConnection(new DoorwayConnection("conn_penthouse_study", "room_crown_penthouse", "room_presidential_study", new Vector3(-11f, 15f, -7f), Vector3.zero, false, null, "Presidential Study Door"));
+            penthouse.AddConnection(new DoorwayConnection("conn_penthouse_study", "room_crown_penthouse", "room_presidential_study", new Vector3(-11f, 15f, -7f), new Vector3(0f, 180f, 0f), false, null, "Presidential Study Door"));
             rooms.Add(penthouse);
 
             // 33. Presidential Master Bedroom

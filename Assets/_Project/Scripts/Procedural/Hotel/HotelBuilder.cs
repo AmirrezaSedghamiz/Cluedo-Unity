@@ -448,7 +448,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     float doorOpeningHeight = isStairArch ? height : 2.8f;
                     float lintelHeight = height - doorOpeningHeight;
                     float doorX = conn.WorldPosition.x;
-                    float doorWidth = (conn.DoorDisplayName.Contains("Archway") || conn.DoorDisplayName.Contains("Double")) ? 3.4f : 2.2f;
+                    float doorWidth = (conn.DoorDisplayName.Contains("Archway") || conn.DoorDisplayName.Contains("Double") || conn.DoorDisplayName.Contains("French")) ? 3.4f : 2.2f;
                     float doorLeft = doorX - doorWidth * 0.5f;
                     float doorRight = doorX + doorWidth * 0.5f;
 
@@ -514,7 +514,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     float doorOpeningHeight = isStairArch ? height : 2.8f;
                     float lintelHeight = height - doorOpeningHeight;
                     float doorZ = conn.WorldPosition.z;
-                    float doorWidth = (conn.DoorDisplayName.Contains("Archway") || conn.DoorDisplayName.Contains("Double")) ? 3.4f : 2.2f;
+                    float doorWidth = (conn.DoorDisplayName.Contains("Archway") || conn.DoorDisplayName.Contains("Double") || conn.DoorDisplayName.Contains("French")) ? 3.4f : 2.2f;
                     float doorSouth = doorZ - doorWidth * 0.5f;
                     float doorNorth = doorZ + doorWidth * 0.5f;
 
@@ -563,8 +563,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             wallRoot.transform.position = center;
 
             bool isXLong = size.x >= size.z;
-            float lowerHeight = 1.6f;
-            float upperHeight = size.y - lowerHeight;
+            float lowerHeight = 1.56f;
+            float trimHeight = 0.08f;
+            float upperHeight = Mathf.Max(0.1f, size.y - lowerHeight - trimHeight);
             float thickness = isXLong ? size.z : size.x;
             float length = isXLong ? size.x : size.z;
 
@@ -579,14 +580,14 @@ namespace TomorrowsCrime.Procedural.Hotel
             var lowerRend = lower.GetComponent<Renderer>();
             if (lowerRend != null && lowerMat != null) lowerRend.sharedMaterial = lowerMat;
 
-            // Brass Trim (Chair Rail)
+            // Brass Trim (Chair Rail) - exactly fits between lower and upper with zero vertical overlap and flush partition thickness
             var trim = GameObject.CreatePrimitive(PrimitiveType.Cube);
             trim.name = $"{name}_ChairRail";
             trim.transform.SetParent(wallRoot.transform);
-            trim.transform.localPosition = new Vector3(0f, -size.y * 0.5f + lowerHeight, 0f);
+            trim.transform.localPosition = new Vector3(0f, -size.y * 0.5f + lowerHeight + trimHeight * 0.5f, 0f);
             trim.transform.localScale = isXLong
-                ? new Vector3(length, 0.08f, thickness * 1.08f)
-                : new Vector3(thickness * 1.08f, 0.08f, length);
+                ? new Vector3(length, trimHeight, thickness)
+                : new Vector3(thickness, trimHeight, length);
             var trimRend = trim.GetComponent<Renderer>();
             if (trimRend != null && trimMat != null) trimRend.sharedMaterial = trimMat;
 
@@ -594,7 +595,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             var upper = GameObject.CreatePrimitive(PrimitiveType.Cube);
             upper.name = $"{name}_Wallpaper";
             upper.transform.SetParent(wallRoot.transform);
-            upper.transform.localPosition = new Vector3(0f, -size.y * 0.5f + lowerHeight + upperHeight * 0.5f, 0f);
+            upper.transform.localPosition = new Vector3(0f, -size.y * 0.5f + lowerHeight + trimHeight + upperHeight * 0.5f, 0f);
             upper.transform.localScale = isXLong
                 ? new Vector3(length, upperHeight, thickness)
                 : new Vector3(thickness, upperHeight, length);
@@ -1037,7 +1038,30 @@ namespace TomorrowsCrime.Procedural.Hotel
                     var doorRoot = new GameObject($"Door_{conn.ConnectionId}");
                     doorRoot.transform.SetParent(doorsRoot.transform);
                     doorRoot.transform.position = conn.WorldPosition;
-                    doorRoot.transform.rotation = Quaternion.Euler(conn.DoorOrientationEuler);
+
+                    // Dynamically calculate exact orientation based on room positions:
+                    // Local -Z faces FromRoom (corridor / approach room where plaque is displayed)
+                    // Local +Z enters ToRoom (destination room where door swings inward)
+                    Quaternion doorRot;
+                    if (roomMap.TryGetValue(conn.FromRoomId, out var fromRoom) && roomMap.TryGetValue(conn.ToRoomId, out var toRoom))
+                    {
+                        Vector3 toRoomDir = toRoom.Bounds.center - fromRoom.Bounds.center;
+                        Vector3 forwardDir;
+                        if (Mathf.Abs(toRoomDir.x) > Mathf.Abs(toRoomDir.z))
+                        {
+                            forwardDir = (toRoomDir.x > 0f) ? Vector3.right : Vector3.left;
+                        }
+                        else
+                        {
+                            forwardDir = (toRoomDir.z > 0f) ? Vector3.forward : Vector3.back;
+                        }
+                        doorRot = Quaternion.LookRotation(forwardDir, Vector3.up);
+                    }
+                    else
+                    {
+                        doorRot = Quaternion.Euler(conn.DoorOrientationEuler);
+                    }
+                    doorRoot.transform.rotation = doorRot;
 
                     bool isArchway = conn.DoorDisplayName.Contains("Archway");
                     if (isArchway)
@@ -1092,7 +1116,12 @@ namespace TomorrowsCrime.Procedural.Hotel
                         continue;
                     }
 
-                    // 1. Stationary Door Casing (Frames the 2.2m wall opening permanently with authentic jambs, header, sill, and plaque)
+                    bool isDoubleDoor = conn.DoorDisplayName.Contains("Double") || conn.DoorDisplayName.Contains("French");
+                    float frameWidth = isDoubleDoor ? 3.4f : 2.2f;
+                    float jambX = isDoubleDoor ? 1.525f : 0.925f;
+                    float clearWidth = isDoubleDoor ? 2.70f : 1.50f;
+
+                    // 1. Stationary Door Casing (Frames wall opening permanently with authentic jambs, header, sill, and plaque)
                     var doorCasing = new GameObject("Door_Casing");
                     doorCasing.transform.SetParent(doorRoot.transform);
                     doorCasing.transform.localPosition = Vector3.zero;
@@ -1101,7 +1130,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     var jambLeft = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     jambLeft.name = "Casing_Jamb_Left";
                     jambLeft.transform.SetParent(doorCasing.transform);
-                    jambLeft.transform.localPosition = new Vector3(-0.925f, 1.375f, 0f);
+                    jambLeft.transform.localPosition = new Vector3(-jambX, 1.375f, 0f);
                     jambLeft.transform.localScale = new Vector3(0.35f, 2.75f, 0.44f);
                     var jLCol = jambLeft.GetComponent<BoxCollider>();
                     if (jLCol != null) jLCol.isTrigger = false;
@@ -1112,7 +1141,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     var jambRight = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     jambRight.name = "Casing_Jamb_Right";
                     jambRight.transform.SetParent(doorCasing.transform);
-                    jambRight.transform.localPosition = new Vector3(0.925f, 1.375f, 0f);
+                    jambRight.transform.localPosition = new Vector3(jambX, 1.375f, 0f);
                     jambRight.transform.localScale = new Vector3(0.35f, 2.75f, 0.44f);
                     var jRCol = jambRight.GetComponent<BoxCollider>();
                     if (jRCol != null) jRCol.isTrigger = false;
@@ -1120,10 +1149,11 @@ namespace TomorrowsCrime.Procedural.Hotel
                     if (jRRend != null) jRRend.sharedMaterial = mahoganyMat;
 
                     // Inner Brass Reveal Trims
+                    float revealX = isDoubleDoor ? 1.35f : 0.75f;
                     var revealL = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     revealL.name = "Casing_Reveal_Left";
                     revealL.transform.SetParent(doorCasing.transform);
-                    revealL.transform.localPosition = new Vector3(-0.75f, 1.375f, 0f);
+                    revealL.transform.localPosition = new Vector3(-revealX, 1.375f, 0f);
                     revealL.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
                     var rLRend = revealL.GetComponent<Renderer>();
                     if (rLRend != null) rLRend.sharedMaterial = brassMat;
@@ -1131,7 +1161,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     var revealR = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     revealR.name = "Casing_Reveal_Right";
                     revealR.transform.SetParent(doorCasing.transform);
-                    revealR.transform.localPosition = new Vector3(0.75f, 1.375f, 0f);
+                    revealR.transform.localPosition = new Vector3(revealX, 1.375f, 0f);
                     revealR.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
                     var rRRend = revealR.GetComponent<Renderer>();
                     if (rRRend != null) rRRend.sharedMaterial = brassMat;
@@ -1141,7 +1171,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     lintelHead.name = "Casing_Lintel_Header";
                     lintelHead.transform.SetParent(doorCasing.transform);
                     lintelHead.transform.localPosition = new Vector3(0f, 2.65f, 0f);
-                    lintelHead.transform.localScale = new Vector3(2.25f, 0.28f, 0.46f);
+                    lintelHead.transform.localScale = new Vector3(frameWidth + 0.05f, 0.28f, 0.46f);
                     var lCol = lintelHead.GetComponent<BoxCollider>();
                     if (lCol != null) lCol.isTrigger = false;
                     var lhRend = lintelHead.GetComponent<Renderer>();
@@ -1152,7 +1182,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     crownCornice.name = "Casing_Crown_Cornice";
                     crownCornice.transform.SetParent(doorCasing.transform);
                     crownCornice.transform.localPosition = new Vector3(0f, 2.82f, 0f);
-                    crownCornice.transform.localScale = new Vector3(2.35f, 0.10f, 0.50f);
+                    crownCornice.transform.localScale = new Vector3(frameWidth + 0.15f, 0.10f, 0.50f);
                     var crRend = crownCornice.GetComponent<Renderer>();
                     if (crRend != null) crRend.sharedMaterial = walnutMat;
 
@@ -1161,125 +1191,63 @@ namespace TomorrowsCrime.Procedural.Hotel
                     threshold.name = "Casing_Threshold";
                     threshold.transform.SetParent(doorCasing.transform);
                     threshold.transform.localPosition = new Vector3(0f, 0.02f, 0f);
-                    threshold.transform.localScale = new Vector3(1.50f, 0.04f, 0.40f);
+                    threshold.transform.localScale = new Vector3(clearWidth, 0.04f, 0.40f);
                     var thRend = threshold.GetComponent<Renderer>();
                     if (thRend != null) thRend.sharedMaterial = brassMat;
 
-                    // Polished Brass Identification Plaque
+                    // Polished Brass Identification Plaque (Faces corridor / approach room at local -Z)
                     var plaque = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     plaque.name = "Casing_Suite_Plaque";
                     plaque.transform.SetParent(doorCasing.transform);
                     plaque.transform.localPosition = new Vector3(0f, 2.62f, -0.235f);
-                    plaque.transform.localScale = new Vector3(0.50f, 0.12f, 0.02f);
+                    plaque.transform.localScale = new Vector3(isDoubleDoor ? 0.65f : 0.50f, 0.12f, 0.02f);
                     var plqRend = plaque.GetComponent<Renderer>();
                     if (plqRend != null) plqRend.sharedMaterial = brassMat;
 
-                    // 2. Dynamic Door Leaf on Hinge
-                    var hinge = new GameObject("Hinge");
-                    hinge.transform.SetParent(doorRoot.transform);
-                    hinge.transform.localPosition = new Vector3(-0.73f, 0f, 0f);
-
-                    // Solid Wood Door Leaf with Beveled Profiling
-                    var doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    doorLeaf.name = "Door_Leaf";
-                    doorLeaf.transform.SetParent(hinge.transform);
-                    doorLeaf.transform.localPosition = new Vector3(0.73f, 1.25f, 0f);
-                    doorLeaf.transform.localScale = new Vector3(1.46f, 2.50f, 0.08f);
-
-                    var leafRend = doorLeaf.GetComponent<Renderer>();
-                    if (leafRend != null) leafRend.sharedMaterial = walnutMat;
-
-                    var leafCol = doorLeaf.GetComponent<BoxCollider>();
-                    if (leafCol == null) leafCol = doorLeaf.AddComponent<BoxCollider>();
-                    leafCol.center = Vector3.zero;
-                    leafCol.size = Vector3.one;
-                    leafCol.isTrigger = false;
-
-                    // Upper Recessed Panel Detail
-                    var upperPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    upperPanel.name = "Door_Panel_Upper";
-                    upperPanel.transform.SetParent(doorLeaf.transform);
-                    upperPanel.transform.localPosition = new Vector3(0f, 0.48f, 0f);
-                    upperPanel.transform.localScale = new Vector3(0.78f, 0.38f, 1.25f);
-                    var upRend = upperPanel.GetComponent<Renderer>();
-                    if (upRend != null) upRend.sharedMaterial = mahoganyMat;
-                    var upCol = upperPanel.GetComponent<Collider>();
-                    if (upCol != null) Object.DestroyImmediate(upCol);
-
-                    // Lower Recessed Panel Detail
-                    var lowerPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    lowerPanel.name = "Door_Panel_Lower";
-                    lowerPanel.transform.SetParent(doorLeaf.transform);
-                    lowerPanel.transform.localPosition = new Vector3(0f, -0.55f, 0f);
-                    lowerPanel.transform.localScale = new Vector3(0.78f, 0.28f, 1.25f);
-                    var lpRend = lowerPanel.GetComponent<Renderer>();
-                    if (lpRend != null) lpRend.sharedMaterial = mahoganyMat;
-                    var lpCol = lowerPanel.GetComponent<Collider>();
-                    if (lpCol != null) Object.DestroyImmediate(lpCol);
-
-                    // Brass Kickplate at Base of Door
-                    var kickplate = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    kickplate.name = "Door_Brass_Kickplate";
-                    kickplate.transform.SetParent(doorLeaf.transform);
-                    kickplate.transform.localPosition = new Vector3(0f, -0.88f, 0f);
-                    kickplate.transform.localScale = new Vector3(0.98f, 0.16f, 1.20f);
-                    var kpRend = kickplate.GetComponent<Renderer>();
-                    if (kpRend != null) kpRend.sharedMaterial = brassMat;
-                    var kpCol = kickplate.GetComponent<Collider>();
-                    if (kpCol != null) Object.DestroyImmediate(kpCol);
-
-                    // Polished Brass Door Lever Handle Plate
-                    var handleEscutcheon = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    handleEscutcheon.name = "Door_Handle_Escutcheon";
-                    handleEscutcheon.transform.SetParent(doorLeaf.transform);
-                    handleEscutcheon.transform.localPosition = new Vector3(0.38f, -0.18f, 0f);
-                    handleEscutcheon.transform.localScale = new Vector3(0.08f, 0.14f, 1.45f);
-                    var hRend = handleEscutcheon.GetComponent<Renderer>();
-                    if (hRend != null) hRend.sharedMaterial = brassMat;
-                    var hCol = handleEscutcheon.GetComponent<Collider>();
-                    if (hCol != null) Object.DestroyImmediate(hCol);
-
-                    // Brass Lever Handle (Front)
-                    var handleLeverFront = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    handleLeverFront.name = "Door_Handle_Lever_Front";
-                    handleLeverFront.transform.SetParent(handleEscutcheon.transform);
-                    handleLeverFront.transform.localPosition = new Vector3(-0.35f, 0.18f, 0.55f);
-                    handleLeverFront.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
-                    var hlfRend = handleLeverFront.GetComponent<Renderer>();
-                    if (hlfRend != null) hlfRend.sharedMaterial = brassMat;
-                    var hlfCol = handleLeverFront.GetComponent<Collider>();
-                    if (hlfCol != null) Object.DestroyImmediate(hlfCol);
-
-                    // Brass Lever Handle (Back)
-                    var handleLeverBack = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    handleLeverBack.name = "Door_Handle_Lever_Back";
-                    handleLeverBack.transform.SetParent(handleEscutcheon.transform);
-                    handleLeverBack.transform.localPosition = new Vector3(-0.35f, 0.18f, -0.55f);
-                    handleLeverBack.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
-                    var hlbRend = handleLeverBack.GetComponent<Renderer>();
-                    if (hlbRend != null) hlbRend.sharedMaterial = brassMat;
-                    var hlbCol = handleLeverBack.GetComponent<Collider>();
-                    if (hlbCol != null) Object.DestroyImmediate(hlbCol);
-
-                    // Calculate Inward Swing Angle so door ALWAYS swings into the destination room's open space
+                    // Door Leaves & Hinges
                     float openAngle = -90f;
-                    if (roomMap.TryGetValue(conn.ToRoomId, out var targetRoom))
-                    {
-                        Vector3 roomDir = targetRoom.Bounds.center - conn.WorldPosition;
-                        Vector3 localDir = Quaternion.Inverse(doorRoot.transform.rotation) * roomDir;
-                        openAngle = (localDir.z >= 0f) ? -90f : 90f;
-                    }
+                    Transform hingeL = null;
+                    Transform hingeR = null;
 
-                    // For unlocked communal doors, start open so player can see inside rooms
-                    bool startsOpen = !conn.RequiresKey;
-                    if (startsOpen)
+                    if (isDoubleDoor)
                     {
-                        hinge.transform.localRotation = Quaternion.Euler(0f, openAngle, 0f);
+                        // Double French Doors: Two mirrored leaves meeting at center x = 0
+                        float leafW = clearWidth * 0.50f;
+                        float hingeX = leafW;
+
+                        // Left Hinge & Leaf
+                        var hLGo = new GameObject("Hinge_Left");
+                        hLGo.transform.SetParent(doorRoot.transform);
+                        hLGo.transform.localPosition = new Vector3(-hingeX, 0f, 0f);
+                        hingeL = hLGo.transform;
+
+                        BuildDoorLeafMesh(hLGo.transform, new Vector3(leafW * 0.5f, 1.25f, 0f), new Vector3(leafW, 2.50f, 0.08f),
+                            walnutMat, mahoganyMat, brassMat, isRightSide: false);
+
+                        // Right Hinge & Leaf
+                        var hRGo = new GameObject("Hinge_Right");
+                        hRGo.transform.SetParent(doorRoot.transform);
+                        hRGo.transform.localPosition = new Vector3(hingeX, 0f, 0f);
+                        hingeR = hRGo.transform;
+
+                        BuildDoorLeafMesh(hRGo.transform, new Vector3(-leafW * 0.5f, 1.25f, 0f), new Vector3(leafW, 2.50f, 0.08f),
+                            walnutMat, mahoganyMat, brassMat, isRightSide: true);
                     }
                     else
                     {
-                        hinge.transform.localRotation = Quaternion.identity;
+                        // Single Door Leaf
+                        var hingeGo = new GameObject("Hinge");
+                        hingeGo.transform.SetParent(doorRoot.transform);
+                        hingeGo.transform.localPosition = new Vector3(-0.73f, 0f, 0f);
+                        hingeL = hingeGo.transform;
+
+                        BuildDoorLeafMesh(hingeGo.transform, new Vector3(0.73f, 1.25f, 0f), new Vector3(1.46f, 2.50f, 0.08f),
+                            walnutMat, mahoganyMat, brassMat, isRightSide: false);
                     }
+
+                    // All doors start flush closed inside their frames
+                    hingeL.localRotation = Quaternion.identity;
+                    if (hingeR != null) hingeR.localRotation = Quaternion.identity;
 
                     // InteractableDoor component
                     var doorComp = doorRoot.AddComponent<InteractableDoor>();
@@ -1287,17 +1255,98 @@ namespace TomorrowsCrime.Procedural.Hotel
 
 #if UNITY_EDITOR
                     var soDoor = new SerializedObject(doorComp);
-                    soDoor.FindProperty("doorHingeTransform").objectReferenceValue = hinge.transform;
+                    soDoor.FindProperty("doorHingeTransform").objectReferenceValue = hingeL;
+                    if (hingeR != null) soDoor.FindProperty("doorHingeRightTransform").objectReferenceValue = hingeR;
                     soDoor.FindProperty("doorId").stringValue = conn.RequiredKeyId != null ? $"door_{conn.ConnectionId}" : $"door_unlocked_{conn.ConnectionId}";
                     soDoor.FindProperty("doorDisplayName").stringValue = conn.DoorDisplayName;
                     soDoor.FindProperty("requiredKeyId").stringValue = conn.RequiredKeyId ?? string.Empty;
                     soDoor.FindProperty("lockState").enumValueIndex = conn.RequiresKey ? (int)DoorLockState.Locked : (int)DoorLockState.Unlocked;
-                    soDoor.FindProperty("openState").enumValueIndex = startsOpen ? (int)DoorOpenState.Open : (int)DoorOpenState.Closed;
+                    soDoor.FindProperty("openState").enumValueIndex = (int)DoorOpenState.Closed;
                     soDoor.FindProperty("openAngle").floatValue = openAngle;
                     soDoor.ApplyModifiedPropertiesWithoutUndo();
 #endif
                 }
             }
+        }
+
+        private static void BuildDoorLeafMesh(Transform hingeParent, Vector3 localPos, Vector3 leafSize,
+            Material woodMat, Material panelMat, Material brassMat, bool isRightSide)
+        {
+            var doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            doorLeaf.name = "Door_Leaf";
+            doorLeaf.transform.SetParent(hingeParent);
+            doorLeaf.transform.localPosition = localPos;
+            doorLeaf.transform.localScale = leafSize;
+
+            var leafRend = doorLeaf.GetComponent<Renderer>();
+            if (leafRend != null && woodMat != null) leafRend.sharedMaterial = woodMat;
+
+            var leafCol = doorLeaf.GetComponent<BoxCollider>();
+            if (leafCol == null) leafCol = doorLeaf.AddComponent<BoxCollider>();
+            leafCol.center = Vector3.zero;
+            leafCol.size = Vector3.one;
+            leafCol.isTrigger = false;
+
+            // Upper Recessed Panel Detail
+            var upperPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            upperPanel.name = "Door_Panel_Upper";
+            upperPanel.transform.SetParent(doorLeaf.transform);
+            upperPanel.transform.localPosition = new Vector3(0f, 0.48f, 0f);
+            upperPanel.transform.localScale = new Vector3(0.78f, 0.38f, 1.25f);
+            if (upperPanel.GetComponent<Renderer>() != null && panelMat != null) upperPanel.GetComponent<Renderer>().sharedMaterial = panelMat;
+            var upCol = upperPanel.GetComponent<Collider>();
+            if (upCol != null) Object.DestroyImmediate(upCol);
+
+            // Lower Recessed Panel Detail
+            var lowerPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lowerPanel.name = "Door_Panel_Lower";
+            lowerPanel.transform.SetParent(doorLeaf.transform);
+            lowerPanel.transform.localPosition = new Vector3(0f, -0.55f, 0f);
+            lowerPanel.transform.localScale = new Vector3(0.78f, 0.28f, 1.25f);
+            if (lowerPanel.GetComponent<Renderer>() != null && panelMat != null) lowerPanel.GetComponent<Renderer>().sharedMaterial = panelMat;
+            var lpCol = lowerPanel.GetComponent<Collider>();
+            if (lpCol != null) Object.DestroyImmediate(lpCol);
+
+            // Brass Kickplate at Base of Door
+            var kickplate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            kickplate.name = "Door_Brass_Kickplate";
+            kickplate.transform.SetParent(doorLeaf.transform);
+            kickplate.transform.localPosition = new Vector3(0f, -0.88f, 0f);
+            kickplate.transform.localScale = new Vector3(0.98f, 0.16f, 1.20f);
+            if (kickplate.GetComponent<Renderer>() != null && brassMat != null) kickplate.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var kpCol = kickplate.GetComponent<Collider>();
+            if (kpCol != null) Object.DestroyImmediate(kpCol);
+
+            // Polished Brass Door Lever Handle Plate
+            float handleX = isRightSide ? -0.38f : 0.38f;
+            var handleEscutcheon = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            handleEscutcheon.name = "Door_Handle_Escutcheon";
+            handleEscutcheon.transform.SetParent(doorLeaf.transform);
+            handleEscutcheon.transform.localPosition = new Vector3(handleX, -0.18f, 0f);
+            handleEscutcheon.transform.localScale = new Vector3(0.08f, 0.14f, 1.45f);
+            if (handleEscutcheon.GetComponent<Renderer>() != null && brassMat != null) handleEscutcheon.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var hCol = handleEscutcheon.GetComponent<Collider>();
+            if (hCol != null) Object.DestroyImmediate(hCol);
+
+            // Brass Lever Handle (Front)
+            var handleLeverFront = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            handleLeverFront.name = "Door_Handle_Lever_Front";
+            handleLeverFront.transform.SetParent(handleEscutcheon.transform);
+            handleLeverFront.transform.localPosition = new Vector3(isRightSide ? 0.35f : -0.35f, 0.18f, 0.55f);
+            handleLeverFront.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
+            if (handleLeverFront.GetComponent<Renderer>() != null && brassMat != null) handleLeverFront.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var hlfCol = handleLeverFront.GetComponent<Collider>();
+            if (hlfCol != null) Object.DestroyImmediate(hlfCol);
+
+            // Brass Lever Handle (Back)
+            var handleLeverBack = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            handleLeverBack.name = "Door_Handle_Lever_Back";
+            handleLeverBack.transform.SetParent(handleEscutcheon.transform);
+            handleLeverBack.transform.localPosition = new Vector3(isRightSide ? 0.35f : -0.35f, 0.18f, -0.55f);
+            handleLeverBack.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
+            if (handleLeverBack.GetComponent<Renderer>() != null && brassMat != null) handleLeverBack.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var hlbCol = handleLeverBack.GetComponent<Collider>();
+            if (hlbCol != null) Object.DestroyImmediate(hlbCol);
         }
 
         private static void BuildRoomFurniture(Transform parent, List<RoomDefinition> rooms, Dictionary<string, Material> mats, TomorrowsCrime.Procedural.Core.SeededRandom rng)
@@ -1309,6 +1358,7 @@ namespace TomorrowsCrime.Procedural.Hotel
             Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
             Material greenFeltMat = GetMaterial(mats, "GreenFelt", new Color(0.12f, 0.45f, 0.22f));
             Material velvetGoldMat = GetMaterial(mats, "VelvetGold", new Color(0.85f, 0.70f, 0.25f));
+            Material velvetEmeraldMat = GetMaterial(mats, "VelvetEmerald", new Color(0.12f, 0.40f, 0.22f));
             Material marbleIvoryMat = GetMaterial(mats, "MarbleIvory", new Color(0.92f, 0.90f, 0.85f));
             Material marbleBlackMat = GetMaterial(mats, "MarbleBlack", new Color(0.15f, 0.15f, 0.18f));
             Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
@@ -1394,6 +1444,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-19f, y, -11f), new Vector3(2.0f, 1.0f, 1.0f), marbleIvoryMat, "Conservatory_StonePlanter");
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-13f, y, -11f), new Vector3(2.2f, 0.85f, 0.8f), walnutMat, "Conservatory_GardenBench");
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, -10f), new Vector3(1.4f, 0.75f, 1.4f), brassMat, "Conservatory_BistroTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, -9.1f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Conservatory_BistroChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, -10.9f), Quaternion.Euler(0f, 0f, 0f), walnutMat, greenFeltMat, "Conservatory_BistroChair_S");
                         break;
 
                     case RoomType.StaffOffice:
@@ -1413,18 +1465,30 @@ namespace TomorrowsCrime.Procedural.Hotel
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, 6f), new Vector3(8.0f, 3.6f, 0.8f), mahoganyMat, "Library_Bookshelf_North");
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, -6f), new Vector3(8.0f, 3.6f, 0.8f), mahoganyMat, "Library_Bookshelf_South");
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, 0f), new Vector3(3.0f, 0.85f, 1.6f), walnutMat, "Library_StudyReadingDesk");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, 1.2f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Library_ReadingChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, -1.2f), Quaternion.Euler(0f, 0f, 0f), walnutMat, greenFeltMat, "Library_ReadingChair_S");
                         BuildFloorGlobe(furnitureRoot.transform, new Vector3(-8.5f, y, 3.5f), brassMat, "Library_TerrestrialGlobe");
                         break;
 
                     case RoomType.CardRoom:
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-6f, y, -13f), new Vector3(2.2f, 0.82f, 2.2f), greenFeltMat, "CardRoom_GameTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-6f, y, -11.7f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-6f, y, -14.3f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_S");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-7.3f, y, -13f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_W");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-4.7f, y, -13f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetEmeraldMat, "CardRoom_GameChair_E");
+
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-11f, y, 10.5f), new Vector3(1.4f, 0.80f, 1.4f), walnutMat, "CardRoom_ChessTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, 11.5f), Quaternion.Euler(0f, 180f, 0f), walnutMat, velvetGoldMat, "CardRoom_ChessChair_N");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-11f, y, 9.5f), Quaternion.Euler(0f, 0f, 0f), walnutMat, velvetGoldMat, "CardRoom_ChessChair_S");
+
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-15f, y, 12f), new Vector3(1.4f, 1.2f, 0.5f), mahoganyMat, "CardRoom_HumidorCredenza");
                         break;
 
                     case RoomType.MusicSalon:
                         BuildSolidPiano(furnitureRoot.transform, new Vector3(0f, y, 11f), mats);
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-3f, y, 12f), new Vector3(0.6f, 1.4f, 0.6f), walnutMat, "MusicSalon_CelloStand");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-2.8f, y, 9.5f), Quaternion.Euler(0f, 40f, 0f), walnutMat, velvetGoldMat, "MusicSalon_Armchair_L");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(2.8f, y, 9.5f), Quaternion.Euler(0f, -40f, 0f), walnutMat, velvetGoldMat, "MusicSalon_Armchair_R");
                         break;
 
                     case RoomType.BilliardsRoom:
@@ -1436,23 +1500,34 @@ namespace TomorrowsCrime.Procedural.Hotel
                     case RoomType.CigarLounge:
                         BuildSolidFireplace(furnitureRoot.transform, new Vector3(-6f, y, -15f), mats, "CigarLounge_Fireplace");
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-6f, y, -12f), new Vector3(2.0f, 0.55f, 1.2f), mahoganyMat, "CigarLounge_CoffeeTable");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-7.5f, y, -12f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_W");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-4.5f, y, -12f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "CigarLounge_Armchair_E");
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-15f, y, -11f), new Vector3(1.8f, 2.2f, 0.6f), walnutMat, "CigarLounge_HumidorCabinet");
                         break;
 
                     case RoomType.CrownPenthouse:
                         BuildSolidFireplace(furnitureRoot.transform, new Vector3(-21f, y, 0f), mats, "Penthouse_GrandFireplace");
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, 0f), new Vector3(4.0f, 1.15f, 1.2f), walnutMat, "Penthouse_PrivateBar");
+                        BuildBarStool(furnitureRoot.transform, new Vector3(-17.0f, y, 1.0f), walnutMat, brassMat, velvetGoldMat, "Penthouse_BarStool_1");
+                        BuildBarStool(furnitureRoot.transform, new Vector3(-15.0f, y, 1.0f), walnutMat, brassMat, velvetGoldMat, "Penthouse_BarStool_2");
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, 4f), new Vector3(2.4f, 0.50f, 1.4f), mahoganyMat, "Penthouse_LoungeTable");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-16f, y, 5.5f), new Vector3(2.8f, 0.85f, 0.9f), velvetGoldMat, "Penthouse_VelvetSofa");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-18f, y, 4f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetGoldMat, "Penthouse_Armchair_W");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-14f, y, 4f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetGoldMat, "Penthouse_Armchair_E");
                         break;
 
                     case RoomType.Observatory:
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(0f, y, 11f), new Vector3(1.4f, 2.2f, 1.4f), brassMat, "Observatory_TelescopePedestal");
+                        BuildAstronomicalTelescope(furnitureRoot.transform, new Vector3(0f, y, 11f), brassMat, mahoganyMat, "Observatory_Telescope");
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-3f, y, 9f), new Vector3(1.8f, 0.85f, 1.0f), walnutMat, "Observatory_StarChartDesk");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-3f, y, 9.8f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Observatory_AstronomerChair");
+                        BuildFloorGlobe(furnitureRoot.transform, new Vector3(2f, y, 9f), brassMat, "Observatory_ArmillaryGlobe");
                         break;
 
                     case RoomType.Solarium:
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-6f, y, -14f), new Vector3(2.2f, 1.2f, 2.2f), marbleIvoryMat, "Solarium_StoneFountain");
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-3f, y, -10f), new Vector3(1.6f, 0.70f, 1.0f), brassMat, "Solarium_LoungerTable");
+                        BuildSunLounger(furnitureRoot.transform, new Vector3(-1.6f, y, -10f), Quaternion.Euler(0f, 90f, 0f), walnutMat, velvetEmeraldMat, "Solarium_SunLounger_1");
+                        BuildSunLounger(furnitureRoot.transform, new Vector3(-4.4f, y, -10f), Quaternion.Euler(0f, -90f, 0f), walnutMat, velvetEmeraldMat, "Solarium_SunLounger_2");
                         break;
 
                     case RoomType.PresidentialBedroom:
@@ -1474,6 +1549,9 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                     case RoomType.PresidentialStudy:
                         BuildSolidTable(furnitureRoot.transform, new Vector3(-16f, y, -11f), new Vector3(2.6f, 0.85f, 1.4f), walnutMat, "Presidential_StudyDesk");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-16f, y, -10.1f), Quaternion.Euler(0f, 180f, 0f), walnutMat, greenFeltMat, "Presidential_ExecutiveChair");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-17.2f, y, -12.3f), Quaternion.Euler(0f, 20f, 0f), walnutMat, velvetGoldMat, "Presidential_VisitorChair_L");
+                        BuildDetailedChair(furnitureRoot.transform, new Vector3(-14.8f, y, -12.3f), Quaternion.Euler(0f, -20f, 0f), walnutMat, velvetGoldMat, "Presidential_VisitorChair_R");
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-19f, y, -11f), new Vector3(1.2f, 1.6f, 0.9f), marbleBlackMat, "Presidential_FloorSafe");
                         BuildFloorGlobe(furnitureRoot.transform, new Vector3(-13f, y, -11f), brassMat, "Presidential_Globe");
                         break;
@@ -1583,6 +1661,7 @@ namespace TomorrowsCrime.Procedural.Hotel
                     // Grand King Canopy Suite
                     BuildLuxuryFourPosterBed(suiteRoot.transform, bedCenter, yFloor, mahoganyMat, duvetMat, whiteMat, brassMat, $"{room.RoomId}_Bed");
                     BuildSolidTable(suiteRoot.transform, new Vector3(center.x + 5.5f, yFloor, center.z - size.z * 0.15f), new Vector3(2.0f, 0.85f, 1.1f), walnutMat, $"{room.RoomId}_WritingDesk");
+                    BuildDetailedChair(suiteRoot.transform, new Vector3(center.x + 5.5f, yFloor, center.z - size.z * 0.15f + 0.70f), Quaternion.Euler(0f, 180f, 0f), walnutMat, duvetMat, $"{room.RoomId}_DeskChair");
                 }
 
                 // Wardrobe Armoire
@@ -2708,13 +2787,21 @@ namespace TomorrowsCrime.Procedural.Hotel
 
             // North Banquet Table (-16m, y, 3m)
             BuildSolidTable(parent, center + new Vector3(-1.0f, 0f, 3.0f), new Vector3(2.2f, 0.85f, 5.8f), mahoganyMat, "Dining_BanquetTable_North");
-            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, 3.0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_W");
-            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, 3.0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_E");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, 4.4f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_W1");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, 3.0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_W2");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, 1.6f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_W3");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, 4.4f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_E1");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, 3.0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_E2");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, 1.6f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_North_E3");
 
             // South Banquet Table (-16m, y, -3m)
             BuildSolidTable(parent, center + new Vector3(-1.0f, 0f, -3.0f), new Vector3(2.2f, 0.85f, 5.8f), mahoganyMat, "Dining_BanquetTable_South");
-            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, -3.0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_W");
-            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, -3.0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_E");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, -1.6f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_W1");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, -3.0f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_W2");
+            BuildDetailedChair(parent, center + new Vector3(-2.4f, 0f, -4.4f), Quaternion.Euler(0f, 90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_W3");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, -1.6f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_E1");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, -3.0f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_E2");
+            BuildDetailedChair(parent, center + new Vector3(0.4f, 0f, -4.4f), Quaternion.Euler(0f, -90f, 0f), walnutMat, mahoganyMat, "Dining_Chair_South_E3");
 
             // Sideboard Cabinet against West Wall
             BuildSolidStorageUnit(parent, center + new Vector3(-6.0f, 0f, 0f), new Vector3(1.2f, 1.6f, 3.5f), walnutMat, "Dining_SideboardCabinet");
@@ -2732,12 +2819,22 @@ namespace TomorrowsCrime.Procedural.Hotel
             // Main Bar Counter
             BuildSolidStorageUnit(parent, center + new Vector3(-1.5f, 0f, -3.5f), new Vector3(5.2f, 1.15f, 1.2f), mahoganyMat, "Bar_ServiceCounter");
 
+            // 3 Art Deco Bar Stools in Front of Service Counter
+            BuildBarStool(parent, center + new Vector3(-3.0f, 0f, -2.4f), walnutMat, brassMat, mahoganyMat, "Bar_BarStool_1");
+            BuildBarStool(parent, center + new Vector3(-1.5f, 0f, -2.4f), walnutMat, brassMat, mahoganyMat, "Bar_BarStool_2");
+            BuildBarStool(parent, center + new Vector3(0.0f, 0f, -2.4f), walnutMat, brassMat, mahoganyMat, "Bar_BarStool_3");
+
             // Back-Bar Liquor Shelf Unit
             BuildSolidStorageUnit(parent, center + new Vector3(-1.5f, 0f, -5.5f), new Vector3(5.0f, 2.4f, 0.6f), walnutMat, "Bar_BackShelves");
 
-            // Cocktail Tables
+            // Cocktail Tables with Armchairs
             BuildSolidTable(parent, center + new Vector3(-3.0f, 0f, 0f), new Vector3(1.4f, 0.75f, 1.4f), walnutMat, "Bar_LoungeTable_A");
+            BuildDetailedChair(parent, center + new Vector3(-3.0f, 0f, 1.1f), Quaternion.Euler(0f, 180f, 0f), walnutMat, mahoganyMat, "Bar_LoungeChair_A1");
+            BuildDetailedChair(parent, center + new Vector3(-3.0f, 0f, -1.1f), Quaternion.Euler(0f, 0f, 0f), walnutMat, mahoganyMat, "Bar_LoungeChair_A2");
+
             BuildSolidTable(parent, center + new Vector3(1.0f, 0f, 0f), new Vector3(1.4f, 0.75f, 1.4f), walnutMat, "Bar_LoungeTable_B");
+            BuildDetailedChair(parent, center + new Vector3(1.0f, 0f, 1.1f), Quaternion.Euler(0f, 180f, 0f), walnutMat, mahoganyMat, "Bar_LoungeChair_B1");
+            BuildDetailedChair(parent, center + new Vector3(1.0f, 0f, -1.1f), Quaternion.Euler(0f, 0f, 0f), walnutMat, mahoganyMat, "Bar_LoungeChair_B2");
 
             // Vintage Brass Gramophone on Credenza
             BuildVintageGramophone(parent, center + new Vector3(-5.5f, 0f, 2.0f), walnutMat, brassMat, "Bar_VintageGramophone");
@@ -2763,40 +2860,74 @@ namespace TomorrowsCrime.Procedural.Hotel
             bedRoot.transform.SetParent(parent);
             bedRoot.transform.position = position;
 
-            // Solid Mattress & Frame Box Collider
+            // Solid Master Collider
             var col = bedRoot.AddComponent<BoxCollider>();
             col.center = new Vector3(0f, size.y * 0.35f, 0f);
             col.size = new Vector3(size.x, size.y * 0.7f, size.z);
             col.isTrigger = false;
 
-            // Bed Mattress Mesh
+            // 1. Bed Base Frame
+            var bedFrame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bedFrame.name = "Bed_Base_Frame";
+            bedFrame.transform.SetParent(bedRoot.transform);
+            bedFrame.transform.localPosition = new Vector3(0f, 0.20f, 0f);
+            bedFrame.transform.localScale = new Vector3(size.x, 0.18f, size.z);
+            if (bedFrame.GetComponent<Renderer>() != null && frameMat != null) bedFrame.GetComponent<Renderer>().sharedMaterial = frameMat;
+            var fc = bedFrame.GetComponent<Collider>();
+            if (fc != null) Object.DestroyImmediate(fc);
+
+            // 2. Thick Mattress
             var mattress = GameObject.CreatePrimitive(PrimitiveType.Cube);
             mattress.name = "Mattress";
             mattress.transform.SetParent(bedRoot.transform);
-            mattress.transform.localPosition = new Vector3(0f, size.y * 0.3f, 0f);
-            mattress.transform.localScale = new Vector3(size.x * 0.95f, size.y * 0.4f, size.z * 0.95f);
-            var mRend = mattress.GetComponent<Renderer>();
-            if (mRend != null && sheetMat != null) mRend.sharedMaterial = sheetMat;
+            mattress.transform.localPosition = new Vector3(0f, 0.44f, 0f);
+            mattress.transform.localScale = new Vector3(size.x * 0.94f, 0.32f, size.z * 0.94f);
+            if (mattress.GetComponent<Renderer>() != null && sheetMat != null) mattress.GetComponent<Renderer>().sharedMaterial = sheetMat;
+            var mc = mattress.GetComponent<Collider>();
+            if (mc != null) Object.DestroyImmediate(mc);
 
-            // Headboard
+            // 3. Headboard
             var headboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
             headboard.name = "Headboard";
             headboard.transform.SetParent(bedRoot.transform);
-            headboard.transform.localPosition = new Vector3(0f, size.y * 0.65f, size.z * 0.45f);
-            headboard.transform.localScale = new Vector3(size.x, size.y * 0.9f, 0.15f);
-            var hRend = headboard.GetComponent<Renderer>();
-            if (hRend != null && frameMat != null) hRend.sharedMaterial = frameMat;
+            headboard.transform.localPosition = new Vector3(0f, size.y * 0.55f, size.z * 0.46f);
+            headboard.transform.localScale = new Vector3(size.x * 1.02f, size.y * 0.85f, 0.12f);
+            if (headboard.GetComponent<Renderer>() != null && frameMat != null) headboard.GetComponent<Renderer>().sharedMaterial = frameMat;
+            var hc = headboard.GetComponent<Collider>();
+            if (hc != null) Object.DestroyImmediate(hc);
+
+            // 4. Footboard
+            var footboard = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            footboard.name = "Footboard";
+            footboard.transform.SetParent(bedRoot.transform);
+            footboard.transform.localPosition = new Vector3(0f, 0.42f, -size.z * 0.46f);
+            footboard.transform.localScale = new Vector3(size.x * 1.02f, 0.55f, 0.12f);
+            if (footboard.GetComponent<Renderer>() != null && frameMat != null) footboard.GetComponent<Renderer>().sharedMaterial = frameMat;
+            var foc = footboard.GetComponent<Collider>();
+            if (foc != null) Object.DestroyImmediate(foc);
+
+            // 5. Twin Bedside Pillows
+            float px = size.x * 0.24f;
+            for (int p = -1; p <= 1; p += 2)
+            {
+                var pillow = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pillow.name = $"Pillow_{(p < 0 ? "L" : "R")}";
+                pillow.transform.SetParent(bedRoot.transform);
+                pillow.transform.localPosition = new Vector3(p * px, 0.64f, size.z * 0.32f);
+                pillow.transform.localScale = new Vector3(size.x * 0.38f, 0.12f, 0.45f);
+                if (pillow.GetComponent<Renderer>() != null && sheetMat != null) pillow.GetComponent<Renderer>().sharedMaterial = sheetMat;
+                var pc = pillow.GetComponent<Collider>();
+                if (pc != null) Object.DestroyImmediate(pc);
+            }
         }
 
         private static void BuildSolidPiano(Transform parent, Vector3 position, Dictionary<string, Material> mats)
         {
-            Material woodMat = null;
-            Material whiteMat = null;
-            if (mats != null)
-            {
-                mats.TryGetValue("WoodMahogany", out woodMat);
-                mats.TryGetValue("ShirtWhite", out whiteMat);
-            }
+            Material woodMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material walnutMat = GetMaterial(mats, "WoodWalnut", new Color(0.28f, 0.16f, 0.10f));
+            Material whiteMat = GetMaterial(mats, "ShirtWhite", Color.white);
+            Material blackMat = GetMaterial(mats, "MarbleBlack", new Color(0.12f, 0.12f, 0.14f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
 
             var pianoRoot = new GameObject("MusicSalon_GrandPiano");
             pianoRoot.transform.SetParent(parent);
@@ -2807,57 +2938,166 @@ namespace TomorrowsCrime.Procedural.Hotel
             col.size = new Vector3(2.4f, 1.5f, 2.6f);
             col.isTrigger = false;
 
+            // 1. Grand Piano Body
             var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
             body.name = "Piano_Body";
             body.transform.SetParent(pianoRoot.transform);
-            body.transform.localPosition = new Vector3(0f, 0.8f, 0f);
-            body.transform.localScale = new Vector3(2.2f, 0.5f, 2.4f);
-            var bRend = body.GetComponent<Renderer>();
-            if (bRend != null && woodMat != null) bRend.sharedMaterial = woodMat;
+            body.transform.localPosition = new Vector3(0f, 0.75f, 0.15f);
+            body.transform.localScale = new Vector3(2.2f, 0.35f, 2.1f);
+            if (body.GetComponent<Renderer>() != null && blackMat != null) body.GetComponent<Renderer>().sharedMaterial = blackMat;
+            var bc = body.GetComponent<Collider>();
+            if (bc != null) Object.DestroyImmediate(bc);
 
+            // 2. Keyboard Console
             var keys = GameObject.CreatePrimitive(PrimitiveType.Cube);
             keys.name = "Piano_Keys";
             keys.transform.SetParent(pianoRoot.transform);
-            keys.transform.localPosition = new Vector3(0f, 0.85f, -1.05f);
-            keys.transform.localScale = new Vector3(1.8f, 0.1f, 0.3f);
-            var kRend = keys.GetComponent<Renderer>();
-            if (kRend != null && whiteMat != null) kRend.sharedMaterial = whiteMat;
+            keys.transform.localPosition = new Vector3(0f, 0.72f, -0.98f);
+            keys.transform.localScale = new Vector3(1.75f, 0.08f, 0.35f);
+            if (keys.GetComponent<Renderer>() != null && whiteMat != null) keys.GetComponent<Renderer>().sharedMaterial = whiteMat;
+            var kc = keys.GetComponent<Collider>();
+            if (kc != null) Object.DestroyImmediate(kc);
+
+            // 3. Sheet Music Stand
+            var musicStand = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            musicStand.name = "Piano_MusicStand";
+            musicStand.transform.SetParent(pianoRoot.transform);
+            musicStand.transform.localPosition = new Vector3(0f, 1.05f, -0.75f);
+            musicStand.transform.localRotation = Quaternion.Euler(20f, 0f, 0f);
+            musicStand.transform.localScale = new Vector3(0.90f, 0.32f, 0.04f);
+            if (musicStand.GetComponent<Renderer>() != null && walnutMat != null) musicStand.GetComponent<Renderer>().sharedMaterial = walnutMat;
+            var mc = musicStand.GetComponent<Collider>();
+            if (mc != null) Object.DestroyImmediate(mc);
+
+            // 4. Three Heavy Turned Piano Legs with Brass Casters
+            Vector3[] pLegs = {
+                new Vector3(-0.95f, 0.28f, -0.80f),
+                new Vector3(0.95f, 0.28f, -0.80f),
+                new Vector3(0f, 0.28f, 1.05f)
+            };
+            for (int i = 0; i < 3; i++)
+            {
+                var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                leg.name = $"Piano_Leg_{i}";
+                leg.transform.SetParent(pianoRoot.transform);
+                leg.transform.localPosition = pLegs[i];
+                leg.transform.localScale = new Vector3(0.16f, 0.28f, 0.16f);
+                if (leg.GetComponent<Renderer>() != null && blackMat != null) leg.GetComponent<Renderer>().sharedMaterial = blackMat;
+                var lc = leg.GetComponent<Collider>();
+                if (lc != null) Object.DestroyImmediate(lc);
+
+                var caster = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                caster.name = "Brass_Caster";
+                caster.transform.SetParent(leg.transform);
+                caster.transform.localPosition = new Vector3(0f, -0.95f, 0f);
+                caster.transform.localScale = new Vector3(1.4f, 0.45f, 1.4f);
+                if (caster.GetComponent<Renderer>() != null && brassMat != null) caster.GetComponent<Renderer>().sharedMaterial = brassMat;
+                var cc = caster.GetComponent<Collider>();
+                if (cc != null) Object.DestroyImmediate(cc);
+            }
+
+            // 5. Grand Piano Lyre (Brass Pedals)
+            var lyre = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lyre.name = "Piano_LyrePedals";
+            lyre.transform.SetParent(pianoRoot.transform);
+            lyre.transform.localPosition = new Vector3(0f, 0.28f, -0.40f);
+            lyre.transform.localScale = new Vector3(0.24f, 0.40f, 0.08f);
+            if (lyre.GetComponent<Renderer>() != null && brassMat != null) lyre.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var lyc = lyre.GetComponent<Collider>();
+            if (lyc != null) Object.DestroyImmediate(lyc);
+
+            // 6. Matching Upholstered Piano Bench
+            var bench = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bench.name = "Piano_Bench";
+            bench.transform.SetParent(pianoRoot.transform);
+            bench.transform.localPosition = new Vector3(0f, 0.46f, -1.65f);
+            bench.transform.localScale = new Vector3(1.10f, 0.14f, 0.45f);
+            if (bench.GetComponent<Renderer>() != null && walnutMat != null) bench.GetComponent<Renderer>().sharedMaterial = walnutMat;
+            var bnc = bench.GetComponent<Collider>();
+            if (bnc != null) Object.DestroyImmediate(bnc);
+
+            Vector3[] bLegs = {
+                new Vector3(-0.46f, 0.20f, -1.80f),
+                new Vector3(0.46f, 0.20f, -1.80f),
+                new Vector3(-0.46f, 0.20f, -1.50f),
+                new Vector3(0.46f, 0.20f, -1.50f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var bleg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                bleg.name = $"Bench_Leg_{i}";
+                bleg.transform.SetParent(pianoRoot.transform);
+                bleg.transform.localPosition = bLegs[i];
+                bleg.transform.localScale = new Vector3(0.06f, 0.20f, 0.06f);
+                if (bleg.GetComponent<Renderer>() != null && walnutMat != null) bleg.GetComponent<Renderer>().sharedMaterial = walnutMat;
+                var blc = bleg.GetComponent<Collider>();
+                if (blc != null) Object.DestroyImmediate(blc);
+            }
         }
 
         private static void BuildSolidBilliardsTable(Transform parent, Vector3 position, Dictionary<string, Material> mats)
         {
-            Material woodMat = null;
-            Material feltMat = null;
-            if (mats != null)
-            {
-                mats.TryGetValue("WoodMahogany", out woodMat);
-                mats.TryGetValue("GreenFelt", out feltMat);
-            }
+            Material woodMat = GetMaterial(mats, "WoodMahogany", new Color(0.35f, 0.18f, 0.12f));
+            Material feltMat = GetMaterial(mats, "GreenFelt", new Color(0.12f, 0.45f, 0.22f));
+            Material brassMat = GetMaterial(mats, "BrassGold", new Color(0.88f, 0.75f, 0.35f));
 
             var tableRoot = new GameObject("Billiards_SlateTable");
             tableRoot.transform.SetParent(parent);
             tableRoot.transform.position = position;
 
+            // Solid Master Collider
             var col = tableRoot.AddComponent<BoxCollider>();
             col.center = new Vector3(0f, 0.45f, 0f);
             col.size = new Vector3(2.6f, 0.9f, 4.4f);
             col.isTrigger = false;
 
+            // 1. Heavy Mahogany Cushion Frame
             var frame = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            frame.name = "Table_Frame";
+            frame.name = "Table_CushionRails";
             frame.transform.SetParent(tableRoot.transform);
-            frame.transform.localPosition = new Vector3(0f, 0.4f, 0f);
-            frame.transform.localScale = new Vector3(2.6f, 0.8f, 4.4f);
-            var fRend = frame.GetComponent<Renderer>();
-            if (fRend != null && woodMat != null) fRend.sharedMaterial = woodMat;
+            frame.transform.localPosition = new Vector3(0f, 0.78f, 0f);
+            frame.transform.localScale = new Vector3(2.6f, 0.18f, 4.4f);
+            if (frame.GetComponent<Renderer>() != null && woodMat != null) frame.GetComponent<Renderer>().sharedMaterial = woodMat;
+            var fc = frame.GetComponent<Collider>();
+            if (fc != null) Object.DestroyImmediate(fc);
 
+            // 2. Recessed Green Felt Playing Bed
             var bed = GameObject.CreatePrimitive(PrimitiveType.Cube);
             bed.name = "GreenFelt_Bed";
             bed.transform.SetParent(tableRoot.transform);
-            bed.transform.localPosition = new Vector3(0f, 0.82f, 0f);
-            bed.transform.localScale = new Vector3(2.3f, 0.05f, 4.1f);
-            var bRend = bed.GetComponent<Renderer>();
-            if (bRend != null && feltMat != null) bRend.sharedMaterial = feltMat;
+            bed.transform.localPosition = new Vector3(0f, 0.83f, 0f);
+            bed.transform.localScale = new Vector3(2.26f, 0.08f, 4.06f);
+            if (bed.GetComponent<Renderer>() != null && feltMat != null) bed.GetComponent<Renderer>().sharedMaterial = feltMat;
+            var bc = bed.GetComponent<Collider>();
+            if (bc != null) Object.DestroyImmediate(bc);
+
+            // 3. Six Heavy Fluted Mahogany Turned Legs with Brass Caps
+            float lx = 1.15f;
+            float[] lzs = { -1.85f, 0f, 1.85f };
+            for (int side = -1; side <= 1; side += 2)
+            {
+                for (int zIdx = 0; zIdx < 3; zIdx++)
+                {
+                    var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                    leg.name = $"Billiards_Leg_{(side < 0 ? "L" : "R")}_{zIdx}";
+                    leg.transform.SetParent(tableRoot.transform);
+                    leg.transform.localPosition = new Vector3(side * lx, 0.35f, lzs[zIdx]);
+                    leg.transform.localScale = new Vector3(0.24f, 0.35f, 0.24f);
+                    if (leg.GetComponent<Renderer>() != null && woodMat != null) leg.GetComponent<Renderer>().sharedMaterial = woodMat;
+                    var lc = leg.GetComponent<Collider>();
+                    if (lc != null) Object.DestroyImmediate(lc);
+
+                    // Brass ferrule base
+                    var cap = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                    cap.name = "Leg_Brass_Cap";
+                    cap.transform.SetParent(leg.transform);
+                    cap.transform.localPosition = new Vector3(0f, -0.85f, 0f);
+                    cap.transform.localScale = new Vector3(1.15f, 0.18f, 1.15f);
+                    if (cap.GetComponent<Renderer>() != null && brassMat != null) cap.GetComponent<Renderer>().sharedMaterial = brassMat;
+                    var cc = cap.GetComponent<Collider>();
+                    if (cc != null) Object.DestroyImmediate(cc);
+                }
+            }
         }
 
         private static void BuildSolidFireplace(Transform parent, Vector3 position, Dictionary<string, Material> mats, string name)
@@ -2885,34 +3125,483 @@ namespace TomorrowsCrime.Procedural.Hotel
 
         private static void BuildSolidTable(Transform parent, Vector3 position, Vector3 size, Material mat, string name)
         {
-            var table = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            table.name = name;
-            table.transform.SetParent(parent);
-            table.transform.position = position + new Vector3(0f, size.y * 0.5f, 0f);
-            table.transform.localScale = size;
+            var tableRoot = new GameObject(name);
+            tableRoot.transform.SetParent(parent);
+            tableRoot.transform.position = position;
 
-            var r = table.GetComponent<Renderer>();
-            if (r != null && mat != null) r.sharedMaterial = mat;
-
-            var col = table.GetComponent<BoxCollider>();
-            if (col == null) col = table.AddComponent<BoxCollider>();
+            // Solid Master Collider matching table bounding box for physics & character collision
+            var col = tableRoot.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, size.y * 0.5f, 0f);
+            col.size = size;
             col.isTrigger = false;
+
+            // 1. Tabletop Surface Slab (Thickness: 0.05m at the very top)
+            var top = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            top.name = "Tabletop";
+            top.transform.SetParent(tableRoot.transform);
+            top.transform.localPosition = new Vector3(0f, size.y - 0.025f, 0f);
+            top.transform.localScale = new Vector3(size.x, 0.05f, size.z);
+            var tRend = top.GetComponent<Renderer>();
+            if (tRend != null && mat != null) tRend.sharedMaterial = mat;
+            var tCol = top.GetComponent<Collider>();
+            if (tCol != null) Object.DestroyImmediate(tCol);
+
+            // 2. Beveled Apron Skirt
+            float apronH = 0.07f;
+            var apron = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            apron.name = "Table_Apron";
+            apron.transform.SetParent(tableRoot.transform);
+            apron.transform.localPosition = new Vector3(0f, size.y - 0.05f - apronH * 0.5f, 0f);
+            apron.transform.localScale = new Vector3(Mathf.Max(0.1f, size.x - 0.12f), apronH, Mathf.Max(0.1f, size.z - 0.12f));
+            var aRend = apron.GetComponent<Renderer>();
+            if (aRend != null && mat != null) aRend.sharedMaterial = mat;
+            var aCol = apron.GetComponent<Collider>();
+            if (aCol != null) Object.DestroyImmediate(aCol);
+
+            // 3. Four Turned / Tapered Legs with Brass Ferrule Feet
+            float legH = size.y - 0.05f;
+            float legThick = Mathf.Min(0.08f, Mathf.Min(size.x, size.z) * 0.12f);
+            float legInsetX = size.x * 0.5f - legThick * 0.9f;
+            float legInsetZ = size.z * 0.5f - legThick * 0.9f;
+            Vector3[] legPos = {
+                new Vector3(-legInsetX, legH * 0.5f, -legInsetZ),
+                new Vector3(legInsetX, legH * 0.5f, -legInsetZ),
+                new Vector3(-legInsetX, legH * 0.5f, legInsetZ),
+                new Vector3(legInsetX, legH * 0.5f, legInsetZ)
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                leg.name = $"Table_Leg_{i}";
+                leg.transform.SetParent(tableRoot.transform);
+                leg.transform.localPosition = legPos[i];
+                leg.transform.localScale = new Vector3(legThick, legH * 0.5f, legThick);
+                var lRend = leg.GetComponent<Renderer>();
+                if (lRend != null && mat != null) lRend.sharedMaterial = mat;
+                var lCol = leg.GetComponent<Collider>();
+                if (lCol != null) Object.DestroyImmediate(lCol);
+
+                // Brass foot tip
+                var foot = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                foot.name = $"Table_Foot_{i}";
+                foot.transform.SetParent(tableRoot.transform);
+                foot.transform.localPosition = new Vector3(legPos[i].x, 0.03f, legPos[i].z);
+                foot.transform.localScale = new Vector3(legThick * 1.15f, 0.03f, legThick * 1.15f);
+                var fRend = foot.GetComponent<Renderer>();
+                if (fRend != null && mat != null) fRend.sharedMaterial = mat;
+                var fCol = foot.GetComponent<Collider>();
+                if (fCol != null) Object.DestroyImmediate(fCol);
+            }
         }
 
         private static void BuildSolidStorageUnit(Transform parent, Vector3 position, Vector3 size, Material mat, string name)
         {
-            var unit = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            unit.name = name;
-            unit.transform.SetParent(parent);
-            unit.transform.position = position + new Vector3(0f, size.y * 0.5f, 0f);
-            unit.transform.localScale = size;
+            var unitRoot = new GameObject(name);
+            unitRoot.transform.SetParent(parent);
+            unitRoot.transform.position = position;
 
-            var r = unit.GetComponent<Renderer>();
-            if (r != null && mat != null) r.sharedMaterial = mat;
-
-            var col = unit.GetComponent<BoxCollider>();
-            if (col == null) col = unit.AddComponent<BoxCollider>();
+            // Solid Master Collider matching storage bounding box
+            var col = unitRoot.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, size.y * 0.5f, 0f);
+            col.size = size;
             col.isTrigger = false;
+
+            bool isBookshelf = name.Contains("Book") || name.Contains("Shelf") || name.Contains("Rack");
+            bool isPlanter = name.Contains("Planter");
+            bool isBench = name.Contains("Bench");
+            bool isFountain = name.Contains("Fountain");
+            bool isSofa = name.Contains("Sofa");
+
+            if (isSofa)
+            {
+                // Art Deco Plush Upholstered Sofa
+                var basePlinth = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                basePlinth.name = "Sofa_Base";
+                basePlinth.transform.SetParent(unitRoot.transform);
+                basePlinth.transform.localPosition = new Vector3(0f, 0.10f, 0f);
+                basePlinth.transform.localScale = new Vector3(size.x, 0.20f, size.z);
+                if (basePlinth.GetComponent<Renderer>() != null && mat != null) basePlinth.GetComponent<Renderer>().sharedMaterial = mat;
+                var bpCol = basePlinth.GetComponent<Collider>();
+                if (bpCol != null) Object.DestroyImmediate(bpCol);
+
+                var seat = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                seat.name = "Sofa_SeatCushion";
+                seat.transform.SetParent(unitRoot.transform);
+                seat.transform.localPosition = new Vector3(0f, 0.32f, 0.04f);
+                seat.transform.localScale = new Vector3(size.x * 0.88f, 0.24f, size.z * 0.82f);
+                if (seat.GetComponent<Renderer>() != null && mat != null) seat.GetComponent<Renderer>().sharedMaterial = mat;
+                var sCol = seat.GetComponent<Collider>();
+                if (sCol != null) Object.DestroyImmediate(sCol);
+
+                var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                back.name = "Sofa_Backrest";
+                back.transform.SetParent(unitRoot.transform);
+                back.transform.localPosition = new Vector3(0f, size.y * 0.62f, -size.z * 0.38f);
+                back.transform.localScale = new Vector3(size.x, size.y * 0.60f, size.z * 0.24f);
+                if (back.GetComponent<Renderer>() != null && mat != null) back.GetComponent<Renderer>().sharedMaterial = mat;
+                var bCol = back.GetComponent<Collider>();
+                if (bCol != null) Object.DestroyImmediate(bCol);
+
+                float armWidth = size.x * 0.12f;
+                var armL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                armL.name = "Sofa_Arm_L";
+                armL.transform.SetParent(unitRoot.transform);
+                armL.transform.localPosition = new Vector3(-size.x * 0.5f + armWidth * 0.5f, size.y * 0.42f, 0f);
+                armL.transform.localScale = new Vector3(armWidth, size.y * 0.50f, size.z);
+                if (armL.GetComponent<Renderer>() != null && mat != null) armL.GetComponent<Renderer>().sharedMaterial = mat;
+                var alCol = armL.GetComponent<Collider>();
+                if (alCol != null) Object.DestroyImmediate(alCol);
+
+                var armR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                armR.name = "Sofa_Arm_R";
+                armR.transform.SetParent(unitRoot.transform);
+                armR.transform.localPosition = new Vector3(size.x * 0.5f - armWidth * 0.5f, size.y * 0.42f, 0f);
+                armR.transform.localScale = new Vector3(armWidth, size.y * 0.50f, size.z);
+                if (armR.GetComponent<Renderer>() != null && mat != null) armR.GetComponent<Renderer>().sharedMaterial = mat;
+                var arCol = armR.GetComponent<Collider>();
+                if (arCol != null) Object.DestroyImmediate(arCol);
+                return;
+            }
+
+            if (isPlanter)
+            {
+                var stone = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                stone.name = "Planter_Urn";
+                stone.transform.SetParent(unitRoot.transform);
+                stone.transform.localPosition = new Vector3(0f, size.y * 0.4f, 0f);
+                stone.transform.localScale = new Vector3(size.x, size.y * 0.8f, size.z);
+                if (stone.GetComponent<Renderer>() != null && mat != null) stone.GetComponent<Renderer>().sharedMaterial = mat;
+                var stCol = stone.GetComponent<Collider>();
+                if (stCol != null) Object.DestroyImmediate(stCol);
+
+                var foliage = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                foliage.name = "Planter_Foliage";
+                foliage.transform.SetParent(unitRoot.transform);
+                foliage.transform.localPosition = new Vector3(0f, size.y * 0.95f, 0f);
+                foliage.transform.localScale = new Vector3(size.x * 1.05f, size.y * 0.55f, size.z * 1.05f);
+                var fRend = foliage.GetComponent<Renderer>();
+                if (fRend != null && mat != null) fRend.sharedMaterial = mat;
+                var folCol = foliage.GetComponent<Collider>();
+                if (folCol != null) Object.DestroyImmediate(folCol);
+                return;
+            }
+
+            if (isBench)
+            {
+                float benchH = size.y;
+                var seat = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                seat.name = "Bench_Seat";
+                seat.transform.SetParent(unitRoot.transform);
+                seat.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+                seat.transform.localScale = new Vector3(size.x, 0.10f, size.z);
+                if (seat.GetComponent<Renderer>() != null && mat != null) seat.GetComponent<Renderer>().sharedMaterial = mat;
+                var sc = seat.GetComponent<Collider>();
+                if (sc != null) Object.DestroyImmediate(sc);
+
+                var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                back.name = "Bench_Backrest";
+                back.transform.SetParent(unitRoot.transform);
+                back.transform.localPosition = new Vector3(0f, 0.45f + (benchH - 0.45f) * 0.5f, -size.z * 0.45f);
+                back.transform.localScale = new Vector3(size.x, benchH - 0.45f, 0.10f);
+                if (back.GetComponent<Renderer>() != null && mat != null) back.GetComponent<Renderer>().sharedMaterial = mat;
+                var bc = back.GetComponent<Collider>();
+                if (bc != null) Object.DestroyImmediate(bc);
+
+                float lx = size.x * 0.45f;
+                float lz = size.z * 0.40f;
+                Vector3[] bLegs = { new Vector3(-lx, 0.22f, -lz), new Vector3(lx, 0.22f, -lz), new Vector3(-lx, 0.22f, lz), new Vector3(lx, 0.22f, lz) };
+                for (int i = 0; i < 4; i++)
+                {
+                    var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                    leg.name = $"Bench_Leg_{i}";
+                    leg.transform.SetParent(unitRoot.transform);
+                    leg.transform.localPosition = bLegs[i];
+                    leg.transform.localScale = new Vector3(0.08f, 0.22f, 0.08f);
+                    if (leg.GetComponent<Renderer>() != null && mat != null) leg.GetComponent<Renderer>().sharedMaterial = mat;
+                    var lc = leg.GetComponent<Collider>();
+                    if (lc != null) Object.DestroyImmediate(lc);
+                }
+                return;
+            }
+
+            if (isFountain)
+            {
+                var basin = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                basin.name = "Fountain_Basin";
+                basin.transform.SetParent(unitRoot.transform);
+                basin.transform.localPosition = new Vector3(0f, 0.4f, 0f);
+                basin.transform.localScale = new Vector3(size.x, 0.4f, size.z);
+                if (basin.GetComponent<Renderer>() != null && mat != null) basin.GetComponent<Renderer>().sharedMaterial = mat;
+                var bCol = basin.GetComponent<Collider>();
+                if (bCol != null) Object.DestroyImmediate(bCol);
+
+                var spire = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                spire.name = "Fountain_Spire";
+                spire.transform.SetParent(unitRoot.transform);
+                spire.transform.localPosition = new Vector3(0f, size.y * 0.65f, 0f);
+                spire.transform.localScale = new Vector3(0.35f, size.y * 0.35f, 0.35f);
+                if (spire.GetComponent<Renderer>() != null && mat != null) spire.GetComponent<Renderer>().sharedMaterial = mat;
+                var spCol = spire.GetComponent<Collider>();
+                if (spCol != null) Object.DestroyImmediate(spCol);
+                return;
+            }
+
+            // Default: Architectural Armoire / Credenza / Wardrobe / Bookshelf
+            float plinthH = 0.10f;
+            var plinth = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            plinth.name = "Unit_Plinth";
+            plinth.transform.SetParent(unitRoot.transform);
+            plinth.transform.localPosition = new Vector3(0f, plinthH * 0.5f, 0f);
+            plinth.transform.localScale = new Vector3(size.x * 0.96f, plinthH, size.z * 0.96f);
+            if (plinth.GetComponent<Renderer>() != null && mat != null) plinth.GetComponent<Renderer>().sharedMaterial = mat;
+            var pCol = plinth.GetComponent<Collider>();
+            if (pCol != null) Object.DestroyImmediate(pCol);
+
+            float crownH = 0.08f;
+            var crown = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            crown.name = "Unit_Cornice";
+            crown.transform.SetParent(unitRoot.transform);
+            crown.transform.localPosition = new Vector3(0f, size.y - crownH * 0.5f, 0f);
+            crown.transform.localScale = new Vector3(size.x, crownH, size.z);
+            if (crown.GetComponent<Renderer>() != null && mat != null) crown.GetComponent<Renderer>().sharedMaterial = mat;
+            var cCol = crown.GetComponent<Collider>();
+            if (cCol != null) Object.DestroyImmediate(cCol);
+
+            float carcassH = size.y - plinthH - crownH;
+            var carcass = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            carcass.name = "Unit_Carcass";
+            carcass.transform.SetParent(unitRoot.transform);
+            carcass.transform.localPosition = new Vector3(0f, plinthH + carcassH * 0.5f, 0f);
+            carcass.transform.localScale = new Vector3(size.x * 0.94f, carcassH, size.z * 0.94f);
+            if (carcass.GetComponent<Renderer>() != null && mat != null) carcass.GetComponent<Renderer>().sharedMaterial = mat;
+            var carCol = carcass.GetComponent<Collider>();
+            if (carCol != null) Object.DestroyImmediate(carCol);
+
+            if (isBookshelf)
+            {
+                int shelfCount = Mathf.Max(2, Mathf.RoundToInt(size.y / 0.7f));
+                float shelfSpacing = carcassH / (shelfCount + 1);
+                for (int s = 1; s <= shelfCount; s++)
+                {
+                    var shelf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    shelf.name = $"Shelf_Divider_{s}";
+                    shelf.transform.SetParent(unitRoot.transform);
+                    shelf.transform.localPosition = new Vector3(0f, plinthH + s * shelfSpacing, size.z * 0.05f);
+                    shelf.transform.localScale = new Vector3(size.x * 0.92f, 0.04f, size.z * 0.92f);
+                    if (shelf.GetComponent<Renderer>() != null && mat != null) shelf.GetComponent<Renderer>().sharedMaterial = mat;
+                    var shCol = shelf.GetComponent<Collider>();
+                    if (shCol != null) Object.DestroyImmediate(shCol);
+                }
+            }
+            else
+            {
+                float frontZ = (size.z * 0.94f) * 0.5f + 0.01f;
+                float doorW = (size.x * 0.94f) * 0.46f;
+                float doorH = carcassH * 0.88f;
+
+                var doorL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                doorL.name = "Door_Panel_L";
+                doorL.transform.SetParent(unitRoot.transform);
+                doorL.transform.localPosition = new Vector3(-doorW * 0.52f, plinthH + carcassH * 0.5f, frontZ);
+                doorL.transform.localScale = new Vector3(doorW, doorH, 0.02f);
+                if (doorL.GetComponent<Renderer>() != null && mat != null) doorL.GetComponent<Renderer>().sharedMaterial = mat;
+                var dlCol = doorL.GetComponent<Collider>();
+                if (dlCol != null) Object.DestroyImmediate(dlCol);
+
+                var doorR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                doorR.name = "Door_Panel_R";
+                doorR.transform.SetParent(unitRoot.transform);
+                doorR.transform.localPosition = new Vector3(doorW * 0.52f, plinthH + carcassH * 0.5f, frontZ);
+                doorR.transform.localScale = new Vector3(doorW, doorH, 0.02f);
+                if (doorR.GetComponent<Renderer>() != null && mat != null) doorR.GetComponent<Renderer>().sharedMaterial = mat;
+                var drCol = doorR.GetComponent<Collider>();
+                if (drCol != null) Object.DestroyImmediate(drCol);
+
+                var handleL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                handleL.name = "Pull_Handle_L";
+                handleL.transform.SetParent(unitRoot.transform);
+                handleL.transform.localPosition = new Vector3(-0.06f, plinthH + carcassH * 0.5f, frontZ + 0.025f);
+                handleL.transform.localScale = new Vector3(0.03f, 0.12f, 0.03f);
+                if (handleL.GetComponent<Renderer>() != null && mat != null) handleL.GetComponent<Renderer>().sharedMaterial = mat;
+                var hlCol = handleL.GetComponent<Collider>();
+                if (hlCol != null) Object.DestroyImmediate(hlCol);
+
+                var handleR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                handleR.name = "Pull_Handle_R";
+                handleR.transform.SetParent(unitRoot.transform);
+                handleR.transform.localPosition = new Vector3(0.06f, plinthH + carcassH * 0.5f, frontZ + 0.025f);
+                handleR.transform.localScale = new Vector3(0.03f, 0.12f, 0.03f);
+                if (handleR.GetComponent<Renderer>() != null && mat != null) handleR.GetComponent<Renderer>().sharedMaterial = mat;
+                var hrCol = handleR.GetComponent<Collider>();
+                if (hrCol != null) Object.DestroyImmediate(hrCol);
+            }
+        }
+
+        private static void BuildBarStool(Transform parent, Vector3 localPos, Material woodMat, Material brassMat, Material cushionMat, string name)
+        {
+            var stool = new GameObject(name);
+            stool.transform.SetParent(parent, false);
+            stool.transform.localPosition = localPos;
+
+            var col = stool.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.45f, 0f);
+            col.size = new Vector3(0.5f, 0.9f, 0.5f);
+            col.isTrigger = false;
+
+            float legH = 0.70f;
+            Vector3[] stoolLegs = {
+                new Vector3(-0.16f, legH * 0.5f, -0.16f),
+                new Vector3(0.16f, legH * 0.5f, -0.16f),
+                new Vector3(-0.16f, legH * 0.5f, 0.16f),
+                new Vector3(0.16f, legH * 0.5f, 0.16f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                leg.name = $"Stool_Leg_{i}";
+                leg.transform.SetParent(stool.transform, false);
+                leg.transform.localPosition = stoolLegs[i];
+                leg.transform.localScale = new Vector3(0.04f, legH * 0.5f, 0.04f);
+                if (leg.GetComponent<Renderer>() != null && woodMat != null) leg.GetComponent<Renderer>().sharedMaterial = woodMat;
+                var lc = leg.GetComponent<Collider>();
+                if (lc != null) Object.DestroyImmediate(lc);
+            }
+
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ring.name = "Stool_Footring";
+            ring.transform.SetParent(stool.transform, false);
+            ring.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+            ring.transform.localScale = new Vector3(0.38f, 0.03f, 0.38f);
+            if (ring.GetComponent<Renderer>() != null && brassMat != null) ring.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var rc = ring.GetComponent<Collider>();
+            if (rc != null) Object.DestroyImmediate(rc);
+
+            var seat = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            seat.name = "Stool_Seat";
+            seat.transform.SetParent(stool.transform, false);
+            seat.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+            seat.transform.localScale = new Vector3(0.44f, 0.08f, 0.44f);
+            if (seat.GetComponent<Renderer>() != null && cushionMat != null) seat.GetComponent<Renderer>().sharedMaterial = cushionMat;
+            var sc = seat.GetComponent<Collider>();
+            if (sc != null) Object.DestroyImmediate(sc);
+        }
+
+        private static void BuildSunLounger(Transform parent, Vector3 localPos, Quaternion localRot, Material frameMat, Material cushionMat, string name)
+        {
+            var lounger = new GameObject(name);
+            lounger.transform.SetParent(parent, false);
+            lounger.transform.localPosition = localPos;
+            lounger.transform.localRotation = localRot;
+
+            var col = lounger.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.35f, 0f);
+            col.size = new Vector3(0.85f, 0.70f, 2.0f);
+            col.isTrigger = false;
+
+            var frame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            frame.name = "Lounger_Frame";
+            frame.transform.SetParent(lounger.transform, false);
+            frame.transform.localPosition = new Vector3(0f, 0.20f, 0f);
+            frame.transform.localScale = new Vector3(0.80f, 0.12f, 1.95f);
+            if (frame.GetComponent<Renderer>() != null && frameMat != null) frame.GetComponent<Renderer>().sharedMaterial = frameMat;
+            var fc = frame.GetComponent<Collider>();
+            if (fc != null) Object.DestroyImmediate(fc);
+
+            var cushion = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cushion.name = "Lounger_Cushion";
+            cushion.transform.SetParent(lounger.transform, false);
+            cushion.transform.localPosition = new Vector3(0f, 0.30f, -0.20f);
+            cushion.transform.localScale = new Vector3(0.76f, 0.10f, 1.45f);
+            if (cushion.GetComponent<Renderer>() != null && cushionMat != null) cushion.GetComponent<Renderer>().sharedMaterial = cushionMat;
+            var cc = cushion.GetComponent<Collider>();
+            if (cc != null) Object.DestroyImmediate(cc);
+
+            var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            back.name = "Lounger_Backrest";
+            back.transform.SetParent(lounger.transform, false);
+            back.transform.localPosition = new Vector3(0f, 0.50f, 0.68f);
+            back.transform.localRotation = Quaternion.Euler(30f, 0f, 0f);
+            back.transform.localScale = new Vector3(0.76f, 0.10f, 0.65f);
+            if (back.GetComponent<Renderer>() != null && cushionMat != null) back.GetComponent<Renderer>().sharedMaterial = cushionMat;
+            var bc = back.GetComponent<Collider>();
+            if (bc != null) Object.DestroyImmediate(bc);
+
+            Vector3[] lLegs = {
+                new Vector3(-0.36f, 0.10f, -0.90f),
+                new Vector3(0.36f, 0.10f, -0.90f),
+                new Vector3(-0.36f, 0.10f, 0.90f),
+                new Vector3(0.36f, 0.10f, 0.90f)
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                leg.name = $"Lounger_Leg_{i}";
+                leg.transform.SetParent(lounger.transform, false);
+                leg.transform.localPosition = lLegs[i];
+                leg.transform.localScale = new Vector3(0.06f, 0.10f, 0.06f);
+                if (leg.GetComponent<Renderer>() != null && frameMat != null) leg.GetComponent<Renderer>().sharedMaterial = frameMat;
+                var lc = leg.GetComponent<Collider>();
+                if (lc != null) Object.DestroyImmediate(lc);
+            }
+        }
+
+        private static void BuildAstronomicalTelescope(Transform parent, Vector3 localPos, Material brassMat, Material woodMat, string name)
+        {
+            var scope = new GameObject(name);
+            scope.transform.SetParent(parent, false);
+            scope.transform.localPosition = localPos;
+
+            var col = scope.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 1.1f, 0f);
+            col.size = new Vector3(1.4f, 2.2f, 1.4f);
+            col.isTrigger = false;
+
+            Vector3[] tripodLegs = {
+                new Vector3(-0.45f, 0.65f, -0.26f),
+                new Vector3(0.45f, 0.65f, -0.26f),
+                new Vector3(0f, 0.65f, 0.52f)
+            };
+            for (int i = 0; i < 3; i++)
+            {
+                var leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                leg.name = $"Tripod_Leg_{i}";
+                leg.transform.SetParent(scope.transform, false);
+                leg.transform.localPosition = tripodLegs[i];
+                leg.transform.localRotation = Quaternion.Euler(tripodLegs[i].z > 0 ? -12f : 12f, 0f, tripodLegs[i].x < 0 ? 12f : (tripodLegs[i].x > 0 ? -12f : 0f));
+                leg.transform.localScale = new Vector3(0.08f, 0.65f, 0.08f);
+                if (leg.GetComponent<Renderer>() != null && woodMat != null) leg.GetComponent<Renderer>().sharedMaterial = woodMat;
+                var lc = leg.GetComponent<Collider>();
+                if (lc != null) Object.DestroyImmediate(lc);
+            }
+
+            var mount = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            mount.name = "Telescope_Mount";
+            mount.transform.SetParent(scope.transform, false);
+            mount.transform.localPosition = new Vector3(0f, 1.35f, 0f);
+            mount.transform.localScale = new Vector3(0.22f, 0.15f, 0.22f);
+            if (mount.GetComponent<Renderer>() != null && brassMat != null) mount.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var mc = mount.GetComponent<Collider>();
+            if (mc != null) Object.DestroyImmediate(mc);
+
+            var barrel = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            barrel.name = "Telescope_Barrel";
+            barrel.transform.SetParent(scope.transform, false);
+            barrel.transform.localPosition = new Vector3(0f, 1.65f, 0.25f);
+            barrel.transform.localRotation = Quaternion.Euler(35f, 0f, 0f);
+            barrel.transform.localScale = new Vector3(0.18f, 0.95f, 0.18f);
+            if (barrel.GetComponent<Renderer>() != null && brassMat != null) barrel.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var bc = barrel.GetComponent<Collider>();
+            if (bc != null) Object.DestroyImmediate(bc);
+
+            var lens = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            lens.name = "Telescope_ObjectiveHood";
+            lens.transform.SetParent(barrel.transform, false);
+            lens.transform.localPosition = new Vector3(0f, 0.95f, 0f);
+            lens.transform.localScale = new Vector3(1.25f, 0.22f, 1.25f);
+            if (lens.GetComponent<Renderer>() != null && brassMat != null) lens.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var lenc = lens.GetComponent<Collider>();
+            if (lenc != null) Object.DestroyImmediate(lenc);
         }
     }
 }

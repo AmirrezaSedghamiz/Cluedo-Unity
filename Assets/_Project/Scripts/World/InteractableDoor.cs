@@ -17,6 +17,7 @@ namespace TomorrowsCrime.World
         [SerializeField] private string doorDisplayName = "Room 102";
         [SerializeField] private string requiredKeyId = "key_room_102";
         [SerializeField] private Transform doorHingeTransform;
+        [SerializeField] private Transform doorHingeRightTransform;
 
         [Header("State")]
         [SerializeField] private DoorLockState lockState = DoorLockState.Locked;
@@ -93,6 +94,10 @@ namespace TomorrowsCrime.World
             _openRotation = Quaternion.Euler(0f, openAngle, 0f);
 
             doorHingeTransform.localRotation = (openState == DoorOpenState.Open) ? _openRotation : _closedRotation;
+            if (doorHingeRightTransform != null)
+            {
+                doorHingeRightTransform.localRotation = (openState == DoorOpenState.Open) ? Quaternion.Euler(0f, -openAngle, 0f) : _closedRotation;
+            }
 
             EnsureNavObstacle();
         }
@@ -148,6 +153,10 @@ namespace TomorrowsCrime.World
             {
                 doorHingeTransform.localRotation = _openRotation;
             }
+            if (doorHingeRightTransform != null)
+            {
+                doorHingeRightTransform.localRotation = Quaternion.Euler(0f, -openAngle, 0f);
+            }
 
             if (_navObstacle != null)
             {
@@ -171,6 +180,10 @@ namespace TomorrowsCrime.World
             {
                 doorHingeTransform.localRotation = openState == DoorOpenState.Open ? _openRotation : _closedRotation;
             }
+            if (doorHingeRightTransform != null)
+            {
+                doorHingeRightTransform.localRotation = openState == DoorOpenState.Open ? Quaternion.Euler(0f, -openAngle, 0f) : _closedRotation;
+            }
             if (_navObstacle != null)
             {
                 _navObstacle.enabled = (openState == DoorOpenState.Closed);
@@ -182,11 +195,12 @@ namespace TomorrowsCrime.World
         {
             if (string.IsNullOrEmpty(requiredKeyId))
             {
-                // Naturally unlocked door restores to open
+                // Naturally unlocked door restores to closed inside its frame
                 lockState = DoorLockState.Unlocked;
-                openState = DoorOpenState.Open;
-                if (doorHingeTransform != null) doorHingeTransform.localRotation = _openRotation;
-                if (_navObstacle != null) _navObstacle.enabled = false;
+                openState = DoorOpenState.Closed;
+                if (doorHingeTransform != null) doorHingeTransform.localRotation = _closedRotation;
+                if (doorHingeRightTransform != null) doorHingeRightTransform.localRotation = _closedRotation;
+                if (_navObstacle != null) _navObstacle.enabled = true;
                 if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
                 {
                     WorldStateManager.Instance.Registry.SetState(doorId, DoorLockState.Unlocked);
@@ -200,6 +214,10 @@ namespace TomorrowsCrime.World
                 if (doorHingeTransform != null)
                 {
                     doorHingeTransform.localRotation = _closedRotation;
+                }
+                if (doorHingeRightTransform != null)
+                {
+                    doorHingeRightTransform.localRotation = _closedRotation;
                 }
                 if (_navObstacle != null) _navObstacle.enabled = true;
 
