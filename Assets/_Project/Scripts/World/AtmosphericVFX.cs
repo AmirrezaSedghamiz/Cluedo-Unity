@@ -17,43 +17,7 @@ namespace TomorrowsCrime.World
             var go = new GameObject("Atmospheric_DustMotes");
             if (parent != null) go.transform.SetParent(parent, false);
             go.transform.position = position;
-
-            var ps = go.AddComponent<ParticleSystem>();
-            var main = ps.main;
-            main.startLifetime = 9.0f;
-            main.startSpeed = 0.08f;
-            main.startSize = 0.035f;
-            main.maxParticles = 180;
-            main.startColor = new Color(1.0f, 0.90f, 0.70f, 0.35f); // Soft golden incandescent motes
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-
-            var emission = ps.emission;
-            emission.rateOverTime = 18f;
-
-            var shape = ps.shape;
-            shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = volumeSize;
-
-            var vel = ps.velocityOverLifetime;
-            vel.enabled = true;
-            vel.x = new ParticleSystem.MinMaxCurve(-0.03f, 0.03f);
-            vel.y = new ParticleSystem.MinMaxCurve(-0.02f, 0.04f);
-            vel.z = new ParticleSystem.MinMaxCurve(-0.03f, 0.03f);
-
-            var colorOverLife = ps.colorOverLifetime;
-            colorOverLife.enabled = true;
-            var grad = new Gradient();
-            grad.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(new Color(1f, 0.88f, 0.65f), 0f), new GradientColorKey(new Color(1f, 0.88f, 0.65f), 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.4f, 0.25f), new GradientAlphaKey(0.4f, 0.75f), new GradientAlphaKey(0f, 1f) }
-            );
-            colorOverLife.color = grad;
-
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
-            renderer.minParticleSize = 0.005f;
-            renderer.maxParticleSize = 0.05f;
-
+            // Particles disabled to ensure clean, clear, crisp visuals without floating speckles/glitter
             return go;
         }
 

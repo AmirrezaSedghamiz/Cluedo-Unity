@@ -120,7 +120,7 @@ namespace TomorrowsCrime.EditorTools
             SaveTexturePNG(albedo, $"{TexturesFolder}/Floor_CheckerMarble.png");
             SaveTexturePNG(smoothness, $"{TexturesFolder}/Floor_CheckerMarble_Mask.png");
 
-            var normal = GenerateNormalMapFromHeight(height, size, size, 4.5f);
+            var normal = GenerateNormalMapFromHeight(height, size, size, 1.2f);
             SaveTexturePNG(normal, $"{TexturesFolder}/Floor_CheckerMarble_Normal.png");
         }
         #endregion
@@ -171,7 +171,7 @@ namespace TomorrowsCrime.EditorTools
             SaveTexturePNG(albedo, $"{TexturesFolder}/Wood_PolishedMahogany.png");
             SaveTexturePNG(smoothness, $"{TexturesFolder}/Wood_PolishedMahogany_Mask.png");
 
-            var normal = GenerateNormalMapFromHeight(height, size, size, 2.8f);
+            var normal = GenerateNormalMapFromHeight(height, size, size, 1.2f);
             SaveTexturePNG(normal, $"{TexturesFolder}/Wood_PolishedMahogany_Normal.png");
         }
         #endregion
@@ -254,7 +254,7 @@ namespace TomorrowsCrime.EditorTools
             SaveTexturePNG(albedo, $"{TexturesFolder}/Wallpaper_ArtDecoDamask.png");
             SaveTexturePNG(smoothness, $"{TexturesFolder}/Wallpaper_ArtDecoDamask_Mask.png");
 
-            var normal = GenerateNormalMapFromHeight(height, size, size, 5.0f);
+            var normal = GenerateNormalMapFromHeight(height, size, size, 1.4f);
             SaveTexturePNG(normal, $"{TexturesFolder}/Wallpaper_ArtDecoDamask_Normal.png");
         }
         #endregion
@@ -306,7 +306,7 @@ namespace TomorrowsCrime.EditorTools
             albedo.Apply();
             SaveTexturePNG(albedo, $"{TexturesFolder}/Carpet_VelvetBurgundy.png");
 
-            var normal = GenerateNormalMapFromHeight(height, size, size, 3.2f);
+            var normal = GenerateNormalMapFromHeight(height, size, size, 1.0f);
             SaveTexturePNG(normal, $"{TexturesFolder}/Carpet_VelvetBurgundy_Normal.png");
         }
         #endregion
@@ -346,7 +346,7 @@ namespace TomorrowsCrime.EditorTools
             albedo.Apply();
             SaveTexturePNG(albedo, $"{TexturesFolder}/Leather_VintageCognac.png");
 
-            var normal = GenerateNormalMapFromHeight(height, size, size, 3.5f);
+            var normal = GenerateNormalMapFromHeight(height, size, size, 1.2f);
             SaveTexturePNG(normal, $"{TexturesFolder}/Leather_VintageCognac_Normal.png");
         }
         #endregion
@@ -367,7 +367,7 @@ namespace TomorrowsCrime.EditorTools
                 }
             }
 
-            var normal = GenerateNormalMapFromHeight(height, size, size, 1.8f);
+            var normal = GenerateNormalMapFromHeight(height, size, size, 0.8f);
             SaveTexturePNG(normal, $"{TexturesFolder}/Brass_Brushed_Normal.png");
         }
         #endregion

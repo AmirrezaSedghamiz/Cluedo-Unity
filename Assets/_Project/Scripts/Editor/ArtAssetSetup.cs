@@ -78,101 +78,101 @@ namespace TomorrowsCrime.EditorTools
             dict["UniformNavy"] = GetOrCreateMaterial("M_UniformNavy", shader,
                 new Color(0.10f, 0.15f, 0.25f), smoothness: 0.38f, metallic: 0.05f);
 
-            // 2. BrassGold (High-Gloss Polished Antique Brass with micro-scratches)
+            // 2. BrassGold (Warm Brushed Antique Brass - non-glittery elegant sheen)
             dict["BrassGold"] = GetOrCreateMaterial("M_BrassGold", shader,
-                new Color(0.88f, 0.74f, 0.28f), smoothness: 0.88f, metallic: 0.94f, normalMap: brassNormal, normalScale: 0.8f);
+                new Color(0.88f, 0.74f, 0.28f), smoothness: 0.45f, metallic: 0.65f, normalMap: brassNormal, normalScale: 0.15f);
 
             // 3. ShirtWhite (Crisp Starched French Cotton)
             dict["ShirtWhite"] = GetOrCreateMaterial("M_ShirtWhite", shader,
-                new Color(0.97f, 0.97f, 0.96f), smoothness: 0.22f, metallic: 0.0f);
+                new Color(0.97f, 0.97f, 0.96f), smoothness: 0.15f, metallic: 0.0f);
 
             // 4. TieBurgundy (Silk Bordeaux Jacquard Crimson)
             dict["TieBurgundy"] = GetOrCreateMaterial("M_TieBurgundy", shader,
-                new Color(0.48f, 0.10f, 0.16f), smoothness: 0.65f, metallic: 0.12f);
+                new Color(0.48f, 0.10f, 0.16f), smoothness: 0.45f, metallic: 0.05f);
 
             // 5. TrousersCharcoal (Formal Wool Charcoal)
             dict["TrousersCharcoal"] = GetOrCreateMaterial("M_TrousersCharcoal", shader,
-                new Color(0.13f, 0.14f, 0.17f), smoothness: 0.28f, metallic: 0.0f);
+                new Color(0.13f, 0.14f, 0.17f), smoothness: 0.18f, metallic: 0.0f);
 
-            // 6. ShoesLeather (Mirror-Polished Black Calfskin Oxford)
+            // 6. ShoesLeather (Classic Black Calfskin Oxford)
             dict["ShoesLeather"] = GetOrCreateMaterial("M_ShoesLeather", shader,
-                new Color(0.05f, 0.05f, 0.07f), smoothness: 0.92f, metallic: 0.08f, normalMap: leatherNormal, normalScale: 0.5f);
+                new Color(0.05f, 0.05f, 0.07f), smoothness: 0.65f, metallic: 0.05f, normalMap: leatherNormal, normalScale: 0.25f);
 
             // 7. SkinStylized -> Photorealistic Skin Tone with warm subsurface scattering aesthetic
             dict["SkinStylized"] = GetOrCreateMaterial("M_SkinStylized", shader,
-                new Color(0.92f, 0.78f, 0.70f), smoothness: 0.44f, metallic: 0.0f);
+                new Color(0.92f, 0.78f, 0.70f), smoothness: 0.35f, metallic: 0.0f);
 
             // 8. HairDark (Natural Brunette Hair)
             dict["HairDark"] = GetOrCreateMaterial("M_HairDark", shader,
-                new Color(0.09f, 0.07f, 0.06f), smoothness: 0.52f, metallic: 0.05f);
+                new Color(0.09f, 0.07f, 0.06f), smoothness: 0.35f, metallic: 0.0f);
 
-            // 9. WoodMahogany (Rich Polished Dark Mahogany with Organic Grain & Specular Depth)
+            // 9. WoodMahogany (Rich Polished Dark Mahogany with Organic Grain)
             dict["WoodMahogany"] = GetOrCreateMaterial("M_WoodMahogany", shader,
-                Color.white, smoothness: 0.82f, metallic: 0.04f, mainTex: woodTex, normalMap: woodNormal, normalScale: 1.2f);
+                Color.white, smoothness: 0.45f, metallic: 0.02f, mainTex: woodTex, normalMap: woodNormal, normalScale: 0.20f);
 
             // 10. WoodWalnut (Burled Walnut Wood)
             dict["WoodWalnut"] = GetOrCreateMaterial("M_WoodWalnut", shader,
-                new Color(0.85f, 0.70f, 0.55f), smoothness: 0.76f, metallic: 0.04f, mainTex: woodTex, normalMap: woodNormal, normalScale: 1.0f);
+                new Color(0.85f, 0.70f, 0.55f), smoothness: 0.42f, metallic: 0.02f, mainTex: woodTex, normalMap: woodNormal, normalScale: 0.20f);
 
             // 11. MarbleBlack (Polished Nero Marquina Marble with Gold/White Calcite Veining)
             dict["MarbleBlack"] = GetOrCreateMaterial("M_MarbleBlack", shader,
-                new Color(0.08f, 0.08f, 0.09f), smoothness: 0.95f, metallic: 0.08f, normalMap: floorNormal, normalScale: 0.6f);
+                new Color(0.08f, 0.08f, 0.09f), smoothness: 0.62f, metallic: 0.04f, normalMap: floorNormal, normalScale: 0.20f);
 
             // 12. MarbleIvory (Polished Calacatta Ivory Marble with Soft Veins)
             dict["MarbleIvory"] = GetOrCreateMaterial("M_MarbleIvory", shader,
-                new Color(0.95f, 0.94f, 0.91f), smoothness: 0.94f, metallic: 0.04f, normalMap: floorNormal, normalScale: 0.6f);
+                new Color(0.95f, 0.94f, 0.91f), smoothness: 0.62f, metallic: 0.02f, normalMap: floorNormal, normalScale: 0.20f);
 
-            // 13. WallpaperEmerald (Gilded Art Deco Emerald Damask with Embossed 3D Relief)
+            // 13. WallpaperEmerald (Gilded Art Deco Emerald Damask)
             dict["WallpaperEmerald"] = GetOrCreateMaterial("M_WallpaperEmerald", shader,
-                Color.white, smoothness: 0.38f, metallic: 0.12f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 1.4f);
+                Color.white, smoothness: 0.15f, metallic: 0.02f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 0.15f);
 
-            // 14. FloorCheckerMarble (High-Definition Carrara & Nero Marquina Diamond Checker with Beveled Grout Seams)
+            // 14. FloorCheckerMarble (High-Definition Carrara & Nero Marquina Diamond Checker)
             dict["FloorCheckerMarble"] = GetOrCreateMaterial("M_FloorCheckerMarble", shader,
-                Color.white, smoothness: 0.94f, metallic: 0.06f, mainTex: floorTex, normalMap: floorNormal, normalScale: 1.3f);
+                Color.white, smoothness: 0.58f, metallic: 0.02f, mainTex: floorTex, normalMap: floorNormal, normalScale: 0.20f);
 
-            // 15. CarpetBurgundy (Deep Bordeaux Wool Velvet with Woven Border Filigree)
+            // 15. CarpetBurgundy (Deep Bordeaux Wool Velvet)
             dict["CarpetBurgundy"] = GetOrCreateMaterial("M_CarpetBurgundy", shader,
-                Color.white, smoothness: 0.16f, metallic: 0.0f, mainTex: carpetTex, normalMap: carpetNormal, normalScale: 1.2f);
+                Color.white, smoothness: 0.08f, metallic: 0.0f, mainTex: carpetTex, normalMap: carpetNormal, normalScale: 0.12f);
 
             // 15b. CarpetSapphire (Royal Midnight Sapphire Velvet)
             dict["CarpetSapphire"] = GetOrCreateMaterial("M_CarpetSapphire", shader,
-                new Color(0.08f, 0.14f, 0.32f), smoothness: 0.16f, metallic: 0.0f, normalMap: carpetNormal, normalScale: 1.0f);
+                new Color(0.08f, 0.14f, 0.32f), smoothness: 0.08f, metallic: 0.0f, normalMap: carpetNormal, normalScale: 0.12f);
 
             // 15c. WallpaperNavy (Royal Prussian Blue Damask)
             dict["WallpaperNavy"] = GetOrCreateMaterial("M_WallpaperNavy", shader,
-                new Color(0.85f, 0.90f, 1.0f), smoothness: 0.35f, metallic: 0.10f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 1.2f);
+                new Color(0.85f, 0.90f, 1.0f), smoothness: 0.15f, metallic: 0.02f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 0.15f);
 
             // 15d. WallpaperBordeaux (Victorian Crimson Damask)
             dict["WallpaperBordeaux"] = GetOrCreateMaterial("M_WallpaperBordeaux", shader,
-                new Color(1.0f, 0.70f, 0.75f), smoothness: 0.35f, metallic: 0.10f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 1.2f);
+                new Color(1.0f, 0.70f, 0.75f), smoothness: 0.15f, metallic: 0.02f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 0.15f);
 
             // 15e. WallpaperArtDecoDamask (Gilded Black & Gold Damask)
             dict["WallpaperArtDecoDamask"] = GetOrCreateMaterial("M_WallpaperArtDecoDamask", shader,
-                Color.white, smoothness: 0.40f, metallic: 0.15f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 1.4f);
+                Color.white, smoothness: 0.15f, metallic: 0.02f, mainTex: wallpaperTex, normalMap: wallpaperNormal, normalScale: 0.15f);
 
             // 15f. FloorSlate (Charcoal Slate Architectural Tile)
             dict["FloorSlate"] = GetOrCreateMaterial("M_FloorSlate", shader,
-                new Color(0.18f, 0.20f, 0.22f), smoothness: 0.42f, metallic: 0.02f);
+                new Color(0.18f, 0.20f, 0.22f), smoothness: 0.25f, metallic: 0.0f);
 
             // 15g. AgedParchment (Archive Study Parchment with warm aged edge tint)
             dict["AgedParchment"] = GetOrCreateMaterial("M_AgedParchment", shader,
-                new Color(0.88f, 0.82f, 0.72f), smoothness: 0.22f, metallic: 0.0f);
+                new Color(0.88f, 0.82f, 0.72f), smoothness: 0.12f, metallic: 0.0f);
 
             // 15h. VelvetEmerald (Plush Emerald Armchair Upholstery)
             dict["VelvetEmerald"] = GetOrCreateMaterial("M_VelvetEmerald", shader,
-                new Color(0.08f, 0.32f, 0.16f), smoothness: 0.24f, metallic: 0.0f, normalMap: carpetNormal, normalScale: 0.8f);
+                new Color(0.08f, 0.32f, 0.16f), smoothness: 0.12f, metallic: 0.0f, normalMap: carpetNormal, normalScale: 0.12f);
 
             // 15i. VelvetGold (Gilded Gold Velvet)
             dict["VelvetGold"] = GetOrCreateMaterial("M_VelvetGold", shader,
-                new Color(0.82f, 0.65f, 0.22f), smoothness: 0.28f, metallic: 0.05f, normalMap: carpetNormal, normalScale: 0.8f);
+                new Color(0.82f, 0.65f, 0.22f), smoothness: 0.15f, metallic: 0.02f, normalMap: carpetNormal, normalScale: 0.12f);
 
             // 15j. GreenFelt (Billiards and Card Table Felt)
             dict["GreenFelt"] = GetOrCreateMaterial("M_GreenFelt", shader,
-                new Color(0.10f, 0.46f, 0.22f), smoothness: 0.12f, metallic: 0.0f);
+                new Color(0.10f, 0.46f, 0.22f), smoothness: 0.08f, metallic: 0.0f);
 
             // 15k. LeatherCognac (Chesterfield Vintage Leather)
             dict["LeatherCognac"] = GetOrCreateMaterial("M_LeatherCognac", shader,
-                Color.white, smoothness: 0.62f, metallic: 0.04f, mainTex: leatherTex, normalMap: leatherNormal, normalScale: 1.1f);
+                Color.white, smoothness: 0.45f, metallic: 0.02f, mainTex: leatherTex, normalMap: leatherNormal, normalScale: 0.20f);
 
             // 16. AmberGlow (Frosted Amber Lamp / Filament with Radiant Emission)
             var amberMat = GetOrCreateMaterial("M_AmberGlow", shader,

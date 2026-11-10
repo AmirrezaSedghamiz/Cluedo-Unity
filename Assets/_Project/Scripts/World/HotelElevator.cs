@@ -36,6 +36,7 @@ namespace TomorrowsCrime.World
         private PlayerController _playerController;
         private bool _isPlayerInside = false;
         private bool _isPlayerRiding = false;
+        private readonly GameObject[] _landingGateBarriers = new GameObject[4];
 
         public int CurrentFloor => currentFloor;
         public int TargetFloor => targetFloor;
@@ -132,10 +133,40 @@ namespace TomorrowsCrime.World
             }
         }
 
+        public void RegisterLandingGate(int floor, GameObject gateBarrier)
+        {
+            if (floor >= 0 && floor < _landingGateBarriers.Length)
+            {
+                _landingGateBarriers[floor] = gateBarrier;
+                SetGateOpen(floor, floor == currentFloor);
+            }
+        }
+
+        private void SetGateOpen(int floor, bool open)
+        {
+            if (floor < 0 || floor >= _landingGateBarriers.Length) return;
+            var barrier = _landingGateBarriers[floor];
+            if (barrier == null) return;
+
+            var col = barrier.GetComponent<BoxCollider>();
+            if (col != null)
+            {
+                col.isTrigger = open;
+            }
+
+            var gateL = barrier.transform.Find("Gate_Leaf_North");
+            var gateR = barrier.transform.Find("Gate_Leaf_South");
+            if (gateL != null) gateL.localPosition = new Vector3(0f, 0f, open ? 1.05f : 0.44f);
+            if (gateR != null) gateR.localPosition = new Vector3(0f, 0f, open ? -1.05f : -0.44f);
+        }
+
         public void MoveToFloor(int floorIndex)
         {
             if (floorIndex < 0 || floorIndex >= _floorElevations.Length) return;
             if (isMoving && targetFloor == floorIndex) return;
+
+            // Close current floor shaft gate barrier when elevator departs
+            SetGateOpen(currentFloor, false);
 
             CheckPlayerInsideCabin();
             if (_isPlayerInside)
@@ -161,6 +192,9 @@ namespace TomorrowsCrime.World
         private void HandleArrival()
         {
             Debug.Log($"[HotelElevator] Arrived at {_floorNames[currentFloor]}!");
+
+            // Open arrival floor shaft gate barrier
+            SetGateOpen(currentFloor, true);
 
             // Chime sound on arrival
             AudioManager.Instance?.PlayEvidenceDiscovery();
