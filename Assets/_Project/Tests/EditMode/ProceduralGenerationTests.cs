@@ -957,5 +957,104 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Object.DestroyImmediate(testRoot);
         }
+
+        [Test]
+        public void Viewmodel_ArmsAnchoredBelowCameraAndHaveNoMidAirStubs()
+        {
+            var playerGo = new GameObject("TestPlayer_Viewmodel");
+            var camGo = new GameObject("Main Camera");
+            camGo.transform.SetParent(playerGo.transform);
+            var cam = camGo.AddComponent<Camera>();
+
+            var vmAnim = playerGo.AddComponent<TomorrowsCrime.Player.PlayerViewmodelAnimator>();
+            var so = new UnityEditor.SerializedObject(vmAnim);
+            so.FindProperty("cameraTransform").objectReferenceValue = camGo.transform;
+            so.ApplyModifiedProperties();
+
+            // Trigger viewmodel generation
+            var method = typeof(TomorrowsCrime.Player.PlayerViewmodelAnimator).GetMethod("BuildDetectiveHandsViewmodel",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Assert.IsNotNull(method, "BuildDetectiveHandsViewmodel method must exist.");
+            method.Invoke(vmAnim, null);
+
+            var vmRoot = camGo.transform.Find("Detective_Hands_Viewmodel");
+            Assert.IsNotNull(vmRoot, "Detective_Hands_Viewmodel must be instantiated under camera.");
+
+            var armL = vmRoot.Find("Arm_Left");
+            var armR = vmRoot.Find("Arm_Right");
+            Assert.IsNotNull(armL, "Left arm must exist.");
+            Assert.IsNotNull(armR, "Right arm must exist.");
+
+            // Verify UpperArm_Shoulder starts from behind or deep below the camera near clip plane
+            var shoulderL = armL.Find("UpperArm_Shoulder");
+            Assert.IsNotNull(shoulderL, "Upper arm shoulder must exist.");
+            Assert.Less(shoulderL.localPosition.z, 0f, "Shoulder must be positioned behind arm root (negative Z).");
+            Assert.Less(shoulderL.localPosition.y, -0.2f, "Shoulder must be positioned below arm root (negative Y).");
+
+            Object.DestroyImmediate(playerGo);
+        }
+
+        [Test]
+        public void Staircase_AllStepsHaveSufficientHeadroomClearance()
+        {
+            var testRoot = new GameObject("TestRoot_StairHeadroom");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var stairsRoot = testRoot.transform.Find("MeridianHouse_Architecture/Staircase_CentralHub_4Floors");
+            Assert.IsNotNull(stairsRoot, "Staircase_CentralHub_4Floors must exist.");
+
+            string[] flights = { "Flight_Floor0_to_1", "Flight_Floor1_to_2", "Flight_Floor2_to_3" };
+            for (int f = 0; f < flights.Length; f++)
+            {
+                var flight = stairsRoot.Find(flights[f]);
+                Assert.IsNotNull(flight, $"Flight '{flights[f]}' must exist.");
+
+                var ramp = flight.Find($"{flights[f]}_WalkRamp_Collider");
+                Assert.IsNotNull(ramp, $"Flight '{flights[f]}' must have a smooth WalkRamp_Collider.");
+                var rampCol = ramp.GetComponent<BoxCollider>();
+                Assert.IsNotNull(rampCol, "WalkRamp must have a BoxCollider.");
+                Assert.IsFalse(rampCol.isTrigger, "WalkRamp collider must be solid for smooth CharacterController climbing.");
+            }
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Elevator_LandingGatesAndRoofCapAreSealedAndOperational()
+        {
+            var testRoot = new GameObject("TestRoot_ElevatorSealed");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            var elevatorRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_ArtDecoElevator");
+            Assert.IsNotNull(elevatorRoot, "Hotel_ArtDecoElevator root must exist.");
+
+            // Check all 4 landing gates exist
+            for (int f = 0; f < 4; f++)
+            {
+                var gate = elevatorRoot.Find($"Elevator_LandingPortal_Floor_{f}/Elevator_ShaftGateBarrier_Floor_{f}");
+                Assert.IsNotNull(gate, $"Landing gate barrier on Floor {f} must exist.");
+
+                var col = gate.GetComponent<BoxCollider>();
+                Assert.IsNotNull(col, $"Landing gate on Floor {f} must have a BoxCollider.");
+                // Floor 0 starts open (isTrigger = true); Floors 1, 2, 3 start closed (isTrigger = false)
+                Assert.AreEqual(f == 0, col.isTrigger, $"Floor {f} gate trigger status mismatch.");
+            }
+
+            // Check Floor 3 roof caps exist
+            var roomFoyer = testRoot.transform.Find("MeridianHouse_Architecture/Room_room_floor3_sky_foyer_Floor3SkyFoyer&GrandLanding");
+            Assert.IsNotNull(roomFoyer, "Sky Penthouse Foyer room must exist.");
+
+            var elevRoof = roomFoyer.Find("Ceiling_Slab_ElevatorRoofCap");
+            Assert.IsNotNull(elevRoof, "Ceiling_Slab_ElevatorRoofCap must seal the elevator shaft on Floor 3.");
+
+            var stairRoof = roomFoyer.Find("Ceiling_Slab_StaircaseRoofCap");
+            Assert.IsNotNull(stairRoof, "Ceiling_Slab_StaircaseRoofCap must seal the central staircase atrium on Floor 3.");
+
+            Object.DestroyImmediate(testRoot);
+        }
     }
 }

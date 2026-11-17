@@ -43,7 +43,7 @@ namespace TomorrowsCrime.Player
         private GameObject _viewmodelRoot;
         private Transform _leftArm;
         private Transform _rightArm;
-        private Vector3 _baseViewmodelPos = new Vector3(0f, -0.32f, 0.48f);
+        private Vector3 _baseViewmodelPos = new Vector3(0f, -0.40f, 0.38f);
         private Vector3 _currentViewmodelPos;
         private Quaternion _currentViewmodelRot = Quaternion.identity;
 
@@ -87,9 +87,9 @@ namespace TomorrowsCrime.Player
 #endif
 
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (coatMaterial == null) coatMaterial = new Material(shader) { color = new Color(0.10f, 0.15f, 0.25f) };
+            if (coatMaterial == null) coatMaterial = new Material(shader) { color = new Color(0.12f, 0.16f, 0.24f) };
             if (cuffMaterial == null) cuffMaterial = new Material(shader) { color = new Color(0.97f, 0.97f, 0.96f) };
-            if (skinMaterial == null) skinMaterial = new Material(shader) { color = new Color(0.92f, 0.78f, 0.70f) };
+            if (skinMaterial == null) skinMaterial = new Material(shader) { color = new Color(0.88f, 0.74f, 0.65f) };
             if (brassMaterial == null) brassMaterial = new Material(shader) { color = new Color(0.88f, 0.74f, 0.28f) };
 
             _viewmodelRoot = new GameObject("Detective_Hands_Viewmodel");
@@ -108,78 +108,78 @@ namespace TomorrowsCrime.Player
             float side = isLeft ? -1f : 1f;
             var armRoot = new GameObject(isLeft ? "Arm_Left" : "Arm_Right");
             armRoot.transform.SetParent(parent, false);
-            // Arm root positioned naturally at detective's shoulder joint
-            armRoot.transform.localPosition = new Vector3(side * 0.28f, -0.12f, 0.02f);
-            armRoot.transform.localRotation = Quaternion.Euler(12f, side * 10f, side * -8f);
+            // Arm root anchored naturally at detective's lower shoulder flank
+            armRoot.transform.localPosition = new Vector3(side * 0.32f, -0.16f, -0.05f);
+            armRoot.transform.localRotation = Quaternion.Euler(8f, side * -16f, side * 12f);
 
-            // 0. Upper Arm & Shoulder Sleeve (Extends deep off-screen so arm never floats or shows open ends)
+            // 0. Upper Arm Sleeve (Anchored deep behind & below camera near plane; bottom never exposed)
             var upperArm = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             upperArm.name = "UpperArm_Shoulder";
             upperArm.transform.SetParent(armRoot.transform, false);
-            upperArm.transform.localPosition = new Vector3(side * 0.06f, -0.20f, -0.16f);
-            upperArm.transform.localRotation = Quaternion.Euler(42f, side * -12f, side * 18f);
-            upperArm.transform.localScale = new Vector3(0.115f, 0.28f, 0.115f);
+            upperArm.transform.localPosition = new Vector3(side * 0.04f, -0.32f, -0.22f);
+            upperArm.transform.localRotation = Quaternion.Euler(58f, side * -15f, side * 10f);
+            upperArm.transform.localScale = new Vector3(0.12f, 0.38f, 0.12f);
             DestroyCollider(upperArm);
             if (coatMaterial != null) upperArm.GetComponent<Renderer>().sharedMaterial = coatMaterial;
 
-            // 0b. Elbow Joint Cover (Seamless transition between upper arm and forearm)
+            // 0b. Elbow Joint Transition
             var elbow = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             elbow.name = "Elbow_Joint";
             elbow.transform.SetParent(armRoot.transform, false);
-            elbow.transform.localPosition = new Vector3(side * 0.02f, -0.06f, -0.02f);
+            elbow.transform.localPosition = new Vector3(side * 0.02f, -0.12f, -0.04f);
             elbow.transform.localScale = new Vector3(0.125f, 0.125f, 0.125f);
             DestroyCollider(elbow);
             if (coatMaterial != null) elbow.GetComponent<Renderer>().sharedMaterial = coatMaterial;
 
-            // 1. Forearm Sleeve (Royal Wool Overcoat)
+            // 1. Forearm Sleeve (Royal Wool Overcoat, enters smoothly from off-screen bottom corner)
             var sleeve = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             sleeve.name = "Forearm_Sleeve";
             sleeve.transform.SetParent(armRoot.transform, false);
-            sleeve.transform.localPosition = new Vector3(0f, 0.04f, 0.14f);
-            sleeve.transform.localRotation = Quaternion.Euler(72f, 0f, 0f);
-            sleeve.transform.localScale = new Vector3(0.10f, 0.22f, 0.10f);
+            sleeve.transform.localPosition = new Vector3(0f, 0.02f, 0.14f);
+            sleeve.transform.localRotation = Quaternion.Euler(64f, side * 6f, side * -4f);
+            sleeve.transform.localScale = new Vector3(0.095f, 0.24f, 0.095f);
             DestroyCollider(sleeve);
             if (coatMaterial != null) sleeve.GetComponent<Renderer>().sharedMaterial = coatMaterial;
 
-            // 2. French Shirt Cuff
+            // 2. Crisp French Shirt Cuff
             var cuff = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             cuff.name = "Shirt_Cuff";
             cuff.transform.SetParent(armRoot.transform, false);
-            cuff.transform.localPosition = new Vector3(0f, 0.06f, 0.28f);
-            cuff.transform.localRotation = Quaternion.Euler(75f, 0f, 0f);
-            cuff.transform.localScale = new Vector3(0.088f, 0.025f, 0.088f);
+            cuff.transform.localPosition = new Vector3(0f, 0.06f, 0.29f);
+            cuff.transform.localRotation = Quaternion.Euler(66f, side * 6f, side * -4f);
+            cuff.transform.localScale = new Vector3(0.082f, 0.028f, 0.082f);
             DestroyCollider(cuff);
             if (cuffMaterial != null) cuff.GetComponent<Renderer>().sharedMaterial = cuffMaterial;
 
-            // 3. Brass Gold Cufflink
+            // 3. Polished Brass Cufflink
             var cufflink = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cufflink.name = "Brass_Cufflink";
             cufflink.transform.SetParent(cuff.transform, false);
-            cufflink.transform.localPosition = new Vector3(side * 0.48f, 0f, 0f);
-            cufflink.transform.localScale = new Vector3(0.25f, 0.35f, 0.25f);
+            cufflink.transform.localPosition = new Vector3(side * 0.46f, 0f, 0f);
+            cufflink.transform.localScale = new Vector3(0.22f, 0.32f, 0.22f);
             DestroyCollider(cufflink);
             if (brassMaterial != null) cufflink.GetComponent<Renderer>().sharedMaterial = brassMaterial;
 
-            // 4. Detective Palm & Knuckles
+            // 4. Detective Palm & Glove / Skin
             var hand = GameObject.CreatePrimitive(PrimitiveType.Cube);
             hand.name = "Hand_Palm";
             hand.transform.SetParent(armRoot.transform, false);
-            hand.transform.localPosition = new Vector3(0f, 0.08f, 0.34f);
-            hand.transform.localRotation = Quaternion.Euler(20f, side * 5f, 0f);
-            hand.transform.localScale = new Vector3(0.075f, 0.038f, 0.085f);
+            hand.transform.localPosition = new Vector3(0f, 0.08f, 0.36f);
+            hand.transform.localRotation = Quaternion.Euler(18f, side * 12f, side * -8f);
+            hand.transform.localScale = new Vector3(0.072f, 0.034f, 0.082f);
             DestroyCollider(hand);
             if (skinMaterial != null) hand.GetComponent<Renderer>().sharedMaterial = skinMaterial;
 
-            // 5. Fingers
+            // 5. Fingers in natural relaxed curl
             for (int i = 0; i < 4; i++)
             {
                 var finger = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 finger.name = $"Finger_{i}";
                 finger.transform.SetParent(hand.transform, false);
-                float fx = -0.36f + (i * 0.24f);
-                finger.transform.localPosition = new Vector3(fx, 0f, 0.55f);
-                finger.transform.localRotation = Quaternion.Euler(22f, 0f, 0f);
-                finger.transform.localScale = new Vector3(0.20f, 0.65f, 0.42f);
+                float fx = -0.34f + (i * 0.23f);
+                finger.transform.localPosition = new Vector3(fx, -0.05f, 0.52f);
+                finger.transform.localRotation = Quaternion.Euler(28f, 0f, 0f);
+                finger.transform.localScale = new Vector3(0.18f, 0.55f, 0.38f);
                 DestroyCollider(finger);
                 if (skinMaterial != null) finger.GetComponent<Renderer>().sharedMaterial = skinMaterial;
             }
@@ -188,9 +188,9 @@ namespace TomorrowsCrime.Player
             var thumb = GameObject.CreatePrimitive(PrimitiveType.Cube);
             thumb.name = "Thumb";
             thumb.transform.SetParent(hand.transform, false);
-            thumb.transform.localPosition = new Vector3(side * -0.52f, 0.15f, 0.12f);
-            thumb.transform.localRotation = Quaternion.Euler(15f, side * -35f, side * 25f);
-            thumb.transform.localScale = new Vector3(0.25f, 0.60f, 0.38f);
+            thumb.transform.localPosition = new Vector3(side * -0.48f, 0.10f, 0.14f);
+            thumb.transform.localRotation = Quaternion.Euler(14f, side * -30f, side * 20f);
+            thumb.transform.localScale = new Vector3(0.22f, 0.52f, 0.34f);
             DestroyCollider(thumb);
             if (skinMaterial != null) thumb.GetComponent<Renderer>().sharedMaterial = skinMaterial;
 
@@ -235,9 +235,9 @@ namespace TomorrowsCrime.Player
                 bobRot = Quaternion.Euler(Mathf.Sin(_animTimer) * pitch, bx * 25f, -bx * 40f);
 
                 // Individual arm swing pump
-                float armPump = Mathf.Sin(_animTimer) * (isSprinting ? 12f : 5f);
-                if (_leftArm != null) _leftArm.localRotation = Quaternion.Euler(15f + armPump, -12f, 10f);
-                if (_rightArm != null) _rightArm.localRotation = Quaternion.Euler(15f - armPump, 12f, -10f);
+                float armPump = Mathf.Sin(_animTimer) * (isSprinting ? 8f : 3.5f);
+                if (_leftArm != null) _leftArm.localRotation = Quaternion.Euler(8f + armPump, 16f, -12f);
+                if (_rightArm != null) _rightArm.localRotation = Quaternion.Euler(8f - armPump, -16f, 12f);
             }
             else
             {
@@ -247,8 +247,8 @@ namespace TomorrowsCrime.Player
                 bobPos = new Vector3(0f, breath * breatheVerticalAmount, 0f);
                 bobRot = Quaternion.Euler(breath * breatheRotationalAmount, 0f, 0f);
 
-                if (_leftArm != null) _leftArm.localRotation = Quaternion.Slerp(_leftArm.localRotation, Quaternion.Euler(15f, -12f, 10f), Time.deltaTime * 6f);
-                if (_rightArm != null) _rightArm.localRotation = Quaternion.Slerp(_rightArm.localRotation, Quaternion.Euler(15f, 12f, -10f), Time.deltaTime * 6f);
+                if (_leftArm != null) _leftArm.localRotation = Quaternion.Slerp(_leftArm.localRotation, Quaternion.Euler(8f, 16f, -12f), Time.deltaTime * 6f);
+                if (_rightArm != null) _rightArm.localRotation = Quaternion.Slerp(_rightArm.localRotation, Quaternion.Euler(8f, -16f, 12f), Time.deltaTime * 6f);
             }
 
             // Apply Landing Compression Dip

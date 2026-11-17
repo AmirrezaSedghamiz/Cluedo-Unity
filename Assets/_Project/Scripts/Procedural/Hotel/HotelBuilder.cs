@@ -519,10 +519,10 @@ namespace TomorrowsCrime.Procedural.Hotel
                     if (lintelHeight > 0.1f)
                     {
                         string lintelName = wallConns.Count == 1 ? $"{sideName}_DoorLintel" : $"{sideName}_DoorLintel_{i}";
-                        BuildSolidWallSection(parent,
+                        BuildLintelWallSection(parent,
                             new Vector3(doorX, yFloor + doorOpeningHeight + lintelHeight * 0.5f, wallZ),
                             new Vector3(doorWidth, lintelHeight, wallThickness),
-                            lowerMat, upperMat, trimMat, lintelName);
+                            upperMat, lintelName);
                     }
 
                     currX = doorRight;
@@ -585,10 +585,10 @@ namespace TomorrowsCrime.Procedural.Hotel
                     if (lintelHeight > 0.1f)
                     {
                         string lintelName = wallConns.Count == 1 ? $"{sideName}_DoorLintel" : $"{sideName}_DoorLintel_{i}";
-                        BuildSolidWallSection(parent,
+                        BuildLintelWallSection(parent,
                             new Vector3(wallX, yFloor + doorOpeningHeight + lintelHeight * 0.5f, doorZ),
                             new Vector3(wallThickness, lintelHeight, doorWidth),
-                            lowerMat, upperMat, trimMat, lintelName);
+                            upperMat, lintelName);
                     }
 
                     currZ = doorNorth;
@@ -605,6 +605,20 @@ namespace TomorrowsCrime.Procedural.Hotel
                         lowerMat, upperMat, trimMat, $"{sideName}_Segment_End");
                 }
             }
+        }
+
+        private static void BuildLintelWallSection(Transform parent, Vector3 center, Vector3 size,
+            Material upperMat, string name)
+        {
+            var lintelGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lintelGo.name = name;
+            lintelGo.transform.SetParent(parent);
+            lintelGo.transform.position = center;
+            lintelGo.transform.localScale = size;
+            var rend = lintelGo.GetComponent<Renderer>();
+            if (rend != null && upperMat != null) rend.sharedMaterial = upperMat;
+            var col = lintelGo.GetComponent<BoxCollider>();
+            if (col != null) col.isTrigger = false;
         }
 
         private static void BuildSolidWallSection(Transform parent, Vector3 center, Vector3 size,
@@ -1566,6 +1580,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                         archTrim.transform.localScale = new Vector3(3.55f, 0.05f, 0.47f);
                         var trimRend = archTrim.GetComponent<Renderer>();
                         if (trimRend != null && brassMat != null) trimRend.sharedMaterial = brassMat;
+                        var atCol = archTrim.GetComponent<Collider>();
+                        if (atCol != null) Object.DestroyImmediate(atCol);
 
                         continue;
                     }
@@ -1611,6 +1627,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                     revealL.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
                     var rLRend = revealL.GetComponent<Renderer>();
                     if (rLRend != null) rLRend.sharedMaterial = brassMat;
+                    var rlCol = revealL.GetComponent<Collider>();
+                    if (rlCol != null) Object.DestroyImmediate(rlCol);
 
                     var revealR = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     revealR.name = "Casing_Reveal_Right";
@@ -1619,6 +1637,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                     revealR.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
                     var rRRend = revealR.GetComponent<Renderer>();
                     if (rRRend != null) rRRend.sharedMaterial = brassMat;
+                    var rrCol = revealR.GetComponent<Collider>();
+                    if (rrCol != null) Object.DestroyImmediate(rrCol);
 
                     // Overhead Lintel Header Beam
                     var lintelHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1639,8 +1659,10 @@ namespace TomorrowsCrime.Procedural.Hotel
                     crownCornice.transform.localScale = new Vector3(frameWidth + 0.15f, 0.10f, 0.50f);
                     var crRend = crownCornice.GetComponent<Renderer>();
                     if (crRend != null) crRend.sharedMaterial = walnutMat;
+                    var ccCol = crownCornice.GetComponent<Collider>();
+                    if (ccCol != null) Object.DestroyImmediate(ccCol);
 
-                    // Polished Brass Floor Sill Threshold
+                    // Polished Brass Floor Sill Threshold (Collider stripped to guarantee smooth zero-snag player foot navigation)
                     var threshold = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     threshold.name = "Casing_Threshold";
                     threshold.transform.SetParent(doorCasing.transform);
@@ -1648,6 +1670,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                     threshold.transform.localScale = new Vector3(clearWidth, 0.04f, 0.40f);
                     var thRend = threshold.GetComponent<Renderer>();
                     if (thRend != null) thRend.sharedMaterial = brassMat;
+                    var thCol = threshold.GetComponent<Collider>();
+                    if (thCol != null) Object.DestroyImmediate(thCol);
 
                     // Polished Brass Identification Plaque (Faces corridor / approach room at local -Z)
                     var plaque = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1657,6 +1681,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                     plaque.transform.localScale = new Vector3(isDoubleDoor ? 0.65f : 0.50f, 0.12f, 0.02f);
                     var plqRend = plaque.GetComponent<Renderer>();
                     if (plqRend != null) plqRend.sharedMaterial = brassMat;
+                    var plCol = plaque.GetComponent<Collider>();
+                    if (plCol != null) Object.DestroyImmediate(plCol);
 
                     // Door Leaves & Hinges
                     float openAngle = -90f;
