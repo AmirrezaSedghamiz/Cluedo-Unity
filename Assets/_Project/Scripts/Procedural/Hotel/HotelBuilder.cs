@@ -1731,7 +1731,17 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                     // InteractableDoor component
                     var doorComp = doorRoot.AddComponent<InteractableDoor>();
+                    doorComp.DoorHingeTransform = hingeL;
+                    doorComp.DoorHingeRightTransform = hingeR;
                     doorComp.OpenAngle = openAngle;
+                    doorComp.DoorDisplayName = conn.DoorDisplayName;
+                    doorComp.DoorIdProp = conn.RequiredKeyId != null ? $"door_{conn.ConnectionId}" : $"door_unlocked_{conn.ConnectionId}";
+                    doorComp.RequiredKeyId = conn.RequiredKeyId ?? string.Empty;
+                    doorComp.LockStateProp = conn.RequiresKey ? DoorLockState.Locked : DoorLockState.Unlocked;
+                    doorComp.OpenStateProp = DoorOpenState.Closed;
+
+                    // Ensure doorRoot rotation is strictly preserved
+                    doorRoot.transform.rotation = doorRot;
 
 #if UNITY_EDITOR
                     var soDoor = new SerializedObject(doorComp);
@@ -1902,8 +1912,8 @@ namespace TomorrowsCrime.Procedural.Hotel
                         var dpCol = deskPlinth.GetComponent<Collider>();
                         if (dpCol != null) Object.DestroyImmediate(dpCol);
 
-                        // Rear Key Cubbies & Staff Lockers Unit flush against North back wall at world Z = 13.5m (Parented under deskRoot for collision audit)
-                        BuildSolidStorageUnit(deskRoot.transform, new Vector3(0f, 0f, -4.3f), new Vector3(4.5f, 2.4f, 0.5f), walnutMat, "Reception_Lockers_Unit");
+                        // Rear Key Cubbies & Staff Lockers Unit flush against North back wall at world Z = 13.6m
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(0f, y, 13.6f), new Vector3(4.0f, 2.4f, 0.4f), walnutMat, "Reception_Lockers_Unit");
 
                         // Switchboard console and executive safe against North back wall corners (wide open staff area)
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-5.2f, y, 13.5f), new Vector3(1.4f, 1.8f, 0.6f), walnutMat, "Reception_Switchboard");
@@ -1999,9 +2009,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                         BuildSolidBilliardsTable(furnitureRoot.transform, new Vector3(-11f, y, 0f), mats);
                         // Cue rack flush against West wall
                         BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-17.5f, y, 0f), new Vector3(0.4f, 2.0f, 2.4f), mahoganyMat, "Billiards_CueRack");
-                        // Spectator benches along North and South walls
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, y, 6.2f), new Vector3(3.2f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench_N");
-                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-11f, y, -6.2f), new Vector3(3.2f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench");
+                        // Spectator benches along North and South walls (shifted West to X = -15.5m so doorways at X = -11m are 100% unobstructed)
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-15.5f, y, 6.3f), new Vector3(2.4f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench_N");
+                        BuildSolidStorageUnit(furnitureRoot.transform, new Vector3(-15.5f, y, -6.3f), new Vector3(2.4f, 0.95f, 0.8f), walnutMat, "Billiards_SpectatorBench");
                         // Faux backlit architectural windows on West exterior wall
                         BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, 3.5f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.4f, 1.8f), mahoganyMat, brassMat, "Billiards_Window_W1");
                         BuildBacklitArchitecturalWindow(furnitureRoot.transform, new Vector3(-17.9f, y + 2.2f, -3.5f), Quaternion.Euler(0f, 90f, 0f), new Vector2(2.4f, 1.8f), mahoganyMat, brassMat, "Billiards_Window_W2");
@@ -2991,35 +3001,81 @@ namespace TomorrowsCrime.Procedural.Hotel
             if (sRend != null) sRend.sharedMaterial = brassMat;
         }
 
-        private static void BuildGrandfatherClock(Transform parent, Vector3 position, Material woodMat, Material brassMat, Material faceMat, string name)
+        private static void BuildGrandfatherClock(Transform parent, Vector3 position, Material woodMat, Material brassMat, Material faceMat, string name, Quaternion rotation = default)
         {
             var clockRoot = new GameObject(name);
             clockRoot.transform.SetParent(parent);
             clockRoot.transform.position = position;
+            if (rotation != default) clockRoot.transform.rotation = rotation;
 
             var col = clockRoot.AddComponent<BoxCollider>();
             col.center = new Vector3(0f, 1.4f, 0f);
             col.size = new Vector3(0.85f, 2.8f, 0.65f);
             col.isTrigger = false;
 
-            // Tall Mahogany Clock Case
+            // Stepped Plinth Base
+            var plinth = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            plinth.name = "Clock_Plinth";
+            plinth.transform.SetParent(clockRoot.transform);
+            plinth.transform.localPosition = new Vector3(0f, 0.15f, 0f);
+            plinth.transform.localScale = new Vector3(0.85f, 0.30f, 0.65f);
+            if (plinth.GetComponent<Renderer>() != null && woodMat != null) plinth.GetComponent<Renderer>().sharedMaterial = woodMat;
+            var plCol = plinth.GetComponent<Collider>();
+            if (plCol != null) Object.DestroyImmediate(plCol);
+
+            // Tall Mahogany Clock Waist & Trunk
             var clockCase = GameObject.CreatePrimitive(PrimitiveType.Cube);
             clockCase.name = "Clock_Case";
             clockCase.transform.SetParent(clockRoot.transform);
-            clockCase.transform.localPosition = new Vector3(0f, 1.35f, 0f);
-            clockCase.transform.localScale = new Vector3(0.75f, 2.7f, 0.55f);
+            clockCase.transform.localPosition = new Vector3(0f, 1.45f, 0f);
+            clockCase.transform.localScale = new Vector3(0.70f, 2.30f, 0.50f);
             var cRend = clockCase.GetComponent<Renderer>();
-            if (cRend != null) cRend.sharedMaterial = woodMat;
+            if (cRend != null && woodMat != null) cRend.sharedMaterial = woodMat;
+            var ccCol = clockCase.GetComponent<Collider>();
+            if (ccCol != null) Object.DestroyImmediate(ccCol);
 
-            // Clock Face
+            // Stepped Crown Pediment Bonnet
+            var bonnet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bonnet.name = "Clock_Bonnet";
+            bonnet.transform.SetParent(clockRoot.transform);
+            bonnet.transform.localPosition = new Vector3(0f, 2.70f, 0f);
+            bonnet.transform.localScale = new Vector3(0.82f, 0.22f, 0.60f);
+            if (bonnet.GetComponent<Renderer>() != null && woodMat != null) bonnet.GetComponent<Renderer>().sharedMaterial = woodMat;
+            var bCol = bonnet.GetComponent<Collider>();
+            if (bCol != null) Object.DestroyImmediate(bCol);
+
+            // Brass Finial on top
+            var finial = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            finial.name = "Clock_Brass_Finial";
+            finial.transform.SetParent(clockRoot.transform);
+            finial.transform.localPosition = new Vector3(0f, 2.88f, 0f);
+            finial.transform.localScale = new Vector3(0.12f, 0.14f, 0.12f);
+            if (finial.GetComponent<Renderer>() != null && brassMat != null) finial.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var fCol = finial.GetComponent<Collider>();
+            if (fCol != null) Object.DestroyImmediate(fCol);
+
+            // Clock Face Dial
             var face = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             face.name = "Clock_Dial";
             face.transform.SetParent(clockRoot.transform);
-            face.transform.localPosition = new Vector3(0f, 2.25f, 0.28f);
+            face.transform.localPosition = new Vector3(0f, 2.25f, 0.26f);
             face.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             face.transform.localScale = new Vector3(0.40f, 0.02f, 0.40f);
             var fRend = face.GetComponent<Renderer>();
-            if (fRend != null) fRend.sharedMaterial = faceMat;
+            if (fRend != null && faceMat != null) fRend.sharedMaterial = faceMat;
+            var fcCol = face.GetComponent<Collider>();
+            if (fcCol != null) Object.DestroyImmediate(fcCol);
+
+            // Brass Bezel Ring around Dial
+            var bezel = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            bezel.name = "Clock_Dial_Bezel";
+            bezel.transform.SetParent(clockRoot.transform);
+            bezel.transform.localPosition = new Vector3(0f, 2.25f, 0.25f);
+            bezel.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            bezel.transform.localScale = new Vector3(0.44f, 0.015f, 0.44f);
+            if (bezel.GetComponent<Renderer>() != null && brassMat != null) bezel.GetComponent<Renderer>().sharedMaterial = brassMat;
+            var bzCol = bezel.GetComponent<Collider>();
+            if (bzCol != null) Object.DestroyImmediate(bzCol);
 
             // Brass Pendulum in glass waist
             var pendulum = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -3028,7 +3084,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             pendulum.transform.localPosition = new Vector3(0f, 1.15f, 0.22f);
             pendulum.transform.localScale = new Vector3(0.22f, 0.02f, 0.22f);
             var pRend = pendulum.GetComponent<Renderer>();
-            if (pRend != null) pRend.sharedMaterial = brassMat;
+            if (pRend != null && brassMat != null) pRend.sharedMaterial = brassMat;
+            var pdCol = pendulum.GetComponent<Collider>();
+            if (pdCol != null) Object.DestroyImmediate(pdCol);
         }
 
         private static void BuildVintageGramophone(Transform parent, Vector3 position, Material woodMat, Material brassMat, string name)
@@ -3331,8 +3389,8 @@ namespace TomorrowsCrime.Procedural.Hotel
             BuildDetailedChair(lobbyRoot.transform, center + new Vector3(4.8f, 0f, 4.6f),
                 Quaternion.Euler(0f, 45f, 0f), walnutMat, carpetBurgundy, "Lobby_WingbackChair_North");
 
-            // Grandfather Clock in Lobby Corner (Inside lobby bounds Z in [-6, 6])
-            BuildGrandfatherClock(lobbyRoot.transform, center + new Vector3(-6.5f, 0f, 4.5f), walnutMat, brassMat, whiteMat, "Lobby_GrandfatherClock");
+            // Grandfather Clock flush against North exterior wall west of Reception archway, facing South into Lobby
+            BuildGrandfatherClock(lobbyRoot.transform, center + new Vector3(-5.5f, 0f, 5.65f), walnutMat, brassMat, whiteMat, "Lobby_GrandfatherClock", Quaternion.Euler(0f, 180f, 0f));
 
             // Bellhop Luggage Trolley Cart in Lobby Entrance
             BuildBellhopLuggageCart(lobbyRoot.transform, center + new Vector3(5.5f, 0f, 1.2f), brassMat, walnutMat, "Lobby_LuggageTrolley");

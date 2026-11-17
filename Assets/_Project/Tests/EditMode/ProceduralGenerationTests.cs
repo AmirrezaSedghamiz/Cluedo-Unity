@@ -1094,6 +1094,22 @@ namespace TomorrowsCrime.Tests.EditMode
                         var thCol = threshold.GetComponent<Collider>();
                         Assert.IsNull(thCol, $"Door '{door.name}' threshold must not have a blocking collider.");
                     }
+
+                    // Verify doors on East/West walls are oriented along the wall (90 or 270 degrees, not 0)
+                    if (door.name.Contains("corridor_office") || door.name.Contains("corridor_utility") || door.name.Contains("sky_penthouse"))
+                    {
+                        float yEuler = door.transform.eulerAngles.y;
+                        bool isAlignedEW = Mathf.Abs(yEuler - 90f) < 5f || Mathf.Abs(yEuler - 270f) < 5f;
+                        Assert.IsTrue(isAlignedEW, $"East/West partition door '{door.name}' must be oriented flush with wall (90 or 270 deg), but was {yEuler} deg.");
+                    }
+
+                    // Verify doors on South walls are oriented facing approach (180 degrees)
+                    if (door.name.Contains("upper_housekeeping") || door.name.Contains("floor2_cigar") || door.name.Contains("dining_conservatory"))
+                    {
+                        float yEuler = door.transform.eulerAngles.y;
+                        bool isAlignedSouth = Mathf.Abs(yEuler - 180f) < 5f;
+                        Assert.IsTrue(isAlignedSouth, $"South wall door '{door.name}' must be oriented at 180 deg, but was {yEuler} deg.");
+                    }
                 }
             }
 

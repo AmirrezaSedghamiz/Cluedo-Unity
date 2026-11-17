@@ -28,6 +28,42 @@ namespace TomorrowsCrime.World
         private Quaternion _openRotation;
         private UnityEngine.AI.NavMeshObstacle _navObstacle;
 
+        public Transform DoorHingeTransform
+        {
+            get => doorHingeTransform;
+            set => doorHingeTransform = value;
+        }
+
+        public Transform DoorHingeRightTransform
+        {
+            get => doorHingeRightTransform;
+            set => doorHingeRightTransform = value;
+        }
+
+        public string DoorDisplayName
+        {
+            get => doorDisplayName;
+            set => doorDisplayName = value;
+        }
+
+        public string DoorIdProp
+        {
+            get => doorId;
+            set => doorId = value;
+        }
+
+        public DoorLockState LockStateProp
+        {
+            get => lockState;
+            set => lockState = value;
+        }
+
+        public DoorOpenState OpenStateProp
+        {
+            get => openState;
+            set => openState = value;
+        }
+
         public string DoorId => doorId;
         public UnityEngine.AI.NavMeshObstacle NavObstacle => _navObstacle;
         public string RequiredKeyId
@@ -88,13 +124,22 @@ namespace TomorrowsCrime.World
         {
             if (doorHingeTransform == null)
             {
-                doorHingeTransform = transform;
+                var h = transform.Find("Hinge");
+                if (h == null) h = transform.Find("Hinge_Left");
+                doorHingeTransform = h;
+            }
+            if (doorHingeRightTransform == null)
+            {
+                doorHingeRightTransform = transform.Find("Hinge_Right");
             }
             _closedRotation = Quaternion.identity;
             _openRotation = Quaternion.Euler(0f, openAngle, 0f);
 
-            doorHingeTransform.localRotation = (openState == DoorOpenState.Open) ? _openRotation : _closedRotation;
-            if (doorHingeRightTransform != null)
+            if (doorHingeTransform != null && doorHingeTransform != transform)
+            {
+                doorHingeTransform.localRotation = (openState == DoorOpenState.Open) ? _openRotation : _closedRotation;
+            }
+            if (doorHingeRightTransform != null && doorHingeRightTransform != transform)
             {
                 doorHingeRightTransform.localRotation = (openState == DoorOpenState.Open) ? Quaternion.Euler(0f, -openAngle, 0f) : _closedRotation;
             }
@@ -149,11 +194,11 @@ namespace TomorrowsCrime.World
             lockState = DoorLockState.Unlocked;
             openState = DoorOpenState.Open;
 
-            if (doorHingeTransform != null)
+            if (doorHingeTransform != null && doorHingeTransform != transform)
             {
                 doorHingeTransform.localRotation = _openRotation;
             }
-            if (doorHingeRightTransform != null)
+            if (doorHingeRightTransform != null && doorHingeRightTransform != transform)
             {
                 doorHingeRightTransform.localRotation = Quaternion.Euler(0f, -openAngle, 0f);
             }
@@ -176,11 +221,11 @@ namespace TomorrowsCrime.World
         public void ToggleOpen()
         {
             openState = openState == DoorOpenState.Closed ? DoorOpenState.Open : DoorOpenState.Closed;
-            if (doorHingeTransform != null)
+            if (doorHingeTransform != null && doorHingeTransform != transform)
             {
                 doorHingeTransform.localRotation = openState == DoorOpenState.Open ? _openRotation : _closedRotation;
             }
-            if (doorHingeRightTransform != null)
+            if (doorHingeRightTransform != null && doorHingeRightTransform != transform)
             {
                 doorHingeRightTransform.localRotation = openState == DoorOpenState.Open ? Quaternion.Euler(0f, -openAngle, 0f) : _closedRotation;
             }
@@ -198,8 +243,8 @@ namespace TomorrowsCrime.World
                 // Naturally unlocked door restores to closed inside its frame
                 lockState = DoorLockState.Unlocked;
                 openState = DoorOpenState.Closed;
-                if (doorHingeTransform != null) doorHingeTransform.localRotation = _closedRotation;
-                if (doorHingeRightTransform != null) doorHingeRightTransform.localRotation = _closedRotation;
+                if (doorHingeTransform != null && doorHingeTransform != transform) doorHingeTransform.localRotation = _closedRotation;
+                if (doorHingeRightTransform != null && doorHingeRightTransform != transform) doorHingeRightTransform.localRotation = _closedRotation;
                 if (_navObstacle != null) _navObstacle.enabled = true;
                 if (WorldStateManager.Instance != null && WorldStateManager.Instance.Registry.HasEntry(doorId))
                 {
@@ -211,11 +256,11 @@ namespace TomorrowsCrime.World
                 lockState = DoorLockState.Locked;
                 openState = DoorOpenState.Closed;
 
-                if (doorHingeTransform != null)
+                if (doorHingeTransform != null && doorHingeTransform != transform)
                 {
                     doorHingeTransform.localRotation = _closedRotation;
                 }
-                if (doorHingeRightTransform != null)
+                if (doorHingeRightTransform != null && doorHingeRightTransform != transform)
                 {
                     doorHingeRightTransform.localRotation = _closedRotation;
                 }
