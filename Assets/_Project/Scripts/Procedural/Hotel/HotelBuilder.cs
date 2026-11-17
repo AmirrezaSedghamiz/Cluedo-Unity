@@ -1536,8 +1536,9 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                         // Open Archway: permanent architectural pilasters and lintel header with zero door leaf
                         var archCasing = new GameObject("Archway_Casing");
-                        archCasing.transform.SetParent(doorRoot.transform);
+                        archCasing.transform.SetParent(doorRoot.transform, false);
                         archCasing.transform.localPosition = Vector3.zero;
+                        archCasing.transform.localRotation = Quaternion.identity;
 
                         bool isStairArch = conn.DoorDisplayName.Contains("Grand Staircase");
                         float pillarHeight = isStairArch ? 4.5f : 2.8f;
@@ -1548,8 +1549,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                         // Left decorative column
                         var leftCol = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         leftCol.name = "Arch_Pillar_Left";
-                        leftCol.transform.SetParent(archCasing.transform);
+                        leftCol.transform.SetParent(archCasing.transform, false);
                         leftCol.transform.localPosition = new Vector3(-1.6f, pillarCenterY, 0f);
+                        leftCol.transform.localRotation = Quaternion.identity;
                         leftCol.transform.localScale = new Vector3(0.3f, pillarHeight, 0.45f);
                         var lRend = leftCol.GetComponent<Renderer>();
                         if (lRend != null && mahoganyMat != null) lRend.sharedMaterial = mahoganyMat;
@@ -1557,8 +1559,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                         // Right decorative column
                         var rightCol = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         rightCol.name = "Arch_Pillar_Right";
-                        rightCol.transform.SetParent(archCasing.transform);
+                        rightCol.transform.SetParent(archCasing.transform, false);
                         rightCol.transform.localPosition = new Vector3(1.6f, pillarCenterY, 0f);
+                        rightCol.transform.localRotation = Quaternion.identity;
                         rightCol.transform.localScale = new Vector3(0.3f, pillarHeight, 0.45f);
                         var rRend = rightCol.GetComponent<Renderer>();
                         if (rRend != null && mahoganyMat != null) rRend.sharedMaterial = mahoganyMat;
@@ -1566,8 +1569,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                         // Overhead Arch Header
                         var topArch = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         topArch.name = "Arch_Lintel_Beam";
-                        topArch.transform.SetParent(archCasing.transform);
+                        topArch.transform.SetParent(archCasing.transform, false);
                         topArch.transform.localPosition = new Vector3(0f, lintelY, 0f);
+                        topArch.transform.localRotation = Quaternion.identity;
                         topArch.transform.localScale = new Vector3(3.5f, 0.25f, 0.45f);
                         var tRend = topArch.GetComponent<Renderer>();
                         if (tRend != null && mahoganyMat != null) tRend.sharedMaterial = mahoganyMat;
@@ -1575,8 +1579,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                         // Brass architrave inlay
                         var archTrim = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         archTrim.name = "Arch_Brass_Inlay";
-                        archTrim.transform.SetParent(archCasing.transform);
+                        archTrim.transform.SetParent(archCasing.transform, false);
                         archTrim.transform.localPosition = new Vector3(0f, trimY, 0f);
+                        archTrim.transform.localRotation = Quaternion.identity;
                         archTrim.transform.localScale = new Vector3(3.55f, 0.05f, 0.47f);
                         var trimRend = archTrim.GetComponent<Renderer>();
                         if (trimRend != null && brassMat != null) trimRend.sharedMaterial = brassMat;
@@ -1593,14 +1598,16 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                     // 1. Stationary Door Casing (Frames wall opening permanently with authentic jambs, header, sill, and plaque)
                     var doorCasing = new GameObject("Door_Casing");
-                    doorCasing.transform.SetParent(doorRoot.transform);
+                    doorCasing.transform.SetParent(doorRoot.transform, false);
                     doorCasing.transform.localPosition = Vector3.zero;
+                    doorCasing.transform.localRotation = Quaternion.identity;
 
                     // Left Jamb Post
                     var jambLeft = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     jambLeft.name = "Casing_Jamb_Left";
-                    jambLeft.transform.SetParent(doorCasing.transform);
+                    jambLeft.transform.SetParent(doorCasing.transform, false);
                     jambLeft.transform.localPosition = new Vector3(-jambX, 1.375f, 0f);
+                    jambLeft.transform.localRotation = Quaternion.identity;
                     jambLeft.transform.localScale = new Vector3(0.35f, 2.75f, 0.44f);
                     var jLCol = jambLeft.GetComponent<BoxCollider>();
                     if (jLCol != null) jLCol.isTrigger = false;
@@ -1610,8 +1617,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     // Right Jamb Post
                     var jambRight = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     jambRight.name = "Casing_Jamb_Right";
-                    jambRight.transform.SetParent(doorCasing.transform);
+                    jambRight.transform.SetParent(doorCasing.transform, false);
                     jambRight.transform.localPosition = new Vector3(jambX, 1.375f, 0f);
+                    jambRight.transform.localRotation = Quaternion.identity;
                     jambRight.transform.localScale = new Vector3(0.35f, 2.75f, 0.44f);
                     var jRCol = jambRight.GetComponent<BoxCollider>();
                     if (jRCol != null) jRCol.isTrigger = false;
@@ -1622,8 +1630,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     float revealX = isDoubleDoor ? 1.35f : 0.75f;
                     var revealL = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     revealL.name = "Casing_Reveal_Left";
-                    revealL.transform.SetParent(doorCasing.transform);
+                    revealL.transform.SetParent(doorCasing.transform, false);
                     revealL.transform.localPosition = new Vector3(-revealX, 1.375f, 0f);
+                    revealL.transform.localRotation = Quaternion.identity;
                     revealL.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
                     var rLRend = revealL.GetComponent<Renderer>();
                     if (rLRend != null) rLRend.sharedMaterial = brassMat;
@@ -1632,8 +1641,9 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                     var revealR = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     revealR.name = "Casing_Reveal_Right";
-                    revealR.transform.SetParent(doorCasing.transform);
+                    revealR.transform.SetParent(doorCasing.transform, false);
                     revealR.transform.localPosition = new Vector3(revealX, 1.375f, 0f);
+                    revealR.transform.localRotation = Quaternion.identity;
                     revealR.transform.localScale = new Vector3(0.04f, 2.75f, 0.46f);
                     var rRRend = revealR.GetComponent<Renderer>();
                     if (rRRend != null) rRRend.sharedMaterial = brassMat;
@@ -1643,8 +1653,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     // Overhead Lintel Header Beam
                     var lintelHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     lintelHead.name = "Casing_Lintel_Header";
-                    lintelHead.transform.SetParent(doorCasing.transform);
+                    lintelHead.transform.SetParent(doorCasing.transform, false);
                     lintelHead.transform.localPosition = new Vector3(0f, 2.65f, 0f);
+                    lintelHead.transform.localRotation = Quaternion.identity;
                     lintelHead.transform.localScale = new Vector3(frameWidth + 0.05f, 0.28f, 0.46f);
                     var lCol = lintelHead.GetComponent<BoxCollider>();
                     if (lCol != null) lCol.isTrigger = false;
@@ -1654,8 +1665,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     // Stepped Cornice Crown
                     var crownCornice = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     crownCornice.name = "Casing_Crown_Cornice";
-                    crownCornice.transform.SetParent(doorCasing.transform);
+                    crownCornice.transform.SetParent(doorCasing.transform, false);
                     crownCornice.transform.localPosition = new Vector3(0f, 2.82f, 0f);
+                    crownCornice.transform.localRotation = Quaternion.identity;
                     crownCornice.transform.localScale = new Vector3(frameWidth + 0.15f, 0.10f, 0.50f);
                     var crRend = crownCornice.GetComponent<Renderer>();
                     if (crRend != null) crRend.sharedMaterial = walnutMat;
@@ -1665,8 +1677,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     // Polished Brass Floor Sill Threshold (Collider stripped to guarantee smooth zero-snag player foot navigation)
                     var threshold = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     threshold.name = "Casing_Threshold";
-                    threshold.transform.SetParent(doorCasing.transform);
+                    threshold.transform.SetParent(doorCasing.transform, false);
                     threshold.transform.localPosition = new Vector3(0f, 0.02f, 0f);
+                    threshold.transform.localRotation = Quaternion.identity;
                     threshold.transform.localScale = new Vector3(clearWidth, 0.04f, 0.40f);
                     var thRend = threshold.GetComponent<Renderer>();
                     if (thRend != null) thRend.sharedMaterial = brassMat;
@@ -1676,8 +1689,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     // Polished Brass Identification Plaque (Faces corridor / approach room at local -Z)
                     var plaque = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     plaque.name = "Casing_Suite_Plaque";
-                    plaque.transform.SetParent(doorCasing.transform);
+                    plaque.transform.SetParent(doorCasing.transform, false);
                     plaque.transform.localPosition = new Vector3(0f, 2.62f, -0.235f);
+                    plaque.transform.localRotation = Quaternion.identity;
                     plaque.transform.localScale = new Vector3(isDoubleDoor ? 0.65f : 0.50f, 0.12f, 0.02f);
                     var plqRend = plaque.GetComponent<Renderer>();
                     if (plqRend != null) plqRend.sharedMaterial = brassMat;
@@ -1697,8 +1711,9 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                         // Left Hinge & Leaf
                         var hLGo = new GameObject("Hinge_Left");
-                        hLGo.transform.SetParent(doorRoot.transform);
+                        hLGo.transform.SetParent(doorRoot.transform, false);
                         hLGo.transform.localPosition = new Vector3(-hingeX, 0f, 0f);
+                        hLGo.transform.localRotation = Quaternion.identity;
                         hingeL = hLGo.transform;
 
                         BuildDoorLeafMesh(hLGo.transform, new Vector3(leafW * 0.5f, 1.25f, 0f), new Vector3(leafW, 2.50f, 0.08f),
@@ -1706,8 +1721,9 @@ namespace TomorrowsCrime.Procedural.Hotel
 
                         // Right Hinge & Leaf
                         var hRGo = new GameObject("Hinge_Right");
-                        hRGo.transform.SetParent(doorRoot.transform);
+                        hRGo.transform.SetParent(doorRoot.transform, false);
                         hRGo.transform.localPosition = new Vector3(hingeX, 0f, 0f);
+                        hRGo.transform.localRotation = Quaternion.identity;
                         hingeR = hRGo.transform;
 
                         BuildDoorLeafMesh(hRGo.transform, new Vector3(-leafW * 0.5f, 1.25f, 0f), new Vector3(leafW, 2.50f, 0.08f),
@@ -1717,8 +1733,9 @@ namespace TomorrowsCrime.Procedural.Hotel
                     {
                         // Single Door Leaf
                         var hingeGo = new GameObject("Hinge");
-                        hingeGo.transform.SetParent(doorRoot.transform);
+                        hingeGo.transform.SetParent(doorRoot.transform, false);
                         hingeGo.transform.localPosition = new Vector3(-0.73f, 0f, 0f);
+                        hingeGo.transform.localRotation = Quaternion.identity;
                         hingeL = hingeGo.transform;
 
                         BuildDoorLeafMesh(hingeGo.transform, new Vector3(0.73f, 1.25f, 0f), new Vector3(1.46f, 2.50f, 0.08f),
@@ -1764,8 +1781,9 @@ namespace TomorrowsCrime.Procedural.Hotel
         {
             var doorLeaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
             doorLeaf.name = "Door_Leaf";
-            doorLeaf.transform.SetParent(hingeParent);
+            doorLeaf.transform.SetParent(hingeParent, false);
             doorLeaf.transform.localPosition = localPos;
+            doorLeaf.transform.localRotation = Quaternion.identity;
             doorLeaf.transform.localScale = leafSize;
 
             var leafRend = doorLeaf.GetComponent<Renderer>();
@@ -1780,8 +1798,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             // Upper Recessed Panel Detail
             var upperPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
             upperPanel.name = "Door_Panel_Upper";
-            upperPanel.transform.SetParent(doorLeaf.transform);
+            upperPanel.transform.SetParent(doorLeaf.transform, false);
             upperPanel.transform.localPosition = new Vector3(0f, 0.48f, 0f);
+            upperPanel.transform.localRotation = Quaternion.identity;
             upperPanel.transform.localScale = new Vector3(0.78f, 0.38f, 1.25f);
             if (upperPanel.GetComponent<Renderer>() != null && panelMat != null) upperPanel.GetComponent<Renderer>().sharedMaterial = panelMat;
             var upCol = upperPanel.GetComponent<Collider>();
@@ -1790,8 +1809,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             // Lower Recessed Panel Detail
             var lowerPanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
             lowerPanel.name = "Door_Panel_Lower";
-            lowerPanel.transform.SetParent(doorLeaf.transform);
+            lowerPanel.transform.SetParent(doorLeaf.transform, false);
             lowerPanel.transform.localPosition = new Vector3(0f, -0.55f, 0f);
+            lowerPanel.transform.localRotation = Quaternion.identity;
             lowerPanel.transform.localScale = new Vector3(0.78f, 0.28f, 1.25f);
             if (lowerPanel.GetComponent<Renderer>() != null && panelMat != null) lowerPanel.GetComponent<Renderer>().sharedMaterial = panelMat;
             var lpCol = lowerPanel.GetComponent<Collider>();
@@ -1800,8 +1820,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             // Brass Kickplate at Base of Door
             var kickplate = GameObject.CreatePrimitive(PrimitiveType.Cube);
             kickplate.name = "Door_Brass_Kickplate";
-            kickplate.transform.SetParent(doorLeaf.transform);
+            kickplate.transform.SetParent(doorLeaf.transform, false);
             kickplate.transform.localPosition = new Vector3(0f, -0.88f, 0f);
+            kickplate.transform.localRotation = Quaternion.identity;
             kickplate.transform.localScale = new Vector3(0.98f, 0.16f, 1.20f);
             if (kickplate.GetComponent<Renderer>() != null && brassMat != null) kickplate.GetComponent<Renderer>().sharedMaterial = brassMat;
             var kpCol = kickplate.GetComponent<Collider>();
@@ -1811,8 +1832,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             float handleX = isRightSide ? -0.38f : 0.38f;
             var handleEscutcheon = GameObject.CreatePrimitive(PrimitiveType.Cube);
             handleEscutcheon.name = "Door_Handle_Escutcheon";
-            handleEscutcheon.transform.SetParent(doorLeaf.transform);
+            handleEscutcheon.transform.SetParent(doorLeaf.transform, false);
             handleEscutcheon.transform.localPosition = new Vector3(handleX, -0.18f, 0f);
+            handleEscutcheon.transform.localRotation = Quaternion.identity;
             handleEscutcheon.transform.localScale = new Vector3(0.08f, 0.14f, 1.45f);
             if (handleEscutcheon.GetComponent<Renderer>() != null && brassMat != null) handleEscutcheon.GetComponent<Renderer>().sharedMaterial = brassMat;
             var hCol = handleEscutcheon.GetComponent<Collider>();
@@ -1821,8 +1843,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             // Brass Lever Handle (Front)
             var handleLeverFront = GameObject.CreatePrimitive(PrimitiveType.Cube);
             handleLeverFront.name = "Door_Handle_Lever_Front";
-            handleLeverFront.transform.SetParent(handleEscutcheon.transform);
+            handleLeverFront.transform.SetParent(handleEscutcheon.transform, false);
             handleLeverFront.transform.localPosition = new Vector3(isRightSide ? 0.35f : -0.35f, 0.18f, 0.55f);
+            handleLeverFront.transform.localRotation = Quaternion.identity;
             handleLeverFront.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
             if (handleLeverFront.GetComponent<Renderer>() != null && brassMat != null) handleLeverFront.GetComponent<Renderer>().sharedMaterial = brassMat;
             var hlfCol = handleLeverFront.GetComponent<Collider>();
@@ -1831,8 +1854,9 @@ namespace TomorrowsCrime.Procedural.Hotel
             // Brass Lever Handle (Back)
             var handleLeverBack = GameObject.CreatePrimitive(PrimitiveType.Cube);
             handleLeverBack.name = "Door_Handle_Lever_Back";
-            handleLeverBack.transform.SetParent(handleEscutcheon.transform);
+            handleLeverBack.transform.SetParent(handleEscutcheon.transform, false);
             handleLeverBack.transform.localPosition = new Vector3(isRightSide ? 0.35f : -0.35f, 0.18f, -0.55f);
+            handleLeverBack.transform.localRotation = Quaternion.identity;
             handleLeverBack.transform.localScale = new Vector3(1.8f, 0.22f, 0.22f);
             if (handleLeverBack.GetComponent<Renderer>() != null && brassMat != null) handleLeverBack.GetComponent<Renderer>().sharedMaterial = brassMat;
             var hlbCol = handleLeverBack.GetComponent<Collider>();

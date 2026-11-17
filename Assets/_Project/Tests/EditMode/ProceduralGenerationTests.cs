@@ -1075,13 +1075,41 @@ namespace TomorrowsCrime.Tests.EditMode
             for (int i = 0; i < doorsRoot.childCount; i++)
             {
                 var door = doorsRoot.GetChild(i);
-                var casing = door.Find("Door_Casing");
+                var casing = door.Find("Door_Casing") ?? door.Find("Archway_Casing");
                 if (casing != null)
                 {
-                    var jambL = casing.Find("Casing_Jamb_Left");
-                    var jambR = casing.Find("Casing_Jamb_Right");
-                    Assert.IsNotNull(jambL, $"Door '{door.name}' must have left jamb.");
-                    Assert.IsNotNull(jambR, $"Door '{door.name}' must have right jamb.");
+                    Transform left = casing.Find("Casing_Jamb_Left") ?? casing.Find("Arch_Pillar_Left");
+                    Transform right = casing.Find("Casing_Jamb_Right") ?? casing.Find("Arch_Pillar_Right");
+                    Debug.Log($"DOOR_AUDIT: {door.name} | Rot={door.eulerAngles.y:F1} | LeftWorld={left?.position} | RightWorld={right?.position}");
+                }
+            }
+
+            for (int i = 0; i < doorsRoot.childCount; i++)
+            {
+                var door = doorsRoot.GetChild(i);
+                var casing = door.Find("Door_Casing") ?? door.Find("Archway_Casing");
+                if (casing != null)
+                {
+                    var jambL = casing.Find("Casing_Jamb_Left") ?? casing.Find("Arch_Pillar_Left");
+                    var jambR = casing.Find("Casing_Jamb_Right") ?? casing.Find("Arch_Pillar_Right");
+                    Assert.IsNotNull(jambL, $"Door '{door.name}' must have left jamb or pillar.");
+                    Assert.IsNotNull(jambR, $"Door '{door.name}' must have right jamb or pillar.");
+
+                    // Verify casing rotation matches door root
+                    Assert.AreEqual(Quaternion.identity, casing.localRotation, $"Door '{door.name}' casing localRotation must be identity so it matches wall orientation.");
+
+                    // If door is oriented East-West (Euler 90 or 270 deg), jambs must be aligned along World Z (same World X)
+                    float yAngle = door.eulerAngles.y;
+                    if (Mathf.Abs(yAngle - 90f) < 5f || Mathf.Abs(yAngle - 270f) < 5f)
+                    {
+                        Assert.AreEqual(jambL.position.x, jambR.position.x, 0.05f, $"East/West partition door '{door.name}' jambs must have identical World X.");
+                        Assert.Greater(Mathf.Abs(jambR.position.z - jambL.position.z), 1.2f, $"East/West partition door '{door.name}' jambs must be separated along World Z.");
+                    }
+                    else if (Mathf.Abs(yAngle - 0f) < 5f || Mathf.Abs(yAngle - 180f) < 5f)
+                    {
+                        Assert.AreEqual(jambL.position.z, jambR.position.z, 0.05f, $"North/South partition door '{door.name}' jambs must have identical World Z.");
+                        Assert.Greater(Mathf.Abs(jambR.position.x - jambL.position.x), 1.2f, $"North/South partition door '{door.name}' jambs must be separated along World X.");
+                    }
 
                     // Verify clear opening is unobstructed
                     float clearWidth = Mathf.Abs(jambR.localPosition.x - jambL.localPosition.x) - jambL.localScale.x;
