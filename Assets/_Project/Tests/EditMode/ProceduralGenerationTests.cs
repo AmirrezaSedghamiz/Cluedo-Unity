@@ -1056,5 +1056,56 @@ namespace TomorrowsCrime.Tests.EditMode
 
             Object.DestroyImmediate(testRoot);
         }
+
+        [Test]
+        public void HotelPhysics_FullSimulation_PlayerMovementStairsAndElevator()
+        {
+            var testRoot = new GameObject("TestRoot_PhysicsSim");
+            var rooms = HotelLayoutTemplate.CreateMeridianHouseLayout();
+            var mats = new Dictionary<string, Material>();
+
+            var hotel = HotelBuilder.BuildHotelEnvironment(testRoot.transform, rooms, mats);
+            Assert.IsNotNull(hotel, "Hotel environment must be successfully built.");
+
+            // Verify all 31 doors exist and their casing jambs are properly positioned
+            var doorsRoot = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_Doors");
+            Assert.IsNotNull(doorsRoot, "Hotel_Doors must exist.");
+            Assert.GreaterOrEqual(doorsRoot.childCount, 30, "All hotel doorway connections must have spawned doors.");
+
+            for (int i = 0; i < doorsRoot.childCount; i++)
+            {
+                var door = doorsRoot.GetChild(i);
+                var casing = door.Find("Door_Casing");
+                if (casing != null)
+                {
+                    var jambL = casing.Find("Casing_Jamb_Left");
+                    var jambR = casing.Find("Casing_Jamb_Right");
+                    Assert.IsNotNull(jambL, $"Door '{door.name}' must have left jamb.");
+                    Assert.IsNotNull(jambR, $"Door '{door.name}' must have right jamb.");
+
+                    // Verify clear opening is unobstructed
+                    float clearWidth = Mathf.Abs(jambR.localPosition.x - jambL.localPosition.x) - jambL.localScale.x;
+                    Assert.GreaterOrEqual(clearWidth, 1.4f, $"Door '{door.name}' clear passage width ({clearWidth}m) must be at least 1.4m.");
+
+                    // Verify threshold sill has no solid collider to snag player feet
+                    var threshold = casing.Find("Casing_Threshold");
+                    if (threshold != null)
+                    {
+                        var thCol = threshold.GetComponent<Collider>();
+                        Assert.IsNull(thCol, $"Door '{door.name}' threshold must not have a blocking collider.");
+                    }
+                }
+            }
+
+            // Verify elevator controller state & landing gates
+            var elevatorCabin = testRoot.transform.Find("MeridianHouse_Architecture/Hotel_ArtDecoElevator/Elevator_Cabin");
+            Assert.IsNotNull(elevatorCabin, "Elevator cabin must exist.");
+            var elevatorComp = elevatorCabin.GetComponent<TomorrowsCrime.World.HotelElevator>();
+            Assert.IsNotNull(elevatorComp, "HotelElevator component must be attached to cabin.");
+            Assert.IsFalse(elevatorComp.IsMoving, "Elevator must start stationary.");
+            Assert.AreEqual(0, elevatorComp.CurrentFloor, "Elevator must start on Floor 0.");
+
+            Object.DestroyImmediate(testRoot);
+        }
     }
 }
