@@ -20,7 +20,7 @@ namespace TomorrowsCrime.Procedural.NPCs
             // 1. Staff Members
             var concierge = new NPCProfile("npc_concierge_pierre", "Concierge Pierre", NPCRole.Concierge, 42, "room_reception")
             {
-                BaselinePosition = new Vector3(-1.2f, 0f, 11.6f),
+                BaselinePosition = new Vector3(-1.0f, 0f, 9.9f),
                 BaselineRotation = new Vector3(0f, 180f, 0f),
                 ModelPrefabPath = "Assets/_Project/Art/Models/NPC_Concierge_Pierre.obj",
                 MaterialKey = "UniformNavy",
@@ -31,7 +31,7 @@ namespace TomorrowsCrime.Procedural.NPCs
 
             var receptionist = new NPCProfile("npc_receptionist_celeste", "Celeste Moreau", NPCRole.Receptionist, 28, "room_reception")
             {
-                BaselinePosition = new Vector3(1.2f, 0f, 11.6f),
+                BaselinePosition = new Vector3(1.0f, 0f, 9.9f),
                 BaselineRotation = new Vector3(0f, 180f, 0f),
                 MaterialKey = "UniformNavy",
                 Personality = { Sociability = 0.7f, Caution = 0.5f, Curiosity = 0.7f, Honesty = 0.6f },
@@ -151,17 +151,17 @@ namespace TomorrowsCrime.Procedural.NPCs
                 switch (npc.Role)
                 {
                     case NPCRole.Concierge:
-                        plan.AddActivity("WaitAtPost", "room_reception", new Vector3(-1.2f, 0f, 11.6f), 0f, 70f, null, "Guarding reception counter and key cubbies.");
+                        plan.AddActivity("WaitAtPost", "room_reception", new Vector3(-1.0f, 0f, 9.9f), 0f, 70f, null, "Guarding reception counter and key cubbies.");
                         plan.AddActivity("PatrolLobby", "room_lobby", new Vector3(0f, 0f, 2.0f), 70f, 140f, null, "Inspecting central lobby and coat rack.");
                         plan.AddActivity("CheckTransport", "room_corridor_ground", new Vector3(10.0f, 0f, 0f), 140f, 210f, null, "Inspecting east transport hub and elevator station.");
-                        plan.AddActivity("StationAtLobby", "room_reception", new Vector3(-1.2f, 0f, 11.6f), 210f, 300f, null, "Stationed behind reception desk overseeing front hall.");
+                        plan.AddActivity("StationAtLobby", "room_reception", new Vector3(-1.0f, 0f, 9.9f), 210f, 300f, null, "Stationed behind reception desk overseeing front hall.");
                         break;
 
                     case NPCRole.Receptionist:
-                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.2f, 0f, 11.6f), 0f, 90f, null, "Managing guest ledger at reception desk.");
+                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.0f, 0f, 9.9f), 0f, 90f, null, "Managing guest ledger at reception desk.");
                         plan.AddActivity("ConsultManager", "room_staff_office", new Vector3(19.0f, 0f, 3.5f), 90f, 170f, null, "Delivering registration records to the manager's office.");
                         plan.AddActivity("VisitBar", "room_bar_lounge", new Vector3(-3.0f, 0f, -9.0f), 170f, 230f, null, "Fetching water and checking on bar patrons.");
-                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.2f, 0f, 11.6f), 230f, 300f, null, "Stationed behind front counter sorting mail.");
+                        plan.AddActivity("DutyAtDesk", "room_reception", new Vector3(1.0f, 0f, 9.9f), 230f, 300f, null, "Stationed behind front counter sorting mail.");
                         break;
 
                     case NPCRole.HeadChef:

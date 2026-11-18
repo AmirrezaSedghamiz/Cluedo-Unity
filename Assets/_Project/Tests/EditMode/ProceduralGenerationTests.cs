@@ -865,11 +865,13 @@ namespace TomorrowsCrime.Tests.EditMode
             float distFromLobbyCenter = new Vector2(journalist.BaselinePosition.x, journalist.BaselinePosition.z).magnitude;
             Assert.Greater(distFromLobbyCenter, 2.5f, "Journalist must not be inside the central lobby table.");
 
-            // 3. Pierre & Celeste must be behind the reception counter (Z > 11.2m)
+            // 3. Pierre & Celeste must be in the staff workstation behind front counter (Z in [9.4, 10.5]), in front of key lockers
             var pierre = investigation.Roster.Find(p => p.Role == NPCRole.Concierge);
             var celeste = investigation.Roster.Find(p => p.Role == NPCRole.Receptionist);
-            Assert.Greater(pierre.BaselinePosition.z, 11.2f, "Concierge must be behind front desk.");
-            Assert.Greater(celeste.BaselinePosition.z, 11.2f, "Receptionist must be behind front desk.");
+            Assert.Greater(pierre.BaselinePosition.z, 9.4f, "Concierge must be behind front counter.");
+            Assert.Less(pierre.BaselinePosition.z, 10.5f, "Concierge must be in front of locker unit.");
+            Assert.Greater(celeste.BaselinePosition.z, 9.4f, "Receptionist must be behind front counter.");
+            Assert.Less(celeste.BaselinePosition.z, 10.5f, "Receptionist must be in front of locker unit.");
         }
 
         [Test]
@@ -1149,6 +1151,146 @@ namespace TomorrowsCrime.Tests.EditMode
             Assert.IsFalse(elevatorComp.IsMoving, "Elevator must start stationary.");
             Assert.AreEqual(0, elevatorComp.CurrentFloor, "Elevator must start on Floor 0.");
 
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void CentralStaircase_Floor1Walls_DoNotIntersectStaircaseBounds()
+        {
+            var testRoot = new GameObject("TestRoot_StairsWallClearance");
+            var seed = InvestigationSeed.FromCode("TC-1A2B3");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var mats = new Dictionary<string, Material>();
+            var world = GenerationPipeline.BuildPlayableWorld(investigation, testRoot.transform, mats);
+
+            // Audit Floor 1 walls against Staircase Flight 0 & Landing 1:
+            // Flight 0 Track A spans X in [4.8, 11.2], Z in [-2.55, -0.95].
+            // Landing 1 spans X in [11.2, 13.6], Z in [-2.60, 0.70].
+            // South partition wall at Z = -2.90m must have ZERO intersection with staircase geometry!
+            var renderers = testRoot.GetComponentsInChildren<Renderer>(true);
+            int overlapCount = 0;
+            foreach (var r in renderers)
+            {
+                if (r.name.Contains("Wall") || (r.transform.parent != null && r.transform.parent.name.Contains("Wall")))
+                {
+                    var b = r.bounds;
+                    // Check Floor 1 walls (Y in [4.5, 9.5])
+                    if (b.min.y >= 4.0f && b.max.y <= 10.5f)
+                    {
+                        // Check if wall penetrates Flight 0 (X in [4.8, 11.2], Z in [-2.55, -0.95])
+                        bool penetratesFlight0 = b.max.x > 4.85f && b.min.x < 11.15f && b.max.z > -2.55f && b.min.z < -0.95f;
+                        // Check if wall penetrates Landing 1 (X in [11.2, 13.6], Z in [-2.60, 0.70])
+                        bool penetratesLanding1 = b.max.x > 11.25f && b.min.x < 13.55f && b.max.z > -2.60f && b.min.z < 0.70f;
+
+                        if (penetratesFlight0 || penetratesLanding1)
+                        {
+                            overlapCount++;
+                            Debug.LogError($"WALL_OVERLAPS_STAIRS: '{r.gameObject.name}' Bounds={b}");
+                        }
+                    }
+                }
+            }
+
+            Assert.AreEqual(0, overlapCount, "No walls on Floor 1 should intersect central staircase Flight 0 or Landing 1.");
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void Reception_StaffNPCsAndAnchors_PositionedInFrontOfLockers()
+        {
+            var testRoot = new GameObject("TestRoot_ReceptionNPCsAndAnchors");
+            var seed = InvestigationSeed.FromCode("TC-1A2B3");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var mats = new Dictionary<string, Material>();
+            var world = GenerationPipeline.BuildPlayableWorld(investigation, testRoot.transform, mats);
+
+            // Pierre and Celeste must be stationed in front of the locker cabinet (Z in [9.5, 10.5]), facing the lobby (rotation Y = 180)
+            var npcs = testRoot.GetComponentsInChildren<NPCController>(true);
+            NPCController pierre = null;
+            NPCController celeste = null;
+            foreach (var npc in npcs)
+            {
+                if (npc.name.Contains("pierre") || npc.name.Contains("Pierre")) pierre = npc;
+                if (npc.name.Contains("celeste") || npc.name.Contains("Celeste")) celeste = npc;
+            }
+
+            Assert.IsNotNull(pierre, "Concierge Pierre must be spawned.");
+            Assert.IsNotNull(celeste, "Receptionist Celeste must be spawned.");
+
+            Assert.GreaterOrEqual(pierre.transform.position.z, 9.6f, "Pierre must stand in front of key cubby cabinet.");
+            Assert.LessOrEqual(pierre.transform.position.z, 10.4f, "Pierre must stand behind reception counter.");
+
+            Assert.GreaterOrEqual(celeste.transform.position.z, 9.6f, "Celeste must stand in front of key cubby cabinet.");
+            Assert.LessOrEqual(celeste.transform.position.z, 10.4f, "Celeste must stand behind reception counter.");
+
+            // Verify Reception Anchors sit on valid furniture surfaces
+            var receptionRoom = investigation.Rooms.Find(r => r.RoomId == "room_reception");
+            Assert.IsNotNull(receptionRoom, "Reception room definition must exist.");
+
+            var counterAnchor = receptionRoom.Anchors.Find(a => a.AnchorId == "anchor_reception_counter");
+            var deskAnchor = receptionRoom.Anchors.Find(a => a.AnchorId == "anchor_reception_desk");
+            var rackAnchor = receptionRoom.Anchors.Find(a => a.AnchorId == "anchor_reception_key_rack");
+            var safeAnchor = receptionRoom.Anchors.Find(a => a.AnchorId == "anchor_reception_safe");
+
+            Assert.IsNotNull(counterAnchor, "anchor_reception_counter must exist.");
+            Assert.AreEqual(8.8f, counterAnchor.LocalPosition.z, 0.1f, "Counter anchor must be on front counter surface (Z ~ 8.8m).");
+
+            Assert.IsNotNull(deskAnchor, "anchor_reception_desk must exist.");
+            Assert.AreEqual(9.4f, deskAnchor.LocalPosition.z, 0.1f, "Desk anchor must be on desk writing ledge (Z ~ 9.4m).");
+
+            Assert.IsNotNull(rackAnchor, "anchor_reception_key_rack must exist.");
+            Assert.AreEqual(10.9f, rackAnchor.LocalPosition.z, 0.1f, "Key rack anchor must be inside key cubby unit (Z ~ 10.9m).");
+
+            Assert.IsNotNull(safeAnchor, "anchor_reception_safe must exist.");
+            Assert.AreEqual(13.5f, safeAnchor.LocalPosition.z, 0.1f, "Safe anchor must be atop executive safe (Z ~ 13.5m).");
+
+            Object.DestroyImmediate(testRoot);
+        }
+
+        [Test]
+        public void DoorLeaves_DecorativePanels_FitStrictlyInsideDoorSlab()
+        {
+            var testRoot = new GameObject("TestRoot_DoorPanelsFit");
+            var seed = InvestigationSeed.FromCode("TC-1A2B3");
+            var investigation = GenerationPipeline.GenerateInvestigation(seed);
+            var mats = new Dictionary<string, Material>();
+            var world = GenerationPipeline.BuildPlayableWorld(investigation, testRoot.transform, mats);
+
+            var doorsRoot = testRoot.transform.Find($"World_Investigation_{seed.SeedCode}/MeridianHouse_Architecture/Hotel_Doors");
+            Assert.IsNotNull(doorsRoot, "Hotel_Doors root must exist.");
+
+            int panelsAudited = 0;
+            for (int i = 0; i < doorsRoot.childCount; i++)
+            {
+                var door = doorsRoot.GetChild(i);
+                var doorLeaves = door.GetComponentsInChildren<Transform>(true);
+                foreach (var t in doorLeaves)
+                {
+                    if (t.name == "Door_Leaf")
+                    {
+                        var leafCol = t.GetComponent<BoxCollider>();
+                        Assert.IsNotNull(leafCol, $"Door leaf '{t.name}' must have BoxCollider.");
+                        float leafMinY = leafCol.bounds.min.y;
+                        float leafMaxY = leafCol.bounds.max.y;
+
+                        for (int c = 0; c < t.childCount; c++)
+                        {
+                            var child = t.GetChild(c);
+                            var rend = child.GetComponent<Renderer>();
+                            if (rend != null)
+                            {
+                                panelsAudited++;
+                                Assert.GreaterOrEqual(rend.bounds.min.y, leafMinY - 0.05f,
+                                    $"Detail '{child.name}' on '{door.name}' must not protrude below bottom of door leaf.");
+                                Assert.LessOrEqual(rend.bounds.max.y, leafMaxY + 0.05f,
+                                    $"Detail '{child.name}' on '{door.name}' must not protrude above top of door leaf.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            Assert.Greater(panelsAudited, 20, "Should have audited decorative panels on all door leaves.");
             Object.DestroyImmediate(testRoot);
         }
     }

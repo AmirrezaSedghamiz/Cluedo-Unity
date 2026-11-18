@@ -47,10 +47,10 @@ namespace TomorrowsCrime.Procedural.Hotel
             var reception = CreateRoom(rng, "room_reception", "Front Reception & Key Station", RoomType.Reception, 0,
                 new Vector3(0f, 2.25f, 10f), new Vector3(16f, 4.5f, 8f),
                 "FloorCheckerMarble", "WallpaperEmerald", "WoodMahogany", new Color(0.6f, 0.95f, 0.7f), 2.4f, 12f);
-            reception.AddAnchor("anchor_reception_counter", AnchorCategory.Counter, new Vector3(0f, 1.15f, 9.8f));
-            reception.AddAnchor("anchor_reception_desk", AnchorCategory.Desk, new Vector3(0f, 0.82f, 11.6f));
-            reception.AddAnchor("anchor_reception_key_rack", AnchorCategory.KeyStation, new Vector3(2.5f, 1.5f, 12.2f));
-            reception.AddAnchor("anchor_reception_safe", AnchorCategory.Desk, new Vector3(-3.2f, 1.4f, 12.0f));
+            reception.AddAnchor("anchor_reception_counter", AnchorCategory.Counter, new Vector3(0f, 1.05f, 8.8f));
+            reception.AddAnchor("anchor_reception_desk", AnchorCategory.Desk, new Vector3(0f, 0.82f, 9.4f));
+            reception.AddAnchor("anchor_reception_key_rack", AnchorCategory.KeyStation, new Vector3(0.5f, 1.35f, 10.9f));
+            reception.AddAnchor("anchor_reception_safe", AnchorCategory.Desk, new Vector3(5.2f, 1.42f, 13.5f));
             rooms.Add(reception);
 
             // 3. Grand Dining Hall
